@@ -66,7 +66,7 @@
     font-family: 'Inter', sans-serif;
     font-size: 11px;
     font-weight: 500;
-    letter-spacing: 0.42em;
+    letter-spacing: 0.18em;
     text-transform: lowercase;
     color: rgba(18,15,12,0.85);
   }
@@ -1268,7 +1268,7 @@
 
   <!-- NAV -->
   <nav>
-    <div class="logo">rosewood</div>
+    <div class="logo">rosewood: curated by tia ❤️</div>
     <div class="nav-right">
       <span class="guest-name" id="loginName">not signed in</span>
       <button class="role-pill active" data-role="user" type="button">guest</button>
@@ -1407,6 +1407,7 @@
     <div class="generate-row">
       <button class="dock-btn" id="generateActivitiesButton" type="button">generate activities</button>
       <button class="dock-btn" id="publishPlanButton" type="button" disabled>add to calendar + email</button>
+      <button class="dock-btn mic-btn" id="calendarAgentButton" type="button" aria-label="Talk to calendar agent">🎙</button>
       <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
     </div>
 
@@ -1642,6 +1643,7 @@
   const bookingStatus = document.getElementById('bookingStatus');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
   const publishPlanButton = document.getElementById('publishPlanButton');
+  const calendarAgentButton = document.getElementById('calendarAgentButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
   const activityRecs = document.getElementById('activityRecs');
   const wellnessRecs = document.getElementById('wellnessRecs');
@@ -1655,6 +1657,7 @@
   let isListening = false;
   let adminRecognition = null;
   let adminTranscript = '';
+  let calendarAgentRecognition = null;
   let lastPublishablePlan = [];
   const mindmapStorageKey = 'rosewoodCompassMindmap';
   const defaultMindmap = {
@@ -2276,6 +2279,78 @@
       publishPlanButton.disabled = false;
       generateActivitiesStatus.textContent = error.message;
     }
+  });
+
+  async function runCalendarVoiceCommand(command) {
+    generateActivitiesStatus.textContent = `Calendar agent heard: ${command}`;
+    const response = await fetch('/api/calendar/publish-plan', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        command,
+        plannedItems: lastPublishablePlan,
+        calendarEvents: tripCalendarEvents(lastCalendarEvents),
+        email: bookingEmail.value.trim() || 'bananachocolatebrownie@gmail.com'
+      })
+    });
+    const raw = await response.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      data = { error: raw || 'Calendar agent returned a non-JSON response' };
+    }
+    if (!response.ok) throw new Error(data.error || 'Calendar agent failed');
+    generateActivitiesStatus.textContent = data.message || `Calendar agent completed ${data.action}.`;
+    await loadCalendarEvents().catch(() => {});
+  }
+
+  calendarAgentButton?.addEventListener('click', () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      generateActivitiesStatus.textContent = 'Calendar voice agent needs Chrome speech recognition.';
+      return;
+    }
+
+    if (calendarAgentRecognition) {
+      calendarAgentRecognition.stop();
+      generateActivitiesStatus.textContent = 'Stopped calendar agent.';
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    calendarAgentRecognition = recognition;
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    calendarAgentButton.textContent = '…';
+    generateActivitiesStatus.textContent = 'Listening for calendar command...';
+
+    recognition.onresult = event => {
+      const transcript = event.results?.[0]?.[0]?.transcript || '';
+      runCalendarVoiceCommand(transcript).catch(error => {
+        generateActivitiesStatus.textContent = error.message;
+      });
+    };
+
+    recognition.onerror = event => {
+      const message = event.error === 'aborted'
+        ? 'Calendar agent stopped. Tap the mic to try again.'
+        : event.error === 'no-speech'
+          ? 'I did not hear a calendar command.'
+          : `Calendar mic error: ${event.error || 'unknown'}`;
+      generateActivitiesStatus.textContent = message;
+      calendarAgentButton.textContent = '🎙';
+      calendarAgentRecognition = null;
+    };
+
+    recognition.onend = () => {
+      calendarAgentButton.textContent = '🎙';
+      calendarAgentRecognition = null;
+    };
+
+    recognition.start();
   });
 
   adminRecordButton?.addEventListener('click', () => {

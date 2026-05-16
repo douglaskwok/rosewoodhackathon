@@ -1,6 +1,7 @@
 const { getValidAccessToken, requireGoogleEnv } = require("../_google");
 
 const RESEND_URL = "https://api.resend.com/emails";
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 
 function validDate(value) {
   const date = new Date(value || "");
@@ -14,6 +15,89 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function extractJson(text) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end === -1) throw new Error("Claude did not return JSON");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+function eventPayload(item) {
+  return {
+    summary: item.name || "Rosewood Compass booking",
+    description: [
+      item.why ? `Why: ${item.why}` : "",
+      item.meta ? `Details: ${item.meta}` : "",
+      "Added by Rosewood Compass."
+    ].filter(Boolean).join("\n"),
+    start: { dateTime: item.startsAt },
+    end: { dateTime: item.endsAt }
+  };
+}
+
+async function askClaudeForCalendarAction({ command, calendarEvents, plannedItems }) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error("Missing env var: ANTHROPIC_API_KEY");
+  }
+
+  const response = await fetch(ANTHROPIC_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5",
+      max_tokens: 500,
+      system: "You are a careful calendar booking agent. Convert voice commands into one safe calendar action. Return valid JSON only.",
+      messages: [{
+        role: "user",
+        content: `
+Voice command:
+${command}
+
+Existing Google Calendar events:
+${JSON.stringify(calendarEvents, null, 2)}
+
+Planned recommendations not necessarily on calendar yet:
+${JSON.stringify(plannedItems, null, 2)}
+
+Return one JSON object:
+{
+  "action": "add|reschedule|delete",
+  "eventId": "existing calendar event id when rescheduling/deleting, else empty",
+  "targetTitle": "event title to match if eventId is empty",
+  "name": "title for add or new title for reschedule",
+  "startsAt": "ISO datetime with -07:00 timezone if adding/rescheduling",
+  "endsAt": "ISO datetime with -07:00 timezone if adding/rescheduling",
+  "why": "short reason or notes"
+}
+
+Rules:
+- Prefer eventId from existing events for reschedule/delete.
+- If adding from a planned recommendation, copy its name/startsAt/endsAt.
+- For vague dates, keep within May 26-28, 2026.
+- Do not invent deletion unless the command clearly says delete/cancel/remove.
+`
+      }]
+    })
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || "Claude calendar command failed");
+  const text = (data.content || []).filter((item) => item.type === "text").map((item) => item.text).join("\n");
+  return extractJson(text);
+}
+
+function findEventId(action, calendarEvents) {
+  if (action.eventId) return action.eventId;
+  const target = String(action.targetTitle || action.name || "").toLowerCase();
+  if (!target) return "";
+  const match = (calendarEvents || []).find((event) => String(event.title || "").toLowerCase().includes(target));
+  return match?.id || "";
 }
 
 async function sendConfirmationEmail({ to, item }) {
@@ -81,23 +165,56 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const items = Array.isArray(req.body?.items) ? req.body.items : [];
-    const email = String(req.body?.email || "").trim();
-    const publishable = items.filter((item) => validDate(item.startsAt) && validDate(item.endsAt));
-    const created = [];
-    const emailed = [];
+    const command = String(req.body?.command || "").trim();
+    if (command) {
+      const calendarEvents = Array.isArray(req.body?.calendarEvents) ? req.body.calendarEvents : [];
+      const plannedItems = Array.isArray(req.body?.plannedItems) ? req.body.plannedItems : [];
+      const email = String(req.body?.email || "").trim();
+      const action = await askClaudeForCalendarAction({ command, calendarEvents, plannedItems });
+      const eventId = findEventId(action, calendarEvents);
 
-    for (const item of publishable) {
-      const calendarBody = {
-        summary: item.name || "Rosewood Compass booking",
-        description: [
-          item.why ? `Why: ${item.why}` : "",
-          item.meta ? `Details: ${item.meta}` : "",
-          "Added by Rosewood Compass."
-        ].filter(Boolean).join("\n"),
-        start: { dateTime: item.startsAt },
-        end: { dateTime: item.endsAt }
+      if (action.action === "delete") {
+        if (!eventId) throw new Error("I could not find a matching calendar event to delete.");
+        const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}`, {
+          method: "DELETE",
+          headers: { authorization: `Bearer ${accessToken}` }
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error?.message || "Google Calendar delete failed");
+        }
+        res.status(200).json({ action: "delete", message: "Deleted matching calendar event." });
+        return;
+      }
+
+      if (!validDate(action.startsAt) || !validDate(action.endsAt)) {
+        throw new Error("I need a clear date and time for that calendar change.");
+      }
+
+      const item = {
+        name: action.name || action.targetTitle || "Rosewood Compass booking",
+        startsAt: action.startsAt,
+        endsAt: action.endsAt,
+        why: action.why || `Voice command: ${command}`,
+        meta: `Voice calendar agent · ${command}`
       };
+
+      if (action.action === "reschedule") {
+        if (!eventId) throw new Error("I could not find a matching calendar event to reschedule.");
+        const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}`, {
+          method: "PATCH",
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify(eventPayload(item))
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "Google Calendar reschedule failed");
+        if (email) await sendConfirmationEmail({ to: email, item });
+        res.status(200).json({ action: "reschedule", message: `Rescheduled ${data.summary}.`, event: data });
+        return;
+      }
 
       const response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
         method: "POST",
@@ -105,7 +222,29 @@ module.exports = async function handler(req, res) {
           authorization: `Bearer ${accessToken}`,
           "content-type": "application/json"
         },
-        body: JSON.stringify(calendarBody)
+        body: JSON.stringify(eventPayload(item))
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || "Google Calendar insert failed");
+      if (email) await sendConfirmationEmail({ to: email, item });
+      res.status(200).json({ action: "add", message: `Added ${data.summary}.`, event: data });
+      return;
+    }
+
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
+    const email = String(req.body?.email || "").trim();
+    const publishable = items.filter((item) => validDate(item.startsAt) && validDate(item.endsAt));
+    const created = [];
+    const emailed = [];
+
+    for (const item of publishable) {
+      const response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(eventPayload(item))
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error?.message || "Google Calendar insert failed");
