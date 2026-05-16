@@ -491,120 +491,12 @@
     margin-bottom: 4px;
   }
 
-  .claude-test {
-    position: relative;
-    z-index: 2;
-    margin: 0 64px 96px;
-    max-width: 1180px;
-    background: rgba(255,255,255,0.50);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-    border: 0.5px solid rgba(28,25,20,0.14);
-    padding: 28px;
-  }
-
-  .api-test-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-    gap: 28px;
-  }
-
-  .api-test-panel {
-    min-width: 0;
-  }
-
-  .booking-form {
-    display: grid;
-    gap: 10px;
-  }
-
-  .booking-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .booking-input {
-    width: 100%;
-    border: 0.5px solid rgba(28,25,20,0.18);
-    background: rgba(255,255,255,0.42);
-    color: rgba(18,15,12,0.86);
-    min-height: 44px;
-    padding: 10px 12px;
-    font: inherit;
-    font-size: 12px;
-  }
-
-  .booking-note {
-    margin-top: 12px;
-    font-size: 13px;
-    line-height: 1.6;
-    color: rgba(18,15,12,0.48);
-  }
-
-  @media (max-width: 920px) {
-    .api-test-grid,
-    .booking-row {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .claude-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 34px;
-    font-weight: 400;
-    letter-spacing: -0.03em;
-    margin-bottom: 8px;
-  }
-
-  .claude-copy {
-    font-size: 12px;
-    line-height: 1.7;
-    color: rgba(18,15,12,0.62);
-    margin-bottom: 18px;
-  }
-
-  .claude-row {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    gap: 10px;
-  }
-
   .mic-btn {
     min-width: 44px;
     padding-left: 12px;
     padding-right: 12px;
     font-size: 16px;
     letter-spacing: 0;
-  }
-
-  .claude-input {
-    min-height: 48px;
-    border: 0.5px solid rgba(28,25,20,0.18);
-    background: rgba(255,255,255,0.42);
-    color: rgba(18,15,12,0.86);
-    padding: 12px 14px;
-    font: inherit;
-    resize: vertical;
-  }
-
-  .claude-output {
-    margin-top: 16px;
-    border-left: 1.5px solid rgba(30,48,36,0.45);
-    padding: 12px 14px;
-    background: rgba(255,255,255,0.28);
-    color: rgba(18,15,12,0.72);
-    font-size: 13px;
-    line-height: 1.7;
-    white-space: pre-wrap;
-  }
-
-  .voice-status {
-    margin-top: 10px;
-    font-size: 13px;
-    letter-spacing: 0.03em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.46);
   }
 
   /* ── ACCORDION ─────────────────────────────────────────── */
@@ -828,6 +720,31 @@
     letter-spacing: 0.02em;
     text-transform: lowercase;
     color: rgba(18,15,12,0.45);
+  }
+
+  .agent-dialogue {
+    display: grid;
+    gap: 8px;
+    margin: -8px 0 24px;
+    max-width: 820px;
+  }
+
+  .agent-line {
+    border-left: 1.5px solid rgba(30,48,36,0.35);
+    background: rgba(255,255,255,0.30);
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(18,15,12,0.70);
+  }
+
+  .agent-line span {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.42);
   }
 
   /* ── GUEST CARD ─────────────────────────────────────── */
@@ -1303,7 +1220,7 @@
         <div class="card-avatar">OM</div>
         <div>
           <p class="card-guest-name" id="cardGuestName">Welcome back</p>
-          <p class="card-guest-meta">Suite 1204 <span class="card-sep">|</span> May 16–20, 2026 <span class="card-sep">|</span> 4th stay</p>
+          <p class="card-guest-meta">Suite 1204 <span class="card-sep">|</span> May 26–28, 2026 <span class="card-sep">|</span> 4th stay</p>
         </div>
       </div>
     </div>
@@ -1407,8 +1324,11 @@
     <div class="generate-row">
       <button class="dock-btn" id="generateActivitiesButton" type="button">generate activities</button>
       <button class="dock-btn" id="publishPlanButton" type="button" disabled>add to calendar + email</button>
-      <button class="dock-btn mic-btn" id="calendarAgentButton" type="button" aria-label="Talk to calendar agent">🎙</button>
+      <button class="dock-btn mic-btn" id="calendarAgentButton" type="button" aria-label="Edit activity by voice">edit activity</button>
       <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
+    </div>
+    <div class="agent-dialogue" id="calendarAgentDialogue">
+      <div class="agent-line"><span>tia calendar agent</span>Try: “move Madera to Thursday at 8” or “delete the spa booking.”</div>
     </div>
 
     <div class="accordion-item activity open">
@@ -1521,7 +1441,7 @@
           <div class="admin-calendar-list" id="adminCalendarList">
             <div class="admin-cal-item"><span class="admin-cal-time">waiting</span>Connect Google Calendar to load guest events.</div>
           </div>
-          <h2 class="admin-title key-title">5 key notes</h2>
+          <h2 class="admin-title key-title">5 service commitments</h2>
           <div class="key-notes" id="keyNotes"></div>
         </aside>
       </div>
@@ -1551,42 +1471,6 @@
     </div>
     <span class="ambient-action">tell us more</span>
   </div>
-
-  <section class="claude-test">
-    <div class="api-test-grid">
-      <div class="api-test-panel">
-        <div class="dock-label">claude api test</div>
-        <h2 class="claude-title">Ask Claude</h2>
-        <p class="claude-copy">A small verification surface for Anthropic. Try asking for a guest-facing concierge note.</p>
-        <div class="claude-row">
-          <textarea class="claude-input" id="claudePrompt">Write a warm one-sentence welcome note for a Rosewood guest who has a nut allergy and prefers sparkling water.</textarea>
-          <button class="dock-btn mic-btn" id="voiceButton" type="button" aria-label="Talk to Claude">🎙</button>
-          <button class="dock-btn" id="claudeButton" type="button">send</button>
-        </div>
-        <div class="claude-output" id="claudeOutput">Claude response will appear here.</div>
-        <div class="voice-status" id="voiceStatus">Voice input uses your browser mic; replies play through ElevenLabs.</div>
-        <audio id="claudeAudio" hidden></audio>
-      </div>
-
-      <div class="api-test-panel">
-        <div class="dock-label">opentable test</div>
-        <h2 class="claude-title">Book Madera</h2>
-        <p class="claude-copy">Open a specific OpenTable flow for Madera Restaurant at Rosewood Sand Hill.</p>
-        <div class="booking-form">
-          <div class="booking-row">
-            <input class="booking-input" id="bookingDate" type="date" value="2026-05-27">
-            <input class="booking-input" id="bookingTime" type="time" value="19:00">
-          </div>
-          <input class="booking-input" id="bookingCovers" type="number" min="1" max="12" value="2" aria-label="Party size">
-          <input class="booking-input" id="bookingEmail" type="email" value="bananachocolatebrownie@gmail.com" aria-label="Confirmation email">
-          <button class="dock-btn" id="maderaBookingButton" type="button">open madera</button>
-          <button class="dock-btn" id="bookingEmailButton" type="button">send confirmation</button>
-          <button class="dock-btn" id="bookingTestButton" type="button">send test email</button>
-        </div>
-        <div class="booking-note" id="bookingStatus">Uses OpenTable's restaurant booking page; direct reservation creation requires partner API access.</div>
-      </div>
-    </div>
-  </section>
 
 </div><!-- /.app -->
 
@@ -1627,24 +1511,11 @@
   const adminRecordStatus = document.getElementById('adminRecordStatus');
   const adminCalendarList = document.getElementById('adminCalendarList');
   const keyNotes = document.getElementById('keyNotes');
-  const claudePrompt = document.getElementById('claudePrompt');
-  const claudeButton = document.getElementById('claudeButton');
-  const claudeOutput = document.getElementById('claudeOutput');
-  const voiceButton = document.getElementById('voiceButton');
-  const voiceStatus = document.getElementById('voiceStatus');
-  const claudeAudio = document.getElementById('claudeAudio');
-  const maderaBookingButton = document.getElementById('maderaBookingButton');
-  const bookingDate = document.getElementById('bookingDate');
-  const bookingTime = document.getElementById('bookingTime');
-  const bookingCovers = document.getElementById('bookingCovers');
-  const bookingEmail = document.getElementById('bookingEmail');
-  const bookingEmailButton = document.getElementById('bookingEmailButton');
-  const bookingTestButton = document.getElementById('bookingTestButton');
-  const bookingStatus = document.getElementById('bookingStatus');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
   const publishPlanButton = document.getElementById('publishPlanButton');
   const calendarAgentButton = document.getElementById('calendarAgentButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
+  const calendarAgentDialogue = document.getElementById('calendarAgentDialogue');
   const activityRecs = document.getElementById('activityRecs');
   const wellnessRecs = document.getElementById('wellnessRecs');
   const learningRecs = document.getElementById('learningRecs');
@@ -1653,18 +1524,17 @@
   const tripStart = new Date('2026-05-26T00:00:00-07:00');
   const tripEnd = new Date('2026-05-29T00:00:00-07:00');
   let lastCalendarEvents = [];
-  let activeRecognition = null;
-  let isListening = false;
   let adminRecognition = null;
   let adminTranscript = '';
   let calendarAgentRecognition = null;
   let lastPublishablePlan = [];
+  let guestEmail = 'bananachocolatebrownie@gmail.com';
   const mindmapStorageKey = 'rosewoodCompassMindmap';
   const defaultMindmap = {
     food: ['Japanese', 'Mediterranean', 'Seasonal tasting menus', 'Nut allergy', 'Needs sparkling water', 'Quiet tables'],
     events: ['Private tastings', 'Wellness classes', 'Art/design tours', 'Intimate dinners'],
     goals: ['Recharge between work commitments', 'Stay fit while traveling', 'Discover local culture without overplanning'],
-    observations: ['Prefers room at 68F before arrival', 'Sparkling water with no ice', 'Extra charger by left bedside table', 'Avoids small talk during early breakfast']
+    observations: ['Room at 68F before arrival', 'Sparkling water with no ice', 'Extra charger by left bedside table', 'Avoids small talk during early breakfast']
   };
   const mindmapBranches = {
     food: { title: 'Food + dietary', branch: { x: 28, y: 22 }, add: { x: 11, y: 47 }, children: [{ x: 10, y: 8 }, { x: 13, y: 20 }, { x: 10, y: 32 }, { x: 29, y: 8 }, { x: 28, y: 38 }, { x: 42, y: 16 }] },
@@ -1769,9 +1639,9 @@
   function renderKeyNotes() {
     if (!keyNotes) return;
     const candidates = [
-      ...mindmapState.food.map(item => ({ label: 'food', item })),
+      ...mindmapState.observations.map(item => ({ label: 'commit', item })),
+      ...mindmapState.food.map(item => ({ label: 'commit', item })),
       ...mindmapState.goals.map(item => ({ label: 'goal', item })),
-      ...mindmapState.observations.map(item => ({ label: 'watch', item })),
       ...mindmapState.events.map(item => ({ label: 'event', item }))
     ];
     const seen = new Set();
@@ -1783,7 +1653,7 @@
         return true;
       })
       .slice(0, 5)
-      .map(note => ({ ...note, label: note.label === 'watch' ? 'watch' : keyNoteType(note.item) }));
+      .map(note => ({ ...note, label: note.label === 'commit' ? 'commit' : keyNoteType(note.item) }));
 
     keyNotes.innerHTML = notes.map(note => `
       <div class="key-note"><span>${escapeHtml(note.label)}</span>${escapeHtml(note.item)}</div>
@@ -2198,52 +2068,7 @@
     });
     const url = `https://www.opentable.com/r/madera-restaurant-at-rosewood-sand-hill-menlo-park?${params.toString()}`;
     window.open(url, '_blank', 'noopener,noreferrer');
-    if (bookingStatus) {
-      bookingStatus.textContent = `Opening Madera for ${safeCovers} on ${safeDate} at ${safeTime}.`;
-    }
   }
-
-  maderaBookingButton?.addEventListener('click', () => {
-    openMaderaBooking(bookingDate.value, bookingTime.value, bookingCovers.value);
-  });
-
-  async function sendBookingConfirmation({ test = false } = {}) {
-    const to = bookingEmail.value.trim() || 'bananachocolatebrownie@gmail.com';
-    bookingEmail.value = to;
-    if (!to) {
-      bookingStatus.textContent = 'Enter an email address first.';
-      return;
-    }
-
-    bookingStatus.textContent = test ? 'Sending test email...' : 'Sending dining confirmation...';
-    try {
-      const response = await fetch('/api/email/booking-confirmation', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          to,
-          restaurant: test ? 'Madera Restaurant at Rosewood Sand Hill - Demo Hold' : 'Madera Restaurant at Rosewood Sand Hill',
-          date: bookingDate.value,
-          time: bookingTime.value,
-          covers: bookingCovers.value
-        })
-      });
-      const raw = await response.text();
-      let data = {};
-      try {
-        data = raw ? JSON.parse(raw) : {};
-      } catch {
-        data = { error: raw || 'Email route returned a non-JSON response' };
-      }
-      if (!response.ok) throw new Error(data.error || 'Email request failed');
-      bookingStatus.textContent = test ? `Sent test email to ${to}.` : `Sent confirmation to ${to}.`;
-    } catch (error) {
-      bookingStatus.textContent = error.message;
-    }
-  }
-
-  bookingEmailButton?.addEventListener('click', () => sendBookingConfirmation());
-  bookingTestButton?.addEventListener('click', () => sendBookingConfirmation({ test: true }));
 
   mindmapButton?.addEventListener('click', generateMindmap);
   generateActivitiesButton?.addEventListener('click', generateActivities);
@@ -2262,7 +2087,7 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           items: lastPublishablePlan,
-          email: bookingEmail.value.trim() || 'bananachocolatebrownie@gmail.com'
+          email: guestEmail
         })
       });
       const raw = await response.text();
@@ -2281,8 +2106,18 @@
     }
   });
 
+  function addAgentDialogue(speaker, text) {
+    if (!calendarAgentDialogue) return;
+    const line = document.createElement('div');
+    line.className = 'agent-line';
+    line.innerHTML = `<span>${escapeHtml(speaker)}</span>${escapeHtml(text)}`;
+    calendarAgentDialogue.appendChild(line);
+    calendarAgentDialogue.scrollTop = calendarAgentDialogue.scrollHeight;
+  }
+
   async function runCalendarVoiceCommand(command) {
     generateActivitiesStatus.textContent = `Calendar agent heard: ${command}`;
+    addAgentDialogue('you', command);
     const response = await fetch('/api/calendar/publish-plan', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -2290,7 +2125,7 @@
         command,
         plannedItems: lastPublishablePlan,
         calendarEvents: tripCalendarEvents(lastCalendarEvents),
-        email: bookingEmail.value.trim() || 'bananachocolatebrownie@gmail.com'
+        email: guestEmail
       })
     });
     const raw = await response.text();
@@ -2301,6 +2136,16 @@
       data = { error: raw || 'Calendar agent returned a non-JSON response' };
     }
     if (!response.ok) throw new Error(data.error || 'Calendar agent failed');
+    if (data.decision) {
+      const decision = data.decision;
+      const summary = [
+        decision.action ? `action: ${decision.action}` : '',
+        decision.name || decision.targetTitle ? `target: ${decision.name || decision.targetTitle}` : '',
+        decision.startsAt ? `time: ${decision.startsAt}` : ''
+      ].filter(Boolean).join(' · ');
+      addAgentDialogue('claude decision', summary || 'calendar action selected');
+    }
+    addAgentDialogue('tia calendar agent', data.message || `Completed ${data.action}.`);
     generateActivitiesStatus.textContent = data.message || `Calendar agent completed ${data.action}.`;
     await loadCalendarEvents().catch(() => {});
   }
@@ -2324,13 +2169,15 @@
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-    calendarAgentButton.textContent = '…';
+    calendarAgentButton.textContent = 'listening...';
     generateActivitiesStatus.textContent = 'Listening for calendar command...';
+    addAgentDialogue('tia calendar agent', 'Listening...');
 
     recognition.onresult = event => {
       const transcript = event.results?.[0]?.[0]?.transcript || '';
       runCalendarVoiceCommand(transcript).catch(error => {
         generateActivitiesStatus.textContent = error.message;
+        addAgentDialogue('tia calendar agent', error.message);
       });
     };
 
@@ -2341,12 +2188,13 @@
           ? 'I did not hear a calendar command.'
           : `Calendar mic error: ${event.error || 'unknown'}`;
       generateActivitiesStatus.textContent = message;
-      calendarAgentButton.textContent = '🎙';
+      addAgentDialogue('tia calendar agent', message);
+      calendarAgentButton.textContent = 'edit activity';
       calendarAgentRecognition = null;
     };
 
     recognition.onend = () => {
-      calendarAgentButton.textContent = '🎙';
+      calendarAgentButton.textContent = 'edit activity';
       calendarAgentRecognition = null;
     };
 
@@ -2416,122 +2264,6 @@
     recognition.start();
   });
 
-  async function speakClaudeText(text) {
-    if (!text) return;
-    voiceStatus.textContent = 'Generating ElevenLabs audio...';
-    const response = await fetch('/api/elevenlabs/speech', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      let error = {};
-      try {
-        error = errorText ? JSON.parse(errorText) : {};
-      } catch {
-        error = { error: errorText };
-      }
-      throw new Error(error.error || 'ElevenLabs request failed');
-    }
-    const blob = await response.blob();
-    if (claudeAudio.src) URL.revokeObjectURL(claudeAudio.src);
-    claudeAudio.src = URL.createObjectURL(blob);
-    await claudeAudio.play();
-    voiceStatus.textContent = 'Playing Claude response.';
-  }
-
-  async function askClaude({ speak = false } = {}) {
-    const prompt = claudePrompt.value.trim();
-    if (!prompt) {
-      claudeOutput.textContent = 'Please enter a prompt.';
-      return;
-    }
-
-    claudeOutput.textContent = 'Asking Claude...';
-    voiceStatus.textContent = speak ? 'Sending your voice prompt to Claude...' : 'Ready for voice.';
-    try {
-      const response = await fetch('/api/claude/chat', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-      const raw = await response.text();
-      let data = {};
-      try {
-        data = raw ? JSON.parse(raw) : {};
-      } catch {
-        data = { error: raw || 'Claude returned a non-JSON response' };
-      }
-      if (!response.ok) throw new Error(data.error || 'Claude request failed');
-      claudeOutput.textContent = data.text || '(empty response)';
-      if (speak) {
-        await speakClaudeText(data.text || '');
-      }
-    } catch (error) {
-      claudeOutput.textContent = error.message;
-      voiceStatus.textContent = error.message;
-    }
-  }
-
-  claudeButton?.addEventListener('click', () => askClaude());
-
-  voiceButton?.addEventListener('click', () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      voiceStatus.textContent = 'Voice input is not supported in this browser. Try Chrome.';
-      return;
-    }
-
-    if (isListening && activeRecognition) {
-      activeRecognition.stop();
-      voiceStatus.textContent = 'Stopped listening.';
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    activeRecognition = recognition;
-    isListening = true;
-    let heardSpeech = false;
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    voiceStatus.textContent = 'Listening...';
-    voiceButton.textContent = '…';
-
-    recognition.onresult = event => {
-      heardSpeech = true;
-      const transcript = event.results?.[0]?.[0]?.transcript || '';
-      claudePrompt.value = transcript;
-      voiceStatus.textContent = `Heard: ${transcript}`;
-      askClaude({ speak: true });
-    };
-
-    recognition.onerror = event => {
-      const message = event.error === 'aborted'
-        ? 'Listening stopped. Tap the mic again and speak after the browser prompt.'
-        : event.error === 'no-speech'
-          ? 'I did not hear anything. Tap the mic and try again.'
-          : `Mic error: ${event.error || 'unknown'}`;
-      voiceStatus.textContent = message;
-      voiceButton.textContent = '🎙';
-      isListening = false;
-      activeRecognition = null;
-    };
-
-    recognition.onend = () => {
-      voiceButton.textContent = '🎙';
-      isListening = false;
-      activeRecognition = null;
-      if (!heardSpeech && voiceStatus.textContent === 'Listening...') {
-        voiceStatus.textContent = 'Listening ended. Tap the mic to try again.';
-      }
-    };
-
-    recognition.start();
-  });
-
   mindmap?.addEventListener('click', event => {
     const addButton = event.target.closest('[data-add]');
     if (addButton) {
@@ -2581,7 +2313,7 @@
         }
         authMessage.textContent = `Signed in as ${profile.name || profile.email}.`;
         if (profile.email) {
-          bookingEmail.value = profile.email;
+          guestEmail = profile.email;
         }
         gmailButton.textContent = 'gmail connected';
         calendarButton.textContent = 'calendar connected';

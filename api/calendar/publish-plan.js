@@ -183,7 +183,7 @@ module.exports = async function handler(req, res) {
           const data = await response.json().catch(() => ({}));
           throw new Error(data.error?.message || "Google Calendar delete failed");
         }
-        res.status(200).json({ action: "delete", message: "Deleted matching calendar event." });
+        res.status(200).json({ action: "delete", decision: action, message: "Deleted matching calendar event." });
         return;
       }
 
@@ -212,7 +212,7 @@ module.exports = async function handler(req, res) {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error?.message || "Google Calendar reschedule failed");
         if (email) await sendConfirmationEmail({ to: email, item });
-        res.status(200).json({ action: "reschedule", message: `Rescheduled ${data.summary}.`, event: data });
+        res.status(200).json({ action: "reschedule", decision: action, message: `Rescheduled ${data.summary}.`, event: data });
         return;
       }
 
@@ -227,7 +227,7 @@ module.exports = async function handler(req, res) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error?.message || "Google Calendar insert failed");
       if (email) await sendConfirmationEmail({ to: email, item });
-      res.status(200).json({ action: "add", message: `Added ${data.summary}.`, event: data });
+      res.status(200).json({ action: "add", decision: action, message: `Added ${data.summary}.`, event: data });
       return;
     }
 
