@@ -211,66 +211,112 @@
           linear-gradient(90deg, #f8f8f8 1px, transparent 1px),
           white;
         background-size: 32px 32px;
+        overflow: hidden;
       }
 
-      .node {
+      .mindmap-svg {
         position: absolute;
-        width: 230px;
-        border: 1px solid #222;
-        border-radius: 8px;
-        background: white;
-        padding: 10px 14px;
-        text-align: left;
-        font-size: 13px;
-        line-height: 1.3;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .mindmap-layer {
+        position: absolute;
+        inset: 0;
         z-index: 2;
       }
 
-      .node strong {
+      .mind-node {
+        position: absolute;
+        width: 210px;
+        border: 1px solid #222;
+        background: white;
+        padding: 10px 12px;
+        text-align: center;
+        font-size: 13px;
+        line-height: 1.3;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 2px 0 #ddd;
+      }
+
+      .mind-node strong {
         display: block;
         margin-bottom: 4px;
       }
 
-      .node.center {
+      .mind-node.root {
         width: 180px;
-        min-height: 72px;
+        min-height: 82px;
+        border-radius: 999px;
+        background: #f4f4f1;
         display: grid;
         place-items: center;
-        text-align: center;
+        font-weight: bold;
       }
 
-      .map-items {
-        display: grid;
-        gap: 6px;
-        margin-top: 8px;
-      }
-
-      .map-item {
-        border: 1px solid #ccc;
+      .mind-node.branch {
         border-radius: 999px;
-        background: #fafafa;
-        padding: 6px 8px;
+        font-weight: bold;
+      }
+
+      .mind-node.child {
+        width: 180px;
+        border-color: #888;
+        border-radius: 999px;
+        background: #fff;
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 6px;
         align-items: center;
+        text-align: left;
       }
 
-      .map-item span {
+      .mind-node.child span {
         outline: none;
       }
 
-      .map-item button {
+      .mind-node.child button {
         min-height: 24px;
         padding: 0 7px;
         border-color: #aaa;
       }
 
-      .add-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 6px;
-        margin-top: 10px;
+      .mind-node.add-node {
+        width: 210px;
+        border-style: dashed;
+        border-radius: 8px;
+        box-shadow: none;
+      }
+
+      .mind-node.add-node .add-row {
+        margin-top: 0;
+      }
+
+      .mind-node.food,
+      .mind-node.food-child,
+      .mind-node.food-add {
+        border-color: #8b4d57;
+      }
+
+      .mind-node.events,
+      .mind-node.events-child,
+      .mind-node.events-add {
+        border-color: #3f6c62;
+      }
+
+      .mind-node.goals,
+      .mind-node.goals-child,
+      .mind-node.goals-add {
+        border-color: #9b7a35;
+      }
+
+      .mind-node.observations,
+      .mind-node.observations-child,
+      .mind-node.observations-add {
+        border-color: #55758b;
       }
 
       .add-row input {
@@ -286,61 +332,6 @@
         flex-wrap: wrap;
         gap: 8px;
         margin: 12px 0;
-      }
-
-      .line {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 3px;
-        height: 270px;
-        background: #ccc;
-        transform-origin: top center;
-        z-index: 1;
-      }
-
-      .center {
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        background: #f4f4f1;
-        font-weight: bold;
-      }
-
-      .node.food {
-        left: 8%;
-        top: 11%;
-      }
-
-      .node.wellness {
-        right: 8%;
-        top: 11%;
-      }
-
-      .node.schedule {
-        left: 8%;
-        bottom: 11%;
-      }
-
-      .node.experiences {
-        right: 8%;
-        bottom: 11%;
-      }
-
-      .line.food {
-        transform: rotate(238deg);
-      }
-
-      .line.wellness {
-        transform: rotate(302deg);
-      }
-
-      .line.schedule {
-        transform: rotate(122deg);
-      }
-
-      .line.experiences {
-        transform: rotate(58deg);
       }
 
       .calendar-title {
@@ -625,44 +616,9 @@
           <div class="mindmap-actions">
             <button id="mindmap-button" type="button">Generate mind map</button>
           </div>
-          <div class="map">
-            <div class="line food"></div>
-            <div class="line wellness"></div>
-            <div class="line schedule"></div>
-            <div class="line experiences"></div>
-            <div class="node center">User preferences</div>
-            <div class="node food" id="node-food" data-node="food">
-              <strong>Food + dietary</strong>
-              <div class="map-items" data-items="food"></div>
-              <div class="add-row">
-                <input data-input="food" placeholder="Add food note" />
-                <button data-add="food" type="button">Add</button>
-              </div>
-            </div>
-            <div class="node wellness" id="node-events" data-node="events">
-              <strong>Favorite events</strong>
-              <div class="map-items" data-items="events"></div>
-              <div class="add-row">
-                <input data-input="events" placeholder="Add event" />
-                <button data-add="events" type="button">Add</button>
-              </div>
-            </div>
-            <div class="node schedule" id="node-goals" data-node="goals">
-              <strong>Latent goals</strong>
-              <div class="map-items" data-items="goals"></div>
-              <div class="add-row">
-                <input data-input="goals" placeholder="Add goal" />
-                <button data-add="goals" type="button">Add</button>
-              </div>
-            </div>
-            <div class="node experiences" id="node-observations" data-node="observations">
-              <strong>Staff observations</strong>
-              <div class="map-items" data-items="observations"></div>
-              <div class="add-row">
-                <input data-input="observations" placeholder="Add observation" />
-                <button data-add="observations" type="button">Add</button>
-              </div>
-            </div>
+          <div class="map" id="mindmap">
+            <svg class="mindmap-svg" id="mindmap-lines" aria-hidden="true"></svg>
+            <div class="mindmap-layer" id="mindmap-layer"></div>
           </div>
         </div>
       </section>
@@ -748,12 +704,69 @@
       const calendarLoadState = document.getElementById("calendar-load-state");
       const mindmapStatus = document.getElementById("mindmap-status");
       const mindmapButton = document.getElementById("mindmap-button");
+      const mindmap = document.getElementById("mindmap");
+      const mindmapLayer = document.getElementById("mindmap-layer");
+      const mindmapLines = document.getElementById("mindmap-lines");
       const calendarWeekStart = new Date("2026-05-24T00:00:00-07:00");
       const calendarWeekEnd = new Date("2026-05-31T00:00:00-07:00");
       const calendarStartHour = 8;
       const calendarSlotHours = 2;
       const calendarRowCount = 7;
       const mindmapStorageKey = "rosewoodCompassMindmap";
+      const mindmapBranches = {
+        food: {
+          title: "Food + dietary",
+          branch: { x: 28, y: 22 },
+          add: { x: 10, y: 45 },
+          children: [
+            { x: 9, y: 8 },
+            { x: 13, y: 20 },
+            { x: 9, y: 32 },
+            { x: 24, y: 8 },
+            { x: 23, y: 36 },
+            { x: 39, y: 12 },
+          ],
+        },
+        events: {
+          title: "Favorite events",
+          branch: { x: 72, y: 22 },
+          add: { x: 90, y: 45 },
+          children: [
+            { x: 91, y: 8 },
+            { x: 87, y: 20 },
+            { x: 91, y: 32 },
+            { x: 76, y: 8 },
+            { x: 77, y: 36 },
+            { x: 61, y: 12 },
+          ],
+        },
+        goals: {
+          title: "Latent goals",
+          branch: { x: 28, y: 78 },
+          add: { x: 10, y: 55 },
+          children: [
+            { x: 9, y: 92 },
+            { x: 13, y: 80 },
+            { x: 9, y: 68 },
+            { x: 24, y: 92 },
+            { x: 23, y: 64 },
+            { x: 39, y: 88 },
+          ],
+        },
+        observations: {
+          title: "Staff observations",
+          branch: { x: 72, y: 78 },
+          add: { x: 90, y: 55 },
+          children: [
+            { x: 91, y: 92 },
+            { x: 87, y: 80 },
+            { x: 91, y: 68 },
+            { x: 76, y: 92 },
+            { x: 77, y: 64 },
+            { x: 61, y: 88 },
+          ],
+        },
+      };
       const defaultMindmap = {
         food: [
           "Japanese",
@@ -813,23 +826,69 @@
         localStorage.setItem(mindmapStorageKey, JSON.stringify(mindmapState));
       }
 
-      function renderMindmapBranch(key) {
-        const container = document.querySelector(`[data-items="${key}"]`);
-        container.innerHTML = "";
+      function pointToPixels(point) {
+        return {
+          x: (point.x / 100) * mindmap.clientWidth,
+          y: (point.y / 100) * mindmap.clientHeight,
+        };
+      }
 
-        mindmapState[key].forEach((item, index) => {
-          const row = document.createElement("div");
-          row.className = "map-item";
-          row.innerHTML = `
-            <span contenteditable="true" data-edit="${key}" data-index="${index}">${escapeHtml(item)}</span>
-            <button type="button" data-remove="${key}" data-index="${index}">x</button>
-          `;
-          container.appendChild(row);
-        });
+      function drawCurve(from, to, className = "") {
+        const start = pointToPixels(from);
+        const end = pointToPixels(to);
+        const midX = (start.x + end.x) / 2;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#b8b8b8");
+        path.setAttribute("stroke-width", className === "branch" ? "3" : "2");
+        path.setAttribute("stroke-linecap", "round");
+        mindmapLines.appendChild(path);
+      }
+
+      function makeNode(className, point, html) {
+        const node = document.createElement("div");
+        node.className = `mind-node ${className}`;
+        node.style.left = `${point.x}%`;
+        node.style.top = `${point.y}%`;
+        node.innerHTML = html;
+        mindmapLayer.appendChild(node);
+        return node;
       }
 
       function renderMindmap() {
-        Object.keys(defaultMindmap).forEach(renderMindmapBranch);
+        mindmapLayer.innerHTML = "";
+        mindmapLines.innerHTML = "";
+        mindmapLines.setAttribute("viewBox", `0 0 ${mindmap.clientWidth} ${mindmap.clientHeight}`);
+
+        const root = { x: 50, y: 50 };
+        makeNode("root", root, "User<br>preference profile");
+
+        Object.entries(mindmapBranches).forEach(([key, config]) => {
+          drawCurve(root, config.branch, "branch");
+          makeNode(`branch ${key}`, config.branch, `<strong>${escapeHtml(config.title)}</strong>`);
+
+          mindmapState[key].forEach((item, index) => {
+            const point = config.children[index] || {
+              x: config.children[config.children.length - 1].x,
+              y: config.children[config.children.length - 1].y + (index - config.children.length + 1) * 8,
+            };
+            drawCurve(config.branch, point);
+            makeNode(
+              `child ${key}-child`,
+              point,
+              `<span contenteditable="true" data-edit="${key}" data-index="${index}">${escapeHtml(item)}</span><button type="button" data-remove="${key}" data-index="${index}">x</button>`,
+            );
+          });
+
+          drawCurve(config.branch, config.add);
+          makeNode(
+            `add-node ${key}-add`,
+            config.add,
+            `<div class="add-row"><input data-input="${key}" placeholder="Add ${escapeHtml(config.title.toLowerCase())}" /><button data-add="${key}" type="button">Add</button></div>`,
+          );
+        });
+
         saveMindmapState();
       }
 
@@ -859,7 +918,11 @@
           roleButtons.forEach((item) =>
             item.classList.toggle("active", item === button),
           );
-          if (isAdmin) renderMindmap();
+          if (isAdmin) {
+            renderMindmap();
+            mindmapStatus.textContent =
+              "Editable mind map loaded from this browser.";
+          }
         });
       });
 
@@ -1043,10 +1106,11 @@
 
       mindmapButton.addEventListener("click", () => loadPreferenceMindmap());
 
-      document.querySelectorAll("[data-add]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const key = button.dataset.add;
-          const input = document.querySelector(`[data-input="${key}"]`);
+      mindmap.addEventListener("click", (event) => {
+        const addButton = event.target.closest("[data-add]");
+        if (addButton) {
+          const key = addButton.dataset.add;
+          const input = mindmap.querySelector(`[data-input="${key}"]`);
           const value = input.value.trim();
           if (!value) return;
 
@@ -1054,18 +1118,9 @@
           input.value = "";
           renderMindmap();
           mindmapStatus.textContent = "Mind map updated locally.";
-        });
-      });
+          return;
+        }
 
-      document.querySelectorAll("[data-input]").forEach((input) => {
-        input.addEventListener("keydown", (event) => {
-          if (event.key !== "Enter") return;
-          event.preventDefault();
-          document.querySelector(`[data-add="${input.dataset.input}"]`).click();
-        });
-      });
-
-      document.querySelector(".map").addEventListener("click", (event) => {
         const button = event.target.closest("[data-remove]");
         if (!button) return;
 
@@ -1076,7 +1131,15 @@
         mindmapStatus.textContent = "Mind map updated locally.";
       });
 
-      document.querySelector(".map").addEventListener("input", (event) => {
+      mindmap.addEventListener("keydown", (event) => {
+        const input = event.target.closest("[data-input]");
+        if (!input || event.key !== "Enter") return;
+
+        event.preventDefault();
+        mindmap.querySelector(`[data-add="${input.dataset.input}"]`).click();
+      });
+
+      mindmap.addEventListener("input", (event) => {
         const target = event.target.closest("[data-edit]");
         if (!target) return;
 
@@ -1086,6 +1149,8 @@
         saveMindmapState();
         mindmapStatus.textContent = "Mind map updated locally.";
       });
+
+      window.addEventListener("resize", renderMindmap);
 
       async function loadArrivalEmail() {
         const arrivalInfo = document.getElementById("arrival-info");
@@ -1240,6 +1305,7 @@
       }
 
       loadGmailState();
+      renderMindmap();
     </script>
   </body>
 </html>
