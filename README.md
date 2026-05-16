@@ -10,15 +10,16 @@ https://rosewoodhackathon.vercel.app/
 
 - User onboarding screen with logo, title, and integration buttons.
 - Admin onboarding screen with a simple preference mind map.
-- User/admin weekly calendar screen for a Tuesday-Thursday stay, with large blocks for flight, image, and link placeholders.
+- User/admin weekly calendar screen that renders connected Google Calendar events.
 - Real Google OAuth entry point for Gmail read-only integration.
 - Google login status that shows the signed-in user's name.
+- Google Calendar week view for May 24-30, 2026.
 
 ## Gmail OAuth Setup
 
 In Google Cloud Console:
 
-1. Enable the Gmail API.
+1. Enable the Gmail API and Google Calendar API.
 2. Create an OAuth client for a Web application.
 3. Add this Authorized redirect URI:
 
@@ -44,6 +45,8 @@ https://rosewoodhackathon.vercel.app/api/auth/config
 ```
 
 It should return `"ready": true`.
+
+After adding Calendar integration, sign in again so Google can ask for the new Calendar read-only permission.
 
 ## Run
 

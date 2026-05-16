@@ -297,6 +297,14 @@
         position: relative;
       }
 
+      .calendar-note {
+        max-width: 1160px;
+        min-height: 22px;
+        margin: 0 auto 10px;
+        color: #666;
+        font-size: 14px;
+      }
+
       .calendar-scroll {
         overflow-x: auto;
         padding-bottom: 8px;
@@ -349,6 +357,10 @@
         gap: 8px;
         align-content: start;
         font-size: 13px;
+      }
+
+      .calendar-block.real-event {
+        overflow: hidden;
       }
 
       .calendar-block strong {
@@ -491,7 +503,7 @@
               </div>
 
               <div class="integration-row">
-                <button type="button">Integrate calendar</button>
+                <a class="button" id="calendar-button" href="/api/auth/google">Integrate calendar</a>
                 <a class="button" id="gmail-button" href="/api/auth/google">Sign in with Google</a>
                 <button type="button">Beli</button>
                 <button type="button">Arrival info (email)</button>
@@ -512,6 +524,10 @@
               <div class="side-box" id="gmail-messages">
                 <strong>Email signals</strong>
                 Connect Gmail to preview travel and reservation emails.
+              </div>
+              <div class="side-box" id="calendar-status">
+                <strong>Calendar signals</strong>
+                Connect Google Calendar to preview upcoming events.
               </div>
               <div class="side-box">Concierge suggestions</div>
             </aside>
@@ -537,22 +553,24 @@
       <section class="screen" id="calendar">
         <div class="calendar-title">
           <div>
-            <h2>Weekly Stay Calendar</h2>
-            <p class="muted">Traditional weekly view with large blocks for images and links.</p>
+            <h2>Google Calendar</h2>
+            <p class="muted">Your Google Calendar events for the week of May 24, 2026.</p>
           </div>
-          <span class="muted">Tue-Thu visit</span>
+          <span class="muted" id="calendar-range">May 24-30, 2026</span>
         </div>
 
+        <div class="calendar-note" id="calendar-load-state">Connect Google Calendar to load this week.</div>
+
         <div class="calendar-scroll">
-          <div class="week-calendar">
+          <div class="week-calendar" id="week-calendar">
             <div class="corner"></div>
-            <div class="day-head" style="grid-column: 2; grid-row: 1;">Mon</div>
-            <div class="day-head" style="grid-column: 3; grid-row: 1;">Tue</div>
-            <div class="day-head" style="grid-column: 4; grid-row: 1;">Wed</div>
-            <div class="day-head" style="grid-column: 5; grid-row: 1;">Thu</div>
-            <div class="day-head" style="grid-column: 6; grid-row: 1;">Fri</div>
-            <div class="day-head" style="grid-column: 7; grid-row: 1;">Sat</div>
-            <div class="day-head" style="grid-column: 8; grid-row: 1;">Sun</div>
+            <div class="day-head" style="grid-column: 2; grid-row: 1;">Sun<br>May 24</div>
+            <div class="day-head" style="grid-column: 3; grid-row: 1;">Mon<br>May 25</div>
+            <div class="day-head" style="grid-column: 4; grid-row: 1;">Tue<br>May 26</div>
+            <div class="day-head" style="grid-column: 5; grid-row: 1;">Wed<br>May 27</div>
+            <div class="day-head" style="grid-column: 6; grid-row: 1;">Thu<br>May 28</div>
+            <div class="day-head" style="grid-column: 7; grid-row: 1;">Fri<br>May 29</div>
+            <div class="day-head" style="grid-column: 8; grid-row: 1;">Sat<br>May 30</div>
 
             <div class="time-label" style="grid-column: 1; grid-row: 2;">8 AM</div>
             <div class="time-label" style="grid-column: 1; grid-row: 3;">10 AM</div>
@@ -563,51 +581,6 @@
             <div class="time-label" style="grid-column: 1; grid-row: 8;">8 PM</div>
 
             <div class="calendar-bg"></div>
-
-            <a class="calendar-block travel" href="#" style="grid-column: 3; grid-row: 3 / span 2;">
-              <strong>10:00 AM - Flight to SFO</strong>
-              <span>Inbound flight, pickup, and transfer to Rosewood.</span>
-              <span class="image-slot">flight card / map</span>
-              <span>Link: flight + arrival details</span>
-              <span class="admin-only">Admin: keep the first afternoon light.</span>
-            </a>
-
-            <a class="calendar-block wellness-block" href="#" style="grid-column: 3; grid-row: 6 / span 2;">
-              <strong>4:30 PM - Spa reset</strong>
-              <span>Recovery block after travel.</span>
-              <span class="image-slot">spa image</span>
-              <span>Link: spa menu</span>
-            </a>
-
-            <a class="calendar-block experience" href="#" style="grid-column: 4; grid-row: 3 / span 3;">
-              <strong>10:30 AM - Private tasting</strong>
-              <span>Large feature block for photos, notes, and booking links.</span>
-              <span class="image-slot">experience image</span>
-              <span>Link: experience details</span>
-            </a>
-
-            <a class="calendar-block dining" href="#" style="grid-column: 4; grid-row: 7 / span 2;">
-              <strong>6:30 PM - Dinner</strong>
-              <span>Preference-led dinner reservation.</span>
-              <span class="image-slot">restaurant image</span>
-              <span>Link: reservation</span>
-              <span class="admin-only">Admin: Beli preference source.</span>
-            </a>
-
-            <a class="calendar-block wellness-block" href="#" style="grid-column: 5; grid-row: 2 / span 2;">
-              <strong>8:30 AM - Garden walk</strong>
-              <span>Quiet movement before checkout.</span>
-              <span class="image-slot">route image</span>
-              <span>Link: walking route</span>
-            </a>
-
-            <a class="calendar-block travel" href="#" style="grid-column: 5; grid-row: 7 / span 2;">
-              <strong>6:00 PM - Flight home</strong>
-              <span>Checkout, airport transfer, and outbound flight.</span>
-              <span class="image-slot">flight card / map</span>
-              <span>Link: departure details</span>
-              <span class="admin-only">Admin: leave buffer after checkout.</span>
-            </a>
           </div>
         </div>
       </section>
@@ -619,7 +592,24 @@
       const userOnboarding = document.getElementById("user-onboarding");
       const adminOnboarding = document.getElementById("admin-onboarding");
       const gmailButton = document.getElementById("gmail-button");
+      const calendarButton = document.getElementById("calendar-button");
       const authMessage = document.getElementById("auth-message");
+      const weekCalendar = document.getElementById("week-calendar");
+      const calendarLoadState = document.getElementById("calendar-load-state");
+      const calendarWeekStart = new Date("2026-05-24T00:00:00-07:00");
+      const calendarWeekEnd = new Date("2026-05-31T00:00:00-07:00");
+      const calendarStartHour = 8;
+      const calendarSlotHours = 2;
+      const calendarRowCount = 7;
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
 
       function showScreen(screenId) {
         document.querySelectorAll(".screen").forEach((screen) => {
@@ -660,17 +650,99 @@
         window.location.assign("/api/auth/google");
       });
 
+      calendarButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (window.location.protocol === "file:") {
+          authMessage.textContent = "Google Calendar only works on the deployed Vercel site, not from a local file.";
+          return;
+        }
+
+        authMessage.textContent = "Opening Google Calendar consent...";
+        window.location.assign("/api/auth/google");
+      });
+
+      function parseCalendarDate(value) {
+        if (!value) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          return new Date(`${value}T12:00:00`);
+        }
+        return new Date(value);
+      }
+
+      function formatEventTime(event) {
+        if (!event.startsAt) return "";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(event.startsAt)) return "All day";
+
+        const date = parseCalendarDate(event.startsAt);
+        return date.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      }
+
+      function renderCalendarWeek(events) {
+        weekCalendar.querySelectorAll(".real-event").forEach((event) => event.remove());
+
+        if (!events.length) {
+          calendarLoadState.textContent = "No Google Calendar events found for May 24-30, 2026.";
+          return;
+        }
+
+        calendarLoadState.textContent = `Loaded ${events.length} Google Calendar event${events.length === 1 ? "" : "s"} for May 24-30, 2026.`;
+
+        events.forEach((event) => {
+          const startsAt = parseCalendarDate(event.startsAt);
+          const endsAt = parseCalendarDate(event.endsAt) || startsAt;
+          if (!startsAt || startsAt < calendarWeekStart || startsAt >= calendarWeekEnd) return;
+
+          const dayIndex = Math.floor((startsAt - calendarWeekStart) / (24 * 60 * 60 * 1000));
+          const isAllDay = /^\d{4}-\d{2}-\d{2}$/.test(event.startsAt);
+          const hour = startsAt.getHours() + startsAt.getMinutes() / 60;
+          const durationHours = Math.max(1, (endsAt - startsAt) / (60 * 60 * 1000));
+          const row = isAllDay
+            ? 2
+            : Math.min(
+                calendarRowCount + 1,
+                Math.max(2, Math.floor((hour - calendarStartHour) / calendarSlotHours) + 2)
+              );
+          const span = isAllDay
+            ? 1
+            : Math.max(1, Math.min(calendarRowCount + 2 - row, Math.ceil(durationHours / calendarSlotHours)));
+
+          const block = document.createElement("a");
+          block.className = "calendar-block real-event experience";
+          block.href = event.link || "#";
+          block.target = event.link ? "_blank" : "";
+          block.rel = event.link ? "noopener" : "";
+          block.style.gridColumn = `${dayIndex + 2}`;
+          block.style.gridRow = `${row} / span ${span}`;
+          block.innerHTML = `
+            <strong>${escapeHtml(formatEventTime(event))} - ${escapeHtml(event.title)}</strong>
+            <span>${escapeHtml(event.location || "Google Calendar event")}</span>
+            <span class="image-slot">image / link</span>
+            <span>${event.link ? "Open in Google Calendar" : "No link available"}</span>
+          `;
+
+          weekCalendar.appendChild(block);
+        });
+      }
+
+      async function loadCalendarWeek() {
+        const params = new URLSearchParams({
+          timeMin: calendarWeekStart.toISOString(),
+          timeMax: calendarWeekEnd.toISOString()
+        });
+        const data = await fetch(`/api/calendar/events?${params}`).then((response) => response.json());
+        renderCalendarWeek(data.events || []);
+        return data;
+      }
+
       async function loadGmailState() {
         const statusBox = document.getElementById("gmail-status");
         const messagesBox = document.getElementById("gmail-messages");
+        const calendarStatus = document.getElementById("calendar-status");
         const loginName = document.getElementById("login-name");
         const profileBox = document.getElementById("google-profile");
-        const escapeHtml = (value) => value
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
 
         try {
           if (window.location.search.includes("gmail=error")) {
@@ -698,17 +770,35 @@
 
           statusBox.innerHTML = "<strong>Gmail</strong>Connected";
           gmailButton.textContent = "Google connected";
+          calendarButton.textContent = "Calendar connected";
 
-          const data = await fetch("/api/gmail/messages").then((response) => response.json());
-          if (!data.messages || !data.messages.length) {
-            messagesBox.innerHTML = "<strong>Email signals</strong>No recent travel emails found.";
-            return;
+          try {
+            const data = await fetch("/api/gmail/messages").then((response) => response.json());
+            if (!data.messages || !data.messages.length) {
+              messagesBox.innerHTML = "<strong>Email signals</strong>No recent travel emails found.";
+            } else {
+              messagesBox.innerHTML = [
+                "<strong>Email signals</strong>",
+                ...data.messages.slice(0, 3).map((message) => `${escapeHtml(message.subject)}<br>`)
+              ].join("");
+            }
+          } catch (error) {
+            messagesBox.innerHTML = "<strong>Email signals</strong>Could not load Gmail messages.";
           }
 
-          messagesBox.innerHTML = [
-            "<strong>Email signals</strong>",
-            ...data.messages.slice(0, 3).map((message) => `${escapeHtml(message.subject)}<br>`)
-          ].join("");
+          try {
+            const calendarData = await loadCalendarWeek();
+            if (!calendarData.events || !calendarData.events.length) {
+              calendarStatus.innerHTML = "<strong>Calendar signals</strong>No events found for May 24-30.";
+            } else {
+              calendarStatus.innerHTML = [
+                "<strong>Calendar signals</strong>",
+                ...calendarData.events.slice(0, 3).map((event) => `${escapeHtml(event.title)}<br>`)
+              ].join("");
+            }
+          } catch (error) {
+            calendarStatus.innerHTML = "<strong>Calendar signals</strong>Could not load Calendar events.";
+          }
         } catch (error) {
           authMessage.textContent = "Could not reach the auth backend. Redeploy after adding the API files.";
         }

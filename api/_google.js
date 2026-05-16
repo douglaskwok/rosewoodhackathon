@@ -3,7 +3,8 @@ const GMAIL_SCOPE = [
   "openid",
   "email",
   "profile",
-  "https://www.googleapis.com/auth/gmail.readonly"
+  "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/calendar.readonly"
 ].join(" ");
 
 function getBaseUrl(req) {
