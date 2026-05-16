@@ -346,6 +346,47 @@
     color: rgba(18,15,12,0.58);
   }
 
+  .key-notes {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .key-note {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 9px;
+    align-items: start;
+    padding: 9px 11px;
+    background: rgba(255,255,255,0.30);
+    border-top: 0.5px solid rgba(28,25,20,0.08);
+    font-size: 11px;
+    line-height: 1.45;
+    color: rgba(18,15,12,0.68);
+  }
+
+  .admin-panel.dark .key-note {
+    background: rgba(255,252,248,0.06);
+    border-top-color: rgba(255,252,248,0.08);
+    color: rgba(255,252,248,0.68);
+  }
+
+  .key-note span {
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.38);
+  }
+
+  .admin-panel.dark .key-note span {
+    color: rgba(220,185,130,0.58);
+  }
+
+  .key-title {
+    margin-top: 28px;
+    font-size: 30px;
+  }
+
   .mindmap {
     position: relative;
     height: 620px;
@@ -1411,7 +1452,7 @@
       <h1 class="greeting-title">Admin view</h1>
       <div class="admin-shell">
         <section class="admin-panel">
-          <h2 class="admin-title">preference mind map</h2>
+          <h2 class="admin-title" id="adminInfoTitle">guest's info graph</h2>
           <p class="admin-copy" id="mindmapStatus">Generated from demo profile signals. Edit the small nodes or add observations; changes save locally.</p>
           <div class="admin-actions">
             <button class="dock-btn" id="mindmapButton" type="button">generate mind map</button>
@@ -1430,6 +1471,8 @@
           <div class="admin-calendar-list" id="adminCalendarList">
             <div class="admin-cal-item"><span class="admin-cal-time">waiting</span>Connect Google Calendar to load guest events.</div>
           </div>
+          <h2 class="admin-title key-title">5 key notes</h2>
+          <div class="key-notes" id="keyNotes"></div>
         </aside>
       </div>
     </div>
@@ -1499,6 +1542,7 @@
   const authMessage = document.getElementById('authMessage');
   const userGreeting = document.getElementById('userGreeting');
   const cardGuestName = document.getElementById('cardGuestName');
+  const adminInfoTitle = document.getElementById('adminInfoTitle');
   const guestCalendarEvents = document.getElementById('guestCalendarEvents');
   const loginName = document.getElementById('loginName');
   const mindmap = document.getElementById('mindmap');
@@ -1509,6 +1553,7 @@
   const adminRecordButton = document.getElementById('adminRecordButton');
   const adminRecordStatus = document.getElementById('adminRecordStatus');
   const adminCalendarList = document.getElementById('adminCalendarList');
+  const keyNotes = document.getElementById('keyNotes');
   const claudePrompt = document.getElementById('claudePrompt');
   const claudeButton = document.getElementById('claudeButton');
   const claudeOutput = document.getElementById('claudeOutput');
@@ -1626,6 +1671,38 @@
       makeMindNode('add', config.add, `<input data-input="${key}" placeholder="add ${escapeHtml(config.title)}"><button data-add="${key}" type="button">add</button>`);
     });
     saveMindmapState();
+    renderKeyNotes();
+  }
+
+  function keyNoteType(text) {
+    const value = String(text || '').toLowerCase();
+    if (/(no |allerg|avoid|after 11|without|quiet|extra|prefers room|small talk)/.test(value)) return 'watch';
+    if (/(stay|recharge|discover|fit|goal|focus|bond)/.test(value)) return 'goal';
+    return 'like';
+  }
+
+  function renderKeyNotes() {
+    if (!keyNotes) return;
+    const candidates = [
+      ...mindmapState.food.map(item => ({ label: 'food', item })),
+      ...mindmapState.goals.map(item => ({ label: 'goal', item })),
+      ...mindmapState.observations.map(item => ({ label: 'watch', item })),
+      ...mindmapState.events.map(item => ({ label: 'event', item }))
+    ];
+    const seen = new Set();
+    const notes = candidates
+      .filter(note => {
+        const key = note.item.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 5)
+      .map(note => ({ ...note, label: note.label === 'watch' ? 'watch' : keyNoteType(note.item) }));
+
+    keyNotes.innerHTML = notes.map(note => `
+      <div class="key-note"><span>${escapeHtml(note.label)}</span>${escapeHtml(note.item)}</div>
+    `).join('');
   }
 
   function replaceMindmap(nextState) {
@@ -2222,6 +2299,7 @@
     if (!edit) return;
     mindmapState[edit.dataset.edit][Number(edit.dataset.index)] = edit.textContent.trim();
     saveMindmapState();
+    renderKeyNotes();
   });
 
   window.addEventListener('resize', renderMindmap);
@@ -2235,6 +2313,7 @@
         if (firstName) {
           userGreeting.innerHTML = `Good evening, ${escapeHtml(firstName)}<br><em>your world, curated.</em>`;
           cardGuestName.textContent = `Welcome back, ${firstName}`;
+          adminInfoTitle.textContent = `${firstName}'s info graph`;
         }
         authMessage.textContent = `Signed in as ${profile.name || profile.email}.`;
         gmailButton.textContent = 'gmail connected';
