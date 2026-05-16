@@ -1633,15 +1633,29 @@
     renderMindmap();
   }
 
-  function localMindmapNote(transcript) {
+  function localMindmapNotes(transcript) {
     const text = transcript.toLowerCase();
+    const notes = [];
     if (/no\s+caffeine\s+after\s+11|caffeine\s+after\s+11|no\s+coffee\s+after\s+11/.test(text)) {
-      return {
+      notes.push({
         branch: 'food',
         item: 'No caffeine after 11',
         reason: 'Fallback captured caffeine timing preference.'
-      };
+      });
     }
+    if (/(sparkling water|seltzer|carbonated water)/.test(text)) {
+      notes.push({ branch: 'food', item: 'Needs sparkling water', reason: 'Fallback captured beverage preference.' });
+    }
+    if (/(nut allergy|allergic to nuts|no nuts)/.test(text)) {
+      notes.push({ branch: 'food', item: 'Nut allergy', reason: 'Fallback captured dietary restriction.' });
+    }
+    if (/(birdwatch|bird watching|birds)/.test(text)) {
+      notes.push({ branch: 'events', item: 'Interested in birdwatching', reason: 'Fallback captured activity interest.' });
+    }
+    if (/(stay fit|fitness|workout|exercise)/.test(text)) {
+      notes.push({ branch: 'goals', item: 'Stay fit while traveling', reason: 'Fallback captured latent goal.' });
+    }
+    if (notes.length) return notes;
 
     let branch = 'observations';
     if (/(allerg|diet|food|drink|water|coffee|tea|wine|restaurant|table|breakfast|dinner|lunch)/.test(text)) branch = 'food';
@@ -1651,16 +1665,16 @@
       .replace(/\s+/g, ' ')
       .replace(/^(the guest|guest|she|he|they)\s+/i, '')
       .trim();
-    return {
+    return [{
       branch,
       item: cleaned.split(' ').slice(0, 9).join(' ') || 'Staff conversation note',
       reason: 'Local fallback from transcript keywords.'
-    };
+    }];
   }
 
   async function addMindmapNoteFromTranscript(transcript) {
     adminRecordStatus.textContent = 'Asking Claude where this belongs...';
-    let note;
+    let notes = [];
     try {
       const response = await fetch('/api/claude/mindmap-note', {
         method: 'POST',
@@ -1675,23 +1689,29 @@
         data = { error: raw || 'Claude returned a non-JSON response' };
       }
       if (!response.ok) throw new Error(data.error || 'Mind map note request failed');
-      note = data;
+      notes = Array.isArray(data.items) ? data.items : [data];
     } catch (error) {
-      note = localMindmapNote(transcript);
+      notes = localMindmapNotes(transcript);
       adminRecordStatus.textContent = `Using local fallback. ${error.message}`;
     }
 
-    const branch = mindmapState[note.branch] ? note.branch : 'observations';
-    const item = String(note.item || '').trim();
-    if (!item) {
+    const added = [];
+    notes.forEach(note => {
+      const branch = mindmapState[note.branch] ? note.branch : 'observations';
+      const item = String(note.item || '').trim();
+      if (!item) return;
+      if (!mindmapState[branch].some(existing => existing.toLowerCase() === item.toLowerCase())) {
+        mindmapState[branch].push(item);
+        added.push(`${mindmapBranches[branch].title}: ${item}`);
+      }
+    });
+
+    if (!added.length) {
       adminRecordStatus.textContent = 'Claude did not find a clear preference to add.';
       return;
     }
-    if (!mindmapState[branch].some(existing => existing.toLowerCase() === item.toLowerCase())) {
-      mindmapState[branch].push(item);
-    }
     renderMindmap();
-    adminRecordStatus.textContent = `Added to ${mindmapBranches[branch].title}: ${item}`;
+    adminRecordStatus.textContent = `Added ${added.length} item(s): ${added.join(' · ')}`;
   }
 
   async function generateMindmap() {

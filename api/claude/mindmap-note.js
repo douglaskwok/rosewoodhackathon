@@ -36,8 +36,8 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5",
-        max_tokens: 300,
-        system: "You convert hotel staff conversation notes into one concise guest preference memory. Return valid JSON only.",
+        max_tokens: 700,
+        system: "You are a superhospitality master: an elite Rosewood guest-memory curator who notices explicit needs, latent goals, service risks, and tiny preference signals that would let staff deliver unusually thoughtful care. Convert conversation notes into concise, useful guest memories. Return valid JSON only.",
         messages: [
           {
             role: "user",
@@ -45,7 +45,20 @@ module.exports = async function handler(req, res) {
 Transcript:
 ${transcript}
 
-Choose exactly one branch:
+The transcript may include multiple speakers or multiple distinct preferences.
+Extract up to 5 useful mind map memories.
+
+Your goal is to capture actual guest needs, not random facts. Prioritize:
+- explicit needs or constraints the staff must honor
+- latent goals behind the guest's words, such as rest, fitness, focus, bonding, privacy, discovery, recovery, or celebration
+- preferences that would change service, itinerary, food, room setup, or staff behavior
+- small but actionable details that would make the guest feel remembered
+
+Do not add a memory if it is vague, temporary, unimportant, or just conversation filler.
+If a statement implies a deeper need, use the goals branch and phrase it as the need.
+Example: "I have back-to-back meetings but want to keep moving" becomes "Stay fit between work commitments."
+
+Use these branches:
 - food
 - events
 - goals
@@ -53,10 +66,17 @@ Choose exactly one branch:
 
 Return only JSON:
 {
-  "branch": "food|events|goals|observations",
-  "item": "one concise mind map node, max 9 words",
-  "reason": "one short reason"
+  "items": [
+    {
+      "branch": "food|events|goals|observations",
+      "item": "one concise mind map node, max 9 words",
+      "reason": "one short reason"
+    }
+  ]
 }
+
+If speaker labels are present, use them as context but do not include staff names unless they matter to the preference.
+Only include stable guest preferences, goals, or staff observations. Skip filler, greetings, and uncertain details.
 
 Prefer:
 - food for dietary needs, drinks, restaurants, table/service preferences
@@ -79,17 +99,23 @@ Prefer:
       .filter((item) => item.type === "text")
       .map((item) => item.text)
       .join("\n");
-    const note = extractJson(text);
-    const branch = ["food", "events", "goals", "observations"].includes(note.branch)
-      ? note.branch
-      : "observations";
+    const parsed = extractJson(text);
+    const rawItems = Array.isArray(parsed.items) ? parsed.items : [parsed];
+    const items = rawItems
+      .map((note) => {
+        const branch = ["food", "events", "goals", "observations"].includes(note.branch)
+          ? note.branch
+          : "observations";
+        return {
+          branch,
+          item: String(note.item || "").trim(),
+          reason: String(note.reason || "").trim()
+        };
+      })
+      .filter((note) => note.item)
+      .slice(0, 5);
 
-    res.status(200).json({
-      branch,
-      item: String(note.item || "").trim(),
-      reason: String(note.reason || "").trim(),
-      model: data.model
-    });
+    res.status(200).json({ items, model: data.model });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
