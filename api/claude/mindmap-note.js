@@ -57,6 +57,7 @@ Your goal is to capture actual guest needs, not random facts. Prioritize:
 Do not add a memory if it is vague, temporary, unimportant, or just conversation filler.
 If a statement implies a deeper need, use the goals branch and phrase it as the need.
 Example: "I have back-to-back meetings but want to keep moving" becomes "Stay fit between work commitments."
+Keep each item short, label-like, and scannable. Prefer "No caffeine after 11" over "The guest does not want caffeine after 11 AM."
 
 Use these branches:
 - food
@@ -69,7 +70,7 @@ Return only JSON:
   "items": [
     {
       "branch": "food|events|goals|observations",
-      "item": "one concise mind map node, max 9 words",
+      "item": "one concise mind map node, max 5 words",
       "reason": "one short reason"
     }
   ]

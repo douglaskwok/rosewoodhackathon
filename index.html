@@ -1667,9 +1667,20 @@
       .trim();
     return [{
       branch,
-      item: cleaned.split(' ').slice(0, 9).join(' ') || 'Staff conversation note',
+      item: cleaned.split(' ').slice(0, 5).join(' ') || 'Staff note',
       reason: 'Local fallback from transcript keywords.'
     }];
+  }
+
+  function conciseMindmapItem(value) {
+    return String(value || '')
+      .replace(/^(the guest|guest|she|he|they)\s+/i, '')
+      .replace(/\b(prefers?|wants?|needs?|likes?|does not want|doesn't want)\b\s*/i, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(' ')
+      .slice(0, 5)
+      .join(' ');
   }
 
   async function addMindmapNoteFromTranscript(transcript) {
@@ -1698,7 +1709,7 @@
     const added = [];
     notes.forEach(note => {
       const branch = mindmapState[note.branch] ? note.branch : 'observations';
-      const item = String(note.item || '').trim();
+      const item = conciseMindmapItem(note.item);
       if (!item) return;
       if (!mindmapState[branch].some(existing => existing.toLowerCase() === item.toLowerCase())) {
         mindmapState[branch].push(item);
