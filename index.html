@@ -1477,6 +1477,9 @@
   const learningRecs = document.getElementById('learningRecs');
   const calendarWeekStart = new Date('2026-05-24T00:00:00-07:00');
   const calendarWeekEnd = new Date('2026-05-31T00:00:00-07:00');
+  const tripStart = new Date('2026-05-26T00:00:00-07:00');
+  const tripEnd = new Date('2026-05-29T00:00:00-07:00');
+  let lastCalendarEvents = [];
   const mindmapStorageKey = 'rosewoodCompassMindmap';
   const defaultMindmap = {
     food: ['Japanese', 'Mediterranean', 'Seasonal tasting menus', 'Nut allergy', 'Needs sparkling water', 'Quiet tables'],
@@ -1647,6 +1650,7 @@
     const response = await fetch(`/api/calendar/events?${params}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Calendar request failed');
+    lastCalendarEvents = data.events || [];
     renderGuestCalendar(data.events || []);
     renderAdminCalendar(data.events || []);
     return data.events || [];
@@ -1665,6 +1669,19 @@
   }
 
   function renderRecommendationList(container, items) {
+    if (!items?.length) {
+      container.innerHTML = `
+        <div class="rec">
+          <div class="rec-info">
+            <div class="rec-name">No separate recommendations</div>
+            <div class="rec-meta">Merged into the activity calendar.</div>
+          </div>
+          <span class="rec-cta">merged →</span>
+        </div>
+      `;
+      return;
+    }
+
     container.innerHTML = (items || []).map(item => `
       <div class="rec">
         <div class="rec-info">
@@ -1677,23 +1694,139 @@
     `).join('');
   }
 
+  function parseEventDate(value) {
+    const date = new Date(value || '');
+    return Number.isNaN(date.valueOf()) ? null : date;
+  }
+
+  function tripCalendarEvents(events) {
+    return (events || []).filter(event => {
+      const startsAt = parseEventDate(event.startsAt);
+      return startsAt && startsAt >= tripStart && startsAt < tripEnd;
+    });
+  }
+
+  function itemStart(item) {
+    const explicit = parseEventDate(item.startsAt);
+    if (explicit) return explicit;
+
+    const meta = String(item.meta || '');
+    const match = meta.match(/May\s+(26|27|28).*?(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+    if (!match) return null;
+    let hour = Number(match[2]);
+    const minute = Number(match[3] || 0);
+    const meridiem = match[4].toUpperCase();
+    if (meridiem === 'PM' && hour !== 12) hour += 12;
+    if (meridiem === 'AM' && hour === 12) hour = 0;
+    return new Date(`2026-05-${match[1]}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00-07:00`);
+  }
+
+  function itemEnd(item, start) {
+    const explicit = parseEventDate(item.endsAt);
+    if (explicit) return explicit;
+    const minutes = item.durationMinutes || 75;
+    return new Date(start.getTime() + minutes * 60 * 1000);
+  }
+
+  function overlaps(a, b) {
+    return a.start < b.end && b.start < a.end;
+  }
+
+  function calendarEventToActivity(event) {
+    const start = parseEventDate(event.startsAt);
+    const end = parseEventDate(event.endsAt);
+    const time = start
+      ? start.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+      : 'calendar';
+    return {
+      name: event.title,
+      meta: `${time}${event.location ? ` · ${event.location}` : ''}`,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      why: 'From your Google Calendar.',
+      cta: event.link ? 'open' : 'fixed event',
+      link: event.link,
+      source: 'calendar',
+      start,
+      end: end || (start ? new Date(start.getTime() + 60 * 60 * 1000) : null)
+    };
+  }
+
+  function recommendationToActivity(item, category) {
+    const start = itemStart(item);
+    const end = start ? itemEnd(item, start) : null;
+    return {
+      ...item,
+      name: item.name,
+      meta: item.meta,
+      why: item.why,
+      cta: item.cta || 'add',
+      source: category,
+      start,
+      end
+    };
+  }
+
+  function mergeCalendarWithRecommendations(itinerary, calendarEvents) {
+    const fixed = tripCalendarEvents(calendarEvents).map(calendarEventToActivity);
+    const occupied = fixed
+      .filter(item => item.start && item.end)
+      .map(item => ({ start: item.start, end: item.end }));
+    const accepted = [...fixed];
+    const skipped = [];
+
+    ['activity', 'wellness', 'learning'].forEach(category => {
+      (itinerary?.[category] || []).forEach(item => {
+        const recommendation = recommendationToActivity(item, category);
+        if (!recommendation.start || !recommendation.end) {
+          accepted.push(recommendation);
+          return;
+        }
+        const busy = { start: recommendation.start, end: recommendation.end };
+        if (occupied.some(slot => overlaps(slot, busy))) {
+          skipped.push(recommendation);
+          return;
+        }
+        occupied.push(busy);
+        accepted.push(recommendation);
+      });
+    });
+
+    accepted.sort((a, b) => {
+      const aTime = a.start ? a.start.getTime() : Number.MAX_SAFE_INTEGER;
+      const bTime = b.start ? b.start.getTime() : Number.MAX_SAFE_INTEGER;
+      return aTime - bTime;
+    });
+
+    return { activity: accepted, wellness: [], learning: [], skipped };
+  }
+
   async function generateActivities() {
-    generateActivitiesStatus.textContent = 'Generating May 26-28 itinerary from mind map...';
+    generateActivitiesStatus.textContent = 'Loading calendar and generating conflict-free recommendations...';
     try {
+      let calendarEvents = lastCalendarEvents;
+      try {
+        calendarEvents = await loadCalendarEvents();
+      } catch (calendarError) {
+        calendarEvents = [];
+        generateActivitiesStatus.textContent = `Calendar unavailable; generating from mind map only. ${calendarError.message}`;
+      }
+
       const response = await fetch('/api/claude/itinerary', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ mindmap: mindmapState })
+        body: JSON.stringify({ mindmap: mindmapState, calendarEvents: tripCalendarEvents(calendarEvents) })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Itinerary request failed');
 
-      renderRecommendationList(activityRecs, data.itinerary.activity);
-      renderRecommendationList(wellnessRecs, data.itinerary.wellness);
-      renderRecommendationList(learningRecs, data.itinerary.learning);
+      const merged = mergeCalendarWithRecommendations(data.itinerary, calendarEvents);
+      renderRecommendationList(activityRecs, merged.activity);
+      renderRecommendationList(wellnessRecs, merged.wellness);
+      renderRecommendationList(learningRecs, merged.learning);
       generateActivitiesStatus.textContent = data.fallback
-        ? `Using fallback itinerary. ${data.warning || ''}`
-        : `Generated with ${data.model}.`;
+        ? `Merged calendar with fallback itinerary. Skipped ${merged.skipped.length} conflict(s). ${data.warning || ''}`
+        : `Merged calendar with ${data.model}. Skipped ${merged.skipped.length} conflict(s).`;
     } catch (error) {
       generateActivitiesStatus.textContent = error.message;
     }
