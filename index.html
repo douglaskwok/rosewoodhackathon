@@ -1046,7 +1046,7 @@
   <!-- LEFT: GREETING -->
   <div class="greeting">
     <div class="greeting-label">day 2 of 5 &nbsp;·&nbsp; suite 412</div>
-    <h1 class="greeting-title">Good evening,<br><em>your world, curated.</em></h1>
+    <h1 class="greeting-title" id="userGreeting">Good evening,<br><em>your world, curated.</em></h1>
     <p class="greeting-sub">We've shaped today around your patterns. Everything below is yours alone.</p>
   </div>
 
@@ -1058,14 +1058,14 @@
       <div class="card-brand">
         <div class="card-brand-name">
           <i class="ti ti-diamond" style="font-size:15px;color:rgba(220,185,130,0.7);"></i>
-          rosewood london
+          rosewood sand hill
         </div>
         <span class="card-badge">platinum guest</span>
       </div>
       <div class="card-guest-row">
         <div class="card-avatar">OM</div>
         <div>
-          <p class="card-guest-name">Welcome back, Ms. Olivia</p>
+          <p class="card-guest-name" id="cardGuestName">Welcome back</p>
           <p class="card-guest-meta">Suite 1204 <span class="card-sep">|</span> May 16–20, 2026 <span class="card-sep">|</span> 4th stay</p>
         </div>
       </div>
@@ -1298,7 +1298,7 @@
   <div class="admin-view">
     <div class="admin-dashboard">
       <div class="greeting-label">admin console &nbsp;·&nbsp; living guest memory</div>
-      <h1 class="greeting-title">Service that <em>remembers.</em></h1>
+      <h1 class="greeting-title">Admin view</h1>
       <div class="admin-shell">
         <section class="admin-panel">
           <h2 class="admin-title">preference mind map</h2>
@@ -1367,6 +1367,8 @@
   const calendarButton = document.getElementById('calendarButton');
   const arrivalButton = document.getElementById('arrivalButton');
   const authMessage = document.getElementById('authMessage');
+  const userGreeting = document.getElementById('userGreeting');
+  const cardGuestName = document.getElementById('cardGuestName');
   const guestCalendarEvents = document.getElementById('guestCalendarEvents');
   const loginName = document.getElementById('loginName');
   const mindmap = document.getElementById('mindmap');
@@ -1399,6 +1401,12 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function firstNameFromProfile(profile) {
+    const source = profile.name || profile.email || '';
+    if (!source) return '';
+    return source.split('@')[0].split(/\s+/)[0];
   }
 
   function loadMindmapState() {
@@ -1627,7 +1635,12 @@
     try {
       const profile = await fetch('/api/auth/me').then(response => response.json());
       if (profile.authenticated) {
+        const firstName = firstNameFromProfile(profile);
         loginName.textContent = profile.name || profile.email || 'signed in';
+        if (firstName) {
+          userGreeting.innerHTML = `Good evening, ${escapeHtml(firstName)}<br><em>your world, curated.</em>`;
+          cardGuestName.textContent = `Welcome back, ${firstName}`;
+        }
         authMessage.textContent = `Signed in as ${profile.name || profile.email}.`;
         gmailButton.textContent = 'gmail connected';
         calendarButton.textContent = 'calendar connected';
