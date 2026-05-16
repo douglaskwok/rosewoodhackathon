@@ -1575,9 +1575,10 @@
             <input class="booking-input" id="bookingTime" type="time" value="19:00">
           </div>
           <input class="booking-input" id="bookingCovers" type="number" min="1" max="12" value="2" aria-label="Party size">
-          <input class="booking-input" id="bookingEmail" type="email" placeholder="you@example.com" aria-label="Confirmation email">
+          <input class="booking-input" id="bookingEmail" type="email" value="bananachocolatebrownie@gmail.com" aria-label="Confirmation email">
           <button class="dock-btn" id="maderaBookingButton" type="button">open madera</button>
           <button class="dock-btn" id="bookingEmailButton" type="button">send confirmation</button>
+          <button class="dock-btn" id="bookingTestButton" type="button">send test email</button>
         </div>
         <div class="booking-note" id="bookingStatus">Uses OpenTable's restaurant booking page; direct reservation creation requires partner API access.</div>
       </div>
@@ -1635,6 +1636,7 @@
   const bookingCovers = document.getElementById('bookingCovers');
   const bookingEmail = document.getElementById('bookingEmail');
   const bookingEmailButton = document.getElementById('bookingEmailButton');
+  const bookingTestButton = document.getElementById('bookingTestButton');
   const bookingStatus = document.getElementById('bookingStatus');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
@@ -2185,6 +2187,44 @@
     openMaderaBooking(bookingDate.value, bookingTime.value, bookingCovers.value);
   });
 
+  async function sendBookingConfirmation({ test = false } = {}) {
+    const to = bookingEmail.value.trim() || 'bananachocolatebrownie@gmail.com';
+    bookingEmail.value = to;
+    if (!to) {
+      bookingStatus.textContent = 'Enter an email address first.';
+      return;
+    }
+
+    bookingStatus.textContent = test ? 'Sending test email...' : 'Sending dining confirmation...';
+    try {
+      const response = await fetch('/api/email/booking-confirmation', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          to,
+          restaurant: test ? 'Madera Restaurant at Rosewood Sand Hill - Demo Hold' : 'Madera Restaurant at Rosewood Sand Hill',
+          date: bookingDate.value,
+          time: bookingTime.value,
+          covers: bookingCovers.value
+        })
+      });
+      const raw = await response.text();
+      let data = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = { error: raw || 'Email route returned a non-JSON response' };
+      }
+      if (!response.ok) throw new Error(data.error || 'Email request failed');
+      bookingStatus.textContent = test ? `Sent test email to ${to}.` : `Sent confirmation to ${to}.`;
+    } catch (error) {
+      bookingStatus.textContent = error.message;
+    }
+  }
+
+  bookingEmailButton?.addEventListener('click', () => sendBookingConfirmation());
+  bookingTestButton?.addEventListener('click', () => sendBookingConfirmation({ test: true }));
+
   mindmapButton?.addEventListener('click', generateMindmap);
   generateActivitiesButton?.addEventListener('click', generateActivities);
 
@@ -2415,6 +2455,9 @@
           adminInfoTitle.textContent = `${firstName}'s info graph`;
         }
         authMessage.textContent = `Signed in as ${profile.name || profile.email}.`;
+        if (profile.email) {
+          bookingEmail.value = profile.email;
+        }
         gmailButton.textContent = 'gmail connected';
         calendarButton.textContent = 'calendar connected';
         loadCalendarEvents().catch(() => {});
