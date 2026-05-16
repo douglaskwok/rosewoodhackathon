@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Rosewood Compass Wireframe</title>
     <style>
       * {
@@ -224,6 +224,13 @@
       .node strong {
         display: block;
         margin-bottom: 4px;
+      }
+
+      .mindmap-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
       }
 
       .line {
@@ -467,7 +474,9 @@
       <div class="controls">
         <button class="active" data-role="user" type="button">User</button>
         <button data-role="admin" type="button">Admin</button>
-        <button class="active" data-screen="onboarding" type="button">Home</button>
+        <button class="active" data-screen="onboarding" type="button">
+          Home
+        </button>
         <button data-screen="calendar" type="button">Calendar</button>
       </div>
     </header>
@@ -490,7 +499,9 @@
             <div class="preview-main">
               <div>
                 <h1>Rosewood Compass</h1>
-                <p class="muted">A web app preview for personalizing a guest's stay.</p>
+                <p class="muted">
+                  A web app preview for personalizing a guest's stay.
+                </p>
               </div>
 
               <div class="preview-canvas">
@@ -509,10 +520,16 @@
               </div>
 
               <div class="integration-row">
-                <a class="button" id="calendar-button" href="/api/auth/google">Integrate calendar</a>
-                <a class="button" id="gmail-button" href="/api/auth/google">Sign in with Google</a>
+                <a class="button" id="calendar-button" href="/api/auth/google"
+                  >Integrate calendar</a
+                >
+                <a class="button" id="gmail-button" href="/api/auth/google"
+                  >Sign in with Google</a
+                >
                 <button type="button">Beli</button>
-                <button id="arrival-button" type="button">Arrival info (email)</button>
+                <button id="arrival-button" type="button">
+                  Arrival info (email)
+                </button>
               </div>
               <div class="status-message" id="auth-message"></div>
             </div>
@@ -546,17 +563,34 @@
 
         <div id="admin-onboarding" class="panel" hidden>
           <h2>Admin Onboarding</h2>
-          <p class="muted" id="mindmap-status">Switch to admin after Google is connected to generate inbox-based preferences.</p>
+          <p class="muted" id="mindmap-status">
+            Demo profile generated from connected Gmail and Calendar signals.
+          </p>
+          <div class="mindmap-actions">
+            <button id="mindmap-button" type="button">Generate mind map</button>
+          </div>
           <div class="map">
             <div class="line food"></div>
             <div class="line wellness"></div>
             <div class="line schedule"></div>
             <div class="line experiences"></div>
             <div class="node center">User preferences</div>
-            <div class="node food" id="node-food"><strong>Food preferences</strong>Waiting for inbox embedding</div>
-            <div class="node wellness" id="node-events"><strong>Favorite events</strong>Waiting for inbox embedding</div>
-            <div class="node schedule" id="node-goals"><strong>Latent goals</strong>Waiting for inbox embedding</div>
-            <div class="node experiences" id="node-evidence"><strong>Evidence</strong>Email subjects will appear here</div>
+            <div class="node food" id="node-food">
+              <strong>Food + dietary</strong>Japanese, Mediterranean, seasonal
+              tasting menus; light dairy
+            </div>
+            <div class="node wellness" id="node-events">
+              <strong>Favorite events</strong>Private tastings, wellness
+              classes, design tours, intimate dinners
+            </div>
+            <div class="node schedule" id="node-goals">
+              <strong>Latent goals</strong>Recharge between work commitments;
+              stay fit while traveling
+            </div>
+            <div class="node experiences" id="node-evidence">
+              <strong>Evidence</strong>Demo signals from Gmail reservations,
+              calendar events, and arrival email
+            </div>
           </div>
         </div>
       </section>
@@ -565,31 +599,63 @@
         <div class="calendar-title">
           <div>
             <h2>Google Calendar</h2>
-            <p class="muted">Your Google Calendar events for the week of May 24, 2026.</p>
+            <p class="muted">
+              Your Google Calendar events for the week of May 24, 2026.
+            </p>
           </div>
           <span class="muted" id="calendar-range">May 24-30, 2026</span>
         </div>
 
-        <div class="calendar-note" id="calendar-load-state">Connect Google Calendar to load this week.</div>
+        <div class="calendar-note" id="calendar-load-state">
+          Connect Google Calendar to load this week.
+        </div>
 
         <div class="calendar-scroll">
           <div class="week-calendar" id="week-calendar">
             <div class="corner"></div>
-            <div class="day-head" style="grid-column: 2; grid-row: 1;">Sun<br>May 24</div>
-            <div class="day-head" style="grid-column: 3; grid-row: 1;">Mon<br>May 25</div>
-            <div class="day-head" style="grid-column: 4; grid-row: 1;">Tue<br>May 26</div>
-            <div class="day-head" style="grid-column: 5; grid-row: 1;">Wed<br>May 27</div>
-            <div class="day-head" style="grid-column: 6; grid-row: 1;">Thu<br>May 28</div>
-            <div class="day-head" style="grid-column: 7; grid-row: 1;">Fri<br>May 29</div>
-            <div class="day-head" style="grid-column: 8; grid-row: 1;">Sat<br>May 30</div>
+            <div class="day-head" style="grid-column: 2; grid-row: 1">
+              Sun<br />May 24
+            </div>
+            <div class="day-head" style="grid-column: 3; grid-row: 1">
+              Mon<br />May 25
+            </div>
+            <div class="day-head" style="grid-column: 4; grid-row: 1">
+              Tue<br />May 26
+            </div>
+            <div class="day-head" style="grid-column: 5; grid-row: 1">
+              Wed<br />May 27
+            </div>
+            <div class="day-head" style="grid-column: 6; grid-row: 1">
+              Thu<br />May 28
+            </div>
+            <div class="day-head" style="grid-column: 7; grid-row: 1">
+              Fri<br />May 29
+            </div>
+            <div class="day-head" style="grid-column: 8; grid-row: 1">
+              Sat<br />May 30
+            </div>
 
-            <div class="time-label" style="grid-column: 1; grid-row: 2;">8 AM</div>
-            <div class="time-label" style="grid-column: 1; grid-row: 3;">10 AM</div>
-            <div class="time-label" style="grid-column: 1; grid-row: 4;">12 PM</div>
-            <div class="time-label" style="grid-column: 1; grid-row: 5;">2 PM</div>
-            <div class="time-label" style="grid-column: 1; grid-row: 6;">4 PM</div>
-            <div class="time-label" style="grid-column: 1; grid-row: 7;">6 PM</div>
-            <div class="time-label" style="grid-column: 1; grid-row: 8;">8 PM</div>
+            <div class="time-label" style="grid-column: 1; grid-row: 2">
+              8 AM
+            </div>
+            <div class="time-label" style="grid-column: 1; grid-row: 3">
+              10 AM
+            </div>
+            <div class="time-label" style="grid-column: 1; grid-row: 4">
+              12 PM
+            </div>
+            <div class="time-label" style="grid-column: 1; grid-row: 5">
+              2 PM
+            </div>
+            <div class="time-label" style="grid-column: 1; grid-row: 6">
+              4 PM
+            </div>
+            <div class="time-label" style="grid-column: 1; grid-row: 7">
+              6 PM
+            </div>
+            <div class="time-label" style="grid-column: 1; grid-row: 8">
+              8 PM
+            </div>
 
             <div class="calendar-bg"></div>
           </div>
@@ -609,6 +675,7 @@
       const weekCalendar = document.getElementById("week-calendar");
       const calendarLoadState = document.getElementById("calendar-load-state");
       const mindmapStatus = document.getElementById("mindmap-status");
+      const mindmapButton = document.getElementById("mindmap-button");
       const calendarWeekStart = new Date("2026-05-24T00:00:00-07:00");
       const calendarWeekEnd = new Date("2026-05-31T00:00:00-07:00");
       const calendarStartHour = 8;
@@ -639,24 +706,31 @@
           document.body.classList.toggle("admin", isAdmin);
           userOnboarding.hidden = isAdmin;
           adminOnboarding.hidden = !isAdmin;
-          roleButtons.forEach((item) => item.classList.toggle("active", item === button));
-          if (isAdmin) loadPreferenceMindmap();
+          roleButtons.forEach((item) =>
+            item.classList.toggle("active", item === button),
+          );
+          if (isAdmin) generateDemoMindmap();
         });
       });
 
       screenButtons.forEach((button) => {
-        button.addEventListener("click", () => showScreen(button.dataset.screen));
+        button.addEventListener("click", () =>
+          showScreen(button.dataset.screen),
+        );
       });
 
-      document.querySelector(".preview-topbar a").addEventListener("click", (event) => {
-        event.preventDefault();
-        showScreen("calendar");
-      });
+      document
+        .querySelector(".preview-topbar a")
+        .addEventListener("click", (event) => {
+          event.preventDefault();
+          showScreen("calendar");
+        });
 
       gmailButton.addEventListener("click", (event) => {
         event.preventDefault();
         if (window.location.protocol === "file:") {
-          authMessage.textContent = "Google sign-in only works on the deployed Vercel site, not from a local file.";
+          authMessage.textContent =
+            "Google sign-in only works on the deployed Vercel site, not from a local file.";
           return;
         }
 
@@ -667,7 +741,8 @@
       calendarButton.addEventListener("click", (event) => {
         event.preventDefault();
         if (window.location.protocol === "file:") {
-          authMessage.textContent = "Google Calendar only works on the deployed Vercel site, not from a local file.";
+          authMessage.textContent =
+            "Google Calendar only works on the deployed Vercel site, not from a local file.";
           return;
         }
 
@@ -690,15 +765,18 @@
         const date = parseCalendarDate(event.startsAt);
         return date.toLocaleTimeString([], {
           hour: "numeric",
-          minute: "2-digit"
+          minute: "2-digit",
         });
       }
 
       function renderCalendarWeek(events) {
-        weekCalendar.querySelectorAll(".real-event").forEach((event) => event.remove());
+        weekCalendar
+          .querySelectorAll(".real-event")
+          .forEach((event) => event.remove());
 
         if (!events.length) {
-          calendarLoadState.textContent = "No Google Calendar events found for May 24-30, 2026.";
+          calendarLoadState.textContent =
+            "No Google Calendar events found for May 24-30, 2026.";
           return;
         }
 
@@ -707,21 +785,41 @@
         events.forEach((event) => {
           const startsAt = parseCalendarDate(event.startsAt);
           const endsAt = parseCalendarDate(event.endsAt) || startsAt;
-          if (!startsAt || startsAt < calendarWeekStart || startsAt >= calendarWeekEnd) return;
+          if (
+            !startsAt ||
+            startsAt < calendarWeekStart ||
+            startsAt >= calendarWeekEnd
+          )
+            return;
 
-          const dayIndex = Math.floor((startsAt - calendarWeekStart) / (24 * 60 * 60 * 1000));
+          const dayIndex = Math.floor(
+            (startsAt - calendarWeekStart) / (24 * 60 * 60 * 1000),
+          );
           const isAllDay = /^\d{4}-\d{2}-\d{2}$/.test(event.startsAt);
           const hour = startsAt.getHours() + startsAt.getMinutes() / 60;
-          const durationHours = Math.max(1, (endsAt - startsAt) / (60 * 60 * 1000));
+          const durationHours = Math.max(
+            1,
+            (endsAt - startsAt) / (60 * 60 * 1000),
+          );
           const row = isAllDay
             ? 2
             : Math.min(
                 calendarRowCount + 1,
-                Math.max(2, Math.floor((hour - calendarStartHour) / calendarSlotHours) + 2)
+                Math.max(
+                  2,
+                  Math.floor((hour - calendarStartHour) / calendarSlotHours) +
+                    2,
+                ),
               );
           const span = isAllDay
             ? 1
-            : Math.max(1, Math.min(calendarRowCount + 2 - row, Math.ceil(durationHours / calendarSlotHours)));
+            : Math.max(
+                1,
+                Math.min(
+                  calendarRowCount + 2 - row,
+                  Math.ceil(durationHours / calendarSlotHours),
+                ),
+              );
 
           const block = document.createElement("a");
           block.className = "calendar-block real-event experience";
@@ -744,7 +842,7 @@
       async function loadCalendarWeek() {
         const params = new URLSearchParams({
           timeMin: calendarWeekStart.toISOString(),
-          timeMax: calendarWeekEnd.toISOString()
+          timeMax: calendarWeekEnd.toISOString(),
         });
         const response = await fetch(`/api/calendar/events?${params}`);
         const data = await response.json();
@@ -756,11 +854,38 @@
       }
 
       function setMindmapNode(id, title, body) {
-        document.getElementById(id).innerHTML = `<strong>${escapeHtml(title)}</strong>${escapeHtml(body)}`;
+        document.getElementById(id).innerHTML =
+          `<strong>${escapeHtml(title)}</strong>${escapeHtml(body)}`;
+      }
+
+      function generateDemoMindmap() {
+        setMindmapNode(
+          "node-food",
+          "Food + dietary",
+          "Japanese, Mediterranean, seasonal tasting menus; prefers quiet tables; light dairy",
+        );
+        setMindmapNode(
+          "node-events",
+          "Favorite events",
+          "Private tastings, wellness classes, art/design tours, intimate dinners",
+        );
+        setMindmapNode(
+          "node-goals",
+          "Latent goals",
+          "Recharge between work commitments; stay fit while traveling; discover local culture without overplanning",
+        );
+        setMindmapNode(
+          "node-evidence",
+          "Evidence",
+          "Demo signals from Gmail reservations, Google Calendar events, and arrival email",
+        );
+        mindmapStatus.textContent =
+          "Demo profile generated from connected Gmail and Calendar signals.";
       }
 
       async function loadPreferenceMindmap() {
-        mindmapStatus.textContent = "Generating preference mind map from Gmail embeddings...";
+        mindmapStatus.textContent =
+          "Generating preference mind map from Gmail embeddings...";
         try {
           const response = await fetch("/api/preferences/mindmap");
           const data = await response.json();
@@ -768,26 +893,47 @@
             throw new Error(data.error || "Preference mind map request failed");
           }
 
-          const byKey = Object.fromEntries((data.nodes || []).map((node) => [node.key, node]));
-          setMindmapNode("node-food", "Food + dietary", byKey.foodPreferences?.insight || "No signal yet");
-          setMindmapNode("node-events", "Favorite events", byKey.favoriteEvents?.insight || "No signal yet");
-          setMindmapNode("node-goals", "Latent goals", byKey.latentGoals?.insight || "No signal yet");
+          const byKey = Object.fromEntries(
+            (data.nodes || []).map((node) => [node.key, node]),
+          );
+          setMindmapNode(
+            "node-food",
+            "Food + dietary",
+            byKey.foodPreferences?.insight || "No signal yet",
+          );
+          setMindmapNode(
+            "node-events",
+            "Favorite events",
+            byKey.favoriteEvents?.insight || "No signal yet",
+          );
+          setMindmapNode(
+            "node-goals",
+            "Latent goals",
+            byKey.latentGoals?.insight || "No signal yet",
+          );
 
           const evidence = (data.nodes || [])
             .flatMap((node) => node.evidence || [])
             .slice(0, 3)
             .map((item) => item.subject)
             .join("; ");
-          setMindmapNode("node-evidence", "Evidence", evidence || "No matching emails found");
+          setMindmapNode(
+            "node-evidence",
+            "Evidence",
+            evidence || "No matching emails found",
+          );
           mindmapStatus.textContent = `Generated with ${data.provider || "embeddings"} / ${data.model}.`;
         } catch (error) {
           mindmapStatus.textContent = `Mind map error: ${error.message}`;
         }
       }
 
+      mindmapButton.addEventListener("click", () => loadPreferenceMindmap());
+
       async function loadArrivalEmail() {
         const arrivalInfo = document.getElementById("arrival-info");
-        arrivalInfo.innerHTML = "<strong>Arrival info</strong>Loading latest arrival email...";
+        arrivalInfo.innerHTML =
+          "<strong>Arrival info</strong>Loading latest arrival email...";
 
         const arrivalResponse = await fetch("/api/gmail/arrival");
         const arrivalData = await arrivalResponse.json();
@@ -796,17 +942,26 @@
         }
 
         if (!arrivalData.arrivalEmail) {
-          arrivalInfo.innerHTML = "<strong>Arrival info</strong>No recent arrival-related email found.";
+          arrivalInfo.innerHTML =
+            "<strong>Arrival info</strong>No recent arrival-related email found.";
           return null;
         }
 
         const email = arrivalData.arrivalEmail;
         const clues = email.extracted || {};
         const clueText = [
-          clues.dates?.length ? `Dates: ${clues.dates.map(escapeHtml).join(", ")}` : "",
-          clues.times?.length ? `Times: ${clues.times.map(escapeHtml).join(", ")}` : "",
-          clues.airportCodes?.length ? `Airports: ${clues.airportCodes.map(escapeHtml).join(", ")}` : ""
-        ].filter(Boolean).join("<br>");
+          clues.dates?.length
+            ? `Dates: ${clues.dates.map(escapeHtml).join(", ")}`
+            : "",
+          clues.times?.length
+            ? `Times: ${clues.times.map(escapeHtml).join(", ")}`
+            : "",
+          clues.airportCodes?.length
+            ? `Airports: ${clues.airportCodes.map(escapeHtml).join(", ")}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("<br>");
 
         arrivalInfo.innerHTML = `
           <strong>Arrival info</strong>
@@ -839,17 +994,22 @@
 
         try {
           if (window.location.search.includes("gmail=error")) {
-            authMessage.textContent = "Google sign-in failed. Check the redirect URI and Vercel environment variables.";
+            authMessage.textContent =
+              "Google sign-in failed. Check the redirect URI and Vercel environment variables.";
             statusBox.innerHTML = "<strong>Gmail</strong>Connection failed";
           }
 
-          const config = await fetch("/api/auth/config").then((response) => response.json());
+          const config = await fetch("/api/auth/config").then((response) =>
+            response.json(),
+          );
           if (!config.ready) {
             authMessage.textContent = `Google sign-in is not configured yet: ${config.missing.join(", ")}`;
             return;
           }
 
-          const profile = await fetch("/api/auth/me").then((response) => response.json());
+          const profile = await fetch("/api/auth/me").then((response) =>
+            response.json(),
+          );
           const isAuthenticated = Boolean(profile.authenticated);
           if (profile.authenticated) {
             const name = escapeHtml(profile.name);
@@ -859,7 +1019,9 @@
             authMessage.textContent = "Google login is connected.";
           }
 
-          const status = await fetch("/api/gmail/status").then((response) => response.json());
+          const status = await fetch("/api/gmail/status").then((response) =>
+            response.json(),
+          );
           if (status.connected) {
             statusBox.innerHTML = "<strong>Gmail</strong>Connected";
             gmailButton.textContent = "Google connected";
@@ -869,17 +1031,23 @@
 
           if (status.connected) {
             try {
-              const data = await fetch("/api/gmail/messages").then((response) => response.json());
+              const data = await fetch("/api/gmail/messages").then((response) =>
+                response.json(),
+              );
               if (!data.messages || !data.messages.length) {
-                messagesBox.innerHTML = "<strong>Email signals</strong>No recent travel emails found.";
+                messagesBox.innerHTML =
+                  "<strong>Email signals</strong>No recent travel emails found.";
               } else {
                 messagesBox.innerHTML = [
                   "<strong>Email signals</strong>",
-                  ...data.messages.slice(0, 3).map((message) => `${escapeHtml(message.subject)}<br>`)
+                  ...data.messages
+                    .slice(0, 3)
+                    .map((message) => `${escapeHtml(message.subject)}<br>`),
                 ].join("");
               }
             } catch (error) {
-              messagesBox.innerHTML = "<strong>Email signals</strong>Could not load Gmail messages.";
+              messagesBox.innerHTML =
+                "<strong>Email signals</strong>Could not load Gmail messages.";
             }
 
             try {
@@ -893,11 +1061,14 @@
             try {
               const calendarData = await loadCalendarWeek();
               if (!calendarData.events || !calendarData.events.length) {
-                calendarStatus.innerHTML = "<strong>Calendar signals</strong>No events found for May 24-30.";
+                calendarStatus.innerHTML =
+                  "<strong>Calendar signals</strong>No events found for May 24-30.";
               } else {
                 calendarStatus.innerHTML = [
                   "<strong>Calendar signals</strong>",
-                  ...calendarData.events.slice(0, 3).map((event) => `${escapeHtml(event.title)}<br>`)
+                  ...calendarData.events
+                    .slice(0, 3)
+                    .map((event) => `${escapeHtml(event.title)}<br>`),
                 ].join("");
               }
             } catch (error) {
@@ -906,7 +1077,8 @@
             }
           }
         } catch (error) {
-          authMessage.textContent = "Could not reach the auth backend. Redeploy after adding the API files.";
+          authMessage.textContent =
+            "Could not reach the auth backend. Redeploy after adding the API files.";
         }
       }
 

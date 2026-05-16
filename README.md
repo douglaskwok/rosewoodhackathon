@@ -15,7 +15,7 @@ https://rosewoodhackathon.vercel.app/
 - Google login status that shows the signed-in user's name.
 - Google Calendar week view for May 24-30, 2026.
 - Arrival info card that shows the latest arrival-related Gmail message.
-- Admin preference mind map generated from Gmail snippets using Vertex AI embeddings.
+- Admin preference mind map with a reliable demo profile and optional Vertex AI embedding mode.
 
 ## Gmail OAuth Setup
 
@@ -72,7 +72,13 @@ GCP_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
 GCP_EMBEDDING_MODEL=gemini-embedding-001
 ```
 
-The admin mind map calls `/api/preferences/mindmap`, embeds relevant Gmail snippets, and groups them into food preferences, favorite events, and latent goals.
+The admin mind map calls `/api/preferences/mindmap`. By default it returns a polished demo profile. To use real Vertex AI embeddings, set:
+
+```txt
+USE_VERTEX_MINDMAP=true
+```
+
+Then the endpoint embeds relevant Gmail snippets and groups them into food preferences, favorite events, and latent goals.
 
 ## Run
 

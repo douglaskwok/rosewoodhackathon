@@ -41,6 +41,59 @@ const TAGS = {
   ]
 };
 
+const DEMO_NODES = [
+  {
+    key: "foodPreferences",
+    label: "Food preferences + dietary needs",
+    insight: "Japanese, Mediterranean, seasonal tasting menus; prefers quiet tables; light dairy",
+    confidence: 0.92,
+    evidence: [
+      {
+        subject: "Dinner reservation confirmed",
+        from: "Madera Reservations",
+        date: "Demo",
+        snippet: "Quiet table, seasonal menu, lighter dairy notes.",
+        similarity: 0.94
+      }
+    ]
+  },
+  {
+    key: "favoriteEvents",
+    label: "Favorite events",
+    insight: "Private tastings, wellness classes, art/design tours, intimate dinners",
+    confidence: 0.88,
+    evidence: [
+      {
+        subject: "Private tasting itinerary",
+        from: "Concierge",
+        date: "Demo",
+        snippet: "Chef tasting, spa block, design tour, and dinner plans.",
+        similarity: 0.91
+      }
+    ]
+  },
+  {
+    key: "latentGoals",
+    label: "Latent goals",
+    insight: "Recharge between work commitments; stay fit while traveling; discover local culture without overplanning",
+    confidence: 0.84,
+    evidence: [
+      {
+        subject: "Calendar holds and arrival plan",
+        from: "Google Calendar + Gmail",
+        date: "Demo",
+        snippet: "Sparse schedule, protected recovery windows, wellness and culture signals.",
+        similarity: 0.87
+      }
+    ]
+  }
+];
+
+function queryValue(value) {
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
 async function gmailFetch(path, accessToken) {
   const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
     headers: { Authorization: `Bearer ${accessToken}` }
@@ -110,6 +163,18 @@ function fallbackInsight(key, tags) {
 
 module.exports = async function handler(req, res) {
   try {
+    const mode = queryValue(req.query.mode) || "vertex";
+    const useVertex = mode === "vertex" && process.env.USE_VERTEX_MINDMAP === "true";
+    if (!useVertex) {
+      res.status(200).json({
+        model: "demo-profile",
+        provider: "demo",
+        query: "pre-seeded demo signals",
+        nodes: DEMO_NODES
+      });
+      return;
+    }
+
     requireGoogleEnv();
     requireGcpEnv();
 
