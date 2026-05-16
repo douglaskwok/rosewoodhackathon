@@ -112,6 +112,17 @@
         gap: 10px;
       }
 
+      .login-name {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .status-message {
+        min-height: 20px;
+        color: #666;
+        font-size: 13px;
+      }
+
       .preview-body {
         min-height: 616px;
         display: grid;
@@ -160,7 +171,8 @@
         gap: 10px;
       }
 
-      .integration-row button {
+      .integration-row button,
+      .integration-row a {
         min-height: 54px;
         text-align: left;
       }
@@ -181,6 +193,12 @@
         background: white;
         padding: 12px;
         color: #666;
+      }
+
+      .side-box strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #222;
       }
 
       .map {
@@ -444,7 +462,10 @@
               <div class="preview-logo">R</div>
               <strong>Rosewood Compass</strong>
             </div>
-            <a class="button" href="#calendar">View stay calendar</a>
+            <div class="controls">
+              <span class="login-name" id="login-name">Not signed in</span>
+              <a class="button" href="#calendar">View stay calendar</a>
+            </div>
           </div>
 
           <div class="preview-body">
@@ -471,16 +492,27 @@
 
               <div class="integration-row">
                 <button type="button">Integrate calendar</button>
-                <button type="button">Integrate email</button>
+                <a class="button" id="gmail-button" href="/api/auth/google">Sign in with Google</a>
                 <button type="button">Beli</button>
                 <button type="button">Arrival info (email)</button>
               </div>
+              <div class="status-message" id="auth-message"></div>
             </div>
 
             <aside class="preview-side">
               <h3>Guest preview</h3>
-              <div class="side-box">Preference graph preview</div>
-              <div class="side-box">Upcoming reservations</div>
+              <div class="side-box" id="google-profile">
+                <strong>Google login</strong>
+                Not signed in
+              </div>
+              <div class="side-box" id="gmail-status">
+                <strong>Gmail</strong>
+                Not connected
+              </div>
+              <div class="side-box" id="gmail-messages">
+                <strong>Email signals</strong>
+                Connect Gmail to preview travel and reservation emails.
+              </div>
               <div class="side-box">Concierge suggestions</div>
             </aside>
           </div>
@@ -586,6 +618,8 @@
       const screenButtons = document.querySelectorAll("[data-screen]");
       const userOnboarding = document.getElementById("user-onboarding");
       const adminOnboarding = document.getElementById("admin-onboarding");
+      const gmailButton = document.getElementById("gmail-button");
+      const authMessage = document.getElementById("auth-message");
 
       function showScreen(screenId) {
         document.querySelectorAll(".screen").forEach((screen) => {
@@ -614,6 +648,73 @@
         event.preventDefault();
         showScreen("calendar");
       });
+
+      gmailButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (window.location.protocol === "file:") {
+          authMessage.textContent = "Google sign-in only works on the deployed Vercel site, not from a local file.";
+          return;
+        }
+
+        authMessage.textContent = "Opening Google sign-in...";
+        window.location.assign("/api/auth/google");
+      });
+
+      async function loadGmailState() {
+        const statusBox = document.getElementById("gmail-status");
+        const messagesBox = document.getElementById("gmail-messages");
+        const loginName = document.getElementById("login-name");
+        const profileBox = document.getElementById("google-profile");
+        const escapeHtml = (value) => value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+
+        try {
+          if (window.location.search.includes("gmail=error")) {
+            authMessage.textContent = "Google sign-in failed. Check the redirect URI and Vercel environment variables.";
+            statusBox.innerHTML = "<strong>Gmail</strong>Connection failed";
+          }
+
+          const config = await fetch("/api/auth/config").then((response) => response.json());
+          if (!config.ready) {
+            authMessage.textContent = `Google sign-in is not configured yet: ${config.missing.join(", ")}`;
+            return;
+          }
+
+          const profile = await fetch("/api/auth/me").then((response) => response.json());
+          if (profile.authenticated) {
+            const name = escapeHtml(profile.name);
+            const email = escapeHtml(profile.email);
+            loginName.textContent = `Signed in as ${profile.name}`;
+            profileBox.innerHTML = `<strong>Google login</strong>${name}<br>${email}`;
+            authMessage.textContent = "Google login is connected.";
+          }
+
+          const status = await fetch("/api/gmail/status").then((response) => response.json());
+          if (!status.connected) return;
+
+          statusBox.innerHTML = "<strong>Gmail</strong>Connected";
+          gmailButton.textContent = "Google connected";
+
+          const data = await fetch("/api/gmail/messages").then((response) => response.json());
+          if (!data.messages || !data.messages.length) {
+            messagesBox.innerHTML = "<strong>Email signals</strong>No recent travel emails found.";
+            return;
+          }
+
+          messagesBox.innerHTML = [
+            "<strong>Email signals</strong>",
+            ...data.messages.slice(0, 3).map((message) => `${escapeHtml(message.subject)}<br>`)
+          ].join("");
+        } catch (error) {
+          authMessage.textContent = "Could not reach the auth backend. Redeploy after adding the API files.";
+        }
+      }
+
+      loadGmailState();
     </script>
   </body>
 </html>
