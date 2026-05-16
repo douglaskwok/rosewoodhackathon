@@ -46,6 +46,14 @@ https://rosewoodhackathon.vercel.app/api/auth/config
 
 It should return `"ready": true`.
 
+To debug Calendar access after signing in, open:
+
+```txt
+https://rosewoodhackathon.vercel.app/api/calendar/debug
+```
+
+It should include `calendar.readonly` in `tokenScopes`.
+
 After adding Calendar integration, sign in again so Google can ask for the new Calendar read-only permission.
 
 ## Run

@@ -732,7 +732,11 @@
           timeMin: calendarWeekStart.toISOString(),
           timeMax: calendarWeekEnd.toISOString()
         });
-        const data = await fetch(`/api/calendar/events?${params}`).then((response) => response.json());
+        const response = await fetch(`/api/calendar/events?${params}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Calendar API request failed");
+        }
         renderCalendarWeek(data.events || []);
         return data;
       }
@@ -757,6 +761,7 @@
           }
 
           const profile = await fetch("/api/auth/me").then((response) => response.json());
+          const isAuthenticated = Boolean(profile.authenticated);
           if (profile.authenticated) {
             const name = escapeHtml(profile.name);
             const email = escapeHtml(profile.email);
@@ -766,38 +771,43 @@
           }
 
           const status = await fetch("/api/gmail/status").then((response) => response.json());
-          if (!status.connected) return;
-
-          statusBox.innerHTML = "<strong>Gmail</strong>Connected";
-          gmailButton.textContent = "Google connected";
-          calendarButton.textContent = "Calendar connected";
-
-          try {
-            const data = await fetch("/api/gmail/messages").then((response) => response.json());
-            if (!data.messages || !data.messages.length) {
-              messagesBox.innerHTML = "<strong>Email signals</strong>No recent travel emails found.";
-            } else {
-              messagesBox.innerHTML = [
-                "<strong>Email signals</strong>",
-                ...data.messages.slice(0, 3).map((message) => `${escapeHtml(message.subject)}<br>`)
-              ].join("");
-            }
-          } catch (error) {
-            messagesBox.innerHTML = "<strong>Email signals</strong>Could not load Gmail messages.";
+          if (status.connected) {
+            statusBox.innerHTML = "<strong>Gmail</strong>Connected";
+            gmailButton.textContent = "Google connected";
+            calendarButton.textContent = "Calendar connected";
           }
 
-          try {
-            const calendarData = await loadCalendarWeek();
-            if (!calendarData.events || !calendarData.events.length) {
-              calendarStatus.innerHTML = "<strong>Calendar signals</strong>No events found for May 24-30.";
-            } else {
-              calendarStatus.innerHTML = [
-                "<strong>Calendar signals</strong>",
-                ...calendarData.events.slice(0, 3).map((event) => `${escapeHtml(event.title)}<br>`)
-              ].join("");
+          if (status.connected) {
+            try {
+              const data = await fetch("/api/gmail/messages").then((response) => response.json());
+              if (!data.messages || !data.messages.length) {
+                messagesBox.innerHTML = "<strong>Email signals</strong>No recent travel emails found.";
+              } else {
+                messagesBox.innerHTML = [
+                  "<strong>Email signals</strong>",
+                  ...data.messages.slice(0, 3).map((message) => `${escapeHtml(message.subject)}<br>`)
+                ].join("");
+              }
+            } catch (error) {
+              messagesBox.innerHTML = "<strong>Email signals</strong>Could not load Gmail messages.";
             }
-          } catch (error) {
-            calendarStatus.innerHTML = "<strong>Calendar signals</strong>Could not load Calendar events.";
+          }
+
+          if (isAuthenticated) {
+            try {
+              const calendarData = await loadCalendarWeek();
+              if (!calendarData.events || !calendarData.events.length) {
+                calendarStatus.innerHTML = "<strong>Calendar signals</strong>No events found for May 24-30.";
+              } else {
+                calendarStatus.innerHTML = [
+                  "<strong>Calendar signals</strong>",
+                  ...calendarData.events.slice(0, 3).map((event) => `${escapeHtml(event.title)}<br>`)
+                ].join("");
+              }
+            } catch (error) {
+              calendarLoadState.textContent = `Calendar error: ${error.message}`;
+              calendarStatus.innerHTML = `<strong>Calendar signals</strong>${escapeHtml(error.message)}`;
+            }
           }
         } catch (error) {
           authMessage.textContent = "Could not reach the auth backend. Redeploy after adding the API files.";
