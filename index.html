@@ -495,12 +495,58 @@
     position: relative;
     z-index: 2;
     margin: 0 64px 96px;
-    max-width: 900px;
+    max-width: 1180px;
     background: rgba(255,255,255,0.50);
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
     border: 0.5px solid rgba(28,25,20,0.14);
     padding: 28px;
+  }
+
+  .api-test-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    gap: 28px;
+  }
+
+  .api-test-panel {
+    min-width: 0;
+  }
+
+  .booking-form {
+    display: grid;
+    gap: 10px;
+  }
+
+  .booking-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .booking-input {
+    width: 100%;
+    border: 0.5px solid rgba(28,25,20,0.18);
+    background: rgba(255,255,255,0.42);
+    color: rgba(18,15,12,0.86);
+    min-height: 44px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 12px;
+  }
+
+  .booking-note {
+    margin-top: 12px;
+    font-size: 10px;
+    line-height: 1.6;
+    color: rgba(18,15,12,0.48);
+  }
+
+  @media (max-width: 920px) {
+    .api-test-grid,
+    .booking-row {
+      grid-template-columns: 1fr;
+    }
   }
 
   .claude-title {
@@ -1300,6 +1346,7 @@
       </div>
       <div class="card-actions">
         <button class="card-btn-primary"><i class="ti ti-message" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>message guest</button>
+        <button class="card-btn-ghost" id="openTableButton" type="button"><i class="ti ti-tools-kitchen-2" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>book dining</button>
         <button class="card-btn-ghost"><i class="ti ti-edit" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>edit preferences</button>
       </div>
     </div>
@@ -1503,17 +1550,36 @@
   </div>
 
   <section class="claude-test">
-    <div class="dock-label">claude api test</div>
-    <h2 class="claude-title">Ask Claude</h2>
-    <p class="claude-copy">A small verification surface for Anthropic. Try asking for a guest-facing concierge note.</p>
-    <div class="claude-row">
-      <textarea class="claude-input" id="claudePrompt">Write a warm one-sentence welcome note for a Rosewood guest who has a nut allergy and prefers sparkling water.</textarea>
-      <button class="dock-btn mic-btn" id="voiceButton" type="button" aria-label="Talk to Claude">🎙</button>
-      <button class="dock-btn" id="claudeButton" type="button">send</button>
+    <div class="api-test-grid">
+      <div class="api-test-panel">
+        <div class="dock-label">claude api test</div>
+        <h2 class="claude-title">Ask Claude</h2>
+        <p class="claude-copy">A small verification surface for Anthropic. Try asking for a guest-facing concierge note.</p>
+        <div class="claude-row">
+          <textarea class="claude-input" id="claudePrompt">Write a warm one-sentence welcome note for a Rosewood guest who has a nut allergy and prefers sparkling water.</textarea>
+          <button class="dock-btn mic-btn" id="voiceButton" type="button" aria-label="Talk to Claude">🎙</button>
+          <button class="dock-btn" id="claudeButton" type="button">send</button>
+        </div>
+        <div class="claude-output" id="claudeOutput">Claude response will appear here.</div>
+        <div class="voice-status" id="voiceStatus">Voice input uses your browser mic; replies play through ElevenLabs.</div>
+        <audio id="claudeAudio" hidden></audio>
+      </div>
+
+      <div class="api-test-panel">
+        <div class="dock-label">opentable test</div>
+        <h2 class="claude-title">Book Madera</h2>
+        <p class="claude-copy">Open a specific OpenTable flow for Madera Restaurant at Rosewood Sand Hill.</p>
+        <div class="booking-form">
+          <div class="booking-row">
+            <input class="booking-input" id="bookingDate" type="date" value="2026-05-27">
+            <input class="booking-input" id="bookingTime" type="time" value="19:00">
+          </div>
+          <input class="booking-input" id="bookingCovers" type="number" min="1" max="12" value="2" aria-label="Party size">
+          <button class="dock-btn" id="maderaBookingButton" type="button">open madera</button>
+        </div>
+        <div class="booking-note" id="bookingStatus">Uses OpenTable's restaurant booking page; direct reservation creation requires partner API access.</div>
+      </div>
     </div>
-    <div class="claude-output" id="claudeOutput">Claude response will appear here.</div>
-    <div class="voice-status" id="voiceStatus">Voice input uses your browser mic; replies play through ElevenLabs.</div>
-    <audio id="claudeAudio" hidden></audio>
   </section>
 
 </div><!-- /.app -->
@@ -1537,6 +1603,7 @@
   const gmailButton = document.getElementById('gmailButton');
   const calendarButton = document.getElementById('calendarButton');
   const arrivalButton = document.getElementById('arrivalButton');
+  const openTableButton = document.getElementById('openTableButton');
   const integrationDock = document.querySelector('.integration-dock');
   const dockMinimize = document.getElementById('dockMinimize');
   const authMessage = document.getElementById('authMessage');
@@ -1560,6 +1627,11 @@
   const voiceButton = document.getElementById('voiceButton');
   const voiceStatus = document.getElementById('voiceStatus');
   const claudeAudio = document.getElementById('claudeAudio');
+  const maderaBookingButton = document.getElementById('maderaBookingButton');
+  const bookingDate = document.getElementById('bookingDate');
+  const bookingTime = document.getElementById('bookingTime');
+  const bookingCovers = document.getElementById('bookingCovers');
+  const bookingStatus = document.getElementById('bookingStatus');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
   const activityRecs = document.getElementById('activityRecs');
@@ -2084,6 +2156,29 @@
     loadArrivalEmail().catch(error => {
       authMessage.textContent = `${error.message}. Connect Google first if needed.`;
     });
+  });
+
+  openTableButton?.addEventListener('click', () => {
+    openMaderaBooking('2026-05-27', '19:00', '2');
+  });
+
+  function openMaderaBooking(date, time, covers) {
+    const safeDate = date || '2026-05-27';
+    const safeTime = time || '19:00';
+    const safeCovers = covers || '2';
+    const params = new URLSearchParams({
+      covers: safeCovers,
+      dateTime: `${safeDate}T${safeTime}`
+    });
+    const url = `https://www.opentable.com/r/madera-restaurant-at-rosewood-sand-hill-menlo-park?${params.toString()}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    if (bookingStatus) {
+      bookingStatus.textContent = `Opening Madera for ${safeCovers} on ${safeDate} at ${safeTime}.`;
+    }
+  }
+
+  maderaBookingButton?.addEventListener('click', () => {
+    openMaderaBooking(bookingDate.value, bookingTime.value, bookingCovers.value);
   });
 
   mindmapButton?.addEventListener('click', generateMindmap);
