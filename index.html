@@ -680,6 +680,20 @@
   }
   .rec:hover .rec-cta { color: rgba(18,15,12,0.75); }
 
+  .generate-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .generate-status {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.45);
+  }
+
   /* ── GUEST CARD ─────────────────────────────────────── */
   .guest-card {
     margin: 0;
@@ -1253,6 +1267,10 @@
   <!-- ACCORDION -->
   <div class="section-container">
   <div class="accordion">
+    <div class="generate-row">
+      <button class="dock-btn" id="generateActivitiesButton" type="button">generate activities</button>
+      <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
+    </div>
 
     <div class="accordion-item activity open">
       <button class="accordion-hdr" onclick="toggleAccordion(this)">
@@ -1274,21 +1292,8 @@
           </div>
           <div class="acc-rule"></div>
           <div class="recs-label">curated for today</div>
-          <div class="recs">
-            <div class="rec">
-              <div class="rec-info">
-                <div class="rec-name">Hampstead Heath Morning Trail</div>
-                <div class="rec-meta">6.2 km &nbsp;·&nbsp; 7:00 AM &nbsp;·&nbsp; guide available</div>
-              </div>
-              <span class="rec-cta">reserve guide →</span>
-            </div>
-            <div class="rec">
-              <div class="rec-info">
-                <div class="rec-name">Private Cycling — Hyde Park</div>
-                <div class="rec-meta">curated route &nbsp;·&nbsp; bicycle arranged</div>
-              </div>
-              <span class="rec-cta">schedule →</span>
-            </div>
+          <div class="recs" id="activityRecs">
+            <div class="rec"><div class="rec-info"><div class="rec-name">No activities yet</div><div class="rec-meta">Generate activities from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
           </div>
         </div>
       </div>
@@ -1314,28 +1319,8 @@
           </div>
           <div class="acc-rule"></div>
           <div class="recs-label">prepared for you</div>
-          <div class="recs">
-            <div class="rec">
-              <div class="rec-info">
-                <div class="rec-name">Finnish Sauna + Cold Plunge</div>
-                <div class="rec-meta">reserved 6:30 PM &nbsp;·&nbsp; private session</div>
-              </div>
-              <span class="rec-cta">confirmed →</span>
-            </div>
-            <div class="rec">
-              <div class="rec-info">
-                <div class="rec-name">Sleep Optimization Turn-Down</div>
-                <div class="rec-meta">magnesium tea, blackout, 18°C &nbsp;·&nbsp; 9:45 PM</div>
-              </div>
-              <span class="rec-cta">adjust preferences →</span>
-            </div>
-            <div class="rec">
-              <div class="rec-info">
-                <div class="rec-name">Morning Guided Breathwork</div>
-                <div class="rec-meta">7:15 AM &nbsp;·&nbsp; rooftop &nbsp;·&nbsp; 20 min</div>
-              </div>
-              <span class="rec-cta">add to morning →</span>
-            </div>
+          <div class="recs" id="wellnessRecs">
+            <div class="rec"><div class="rec-info"><div class="rec-name">No wellness plan yet</div><div class="rec-meta">Generate wellness from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
           </div>
         </div>
       </div>
@@ -1361,21 +1346,8 @@
           </div>
           <div class="acc-rule"></div>
           <div class="recs-label">exclusive experiences</div>
-          <div class="recs">
-            <div class="rec">
-              <div class="rec-info">
-                <div class="rec-name">Perfume Making — Floris London</div>
-                <div class="rec-meta">private session &nbsp;·&nbsp; 3:00 PM tomorrow</div>
-              </div>
-              <span class="rec-cta">reserve 2 seats →</span>
-            </div>
-            <div class="rec">
-              <div class="rec-info">
-                <div class="rec-name">V&amp;A After-Hours Private Tour</div>
-                <div class="rec-meta">curator-led &nbsp;·&nbsp; textiles &amp; fashion</div>
-              </div>
-              <span class="rec-cta">check availability →</span>
-            </div>
+          <div class="recs" id="learningRecs">
+            <div class="rec"><div class="rec-info"><div class="rec-name">No learning experiences yet</div><div class="rec-meta">Generate culture and learning from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
           </div>
         </div>
       </div>
@@ -1483,6 +1455,11 @@
   const claudePrompt = document.getElementById('claudePrompt');
   const claudeButton = document.getElementById('claudeButton');
   const claudeOutput = document.getElementById('claudeOutput');
+  const generateActivitiesButton = document.getElementById('generateActivitiesButton');
+  const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
+  const activityRecs = document.getElementById('activityRecs');
+  const wellnessRecs = document.getElementById('wellnessRecs');
+  const learningRecs = document.getElementById('learningRecs');
   const calendarWeekStart = new Date('2026-05-24T00:00:00-07:00');
   const calendarWeekEnd = new Date('2026-05-31T00:00:00-07:00');
   const mindmapStorageKey = 'rosewoodCompassMindmap';
@@ -1672,6 +1649,40 @@
     authMessage.textContent = `Arrival email: ${data.arrivalEmail.subject}`;
   }
 
+  function renderRecommendationList(container, items) {
+    container.innerHTML = (items || []).map(item => `
+      <div class="rec">
+        <div class="rec-info">
+          <div class="rec-name">${escapeHtml(item.name)}</div>
+          <div class="rec-meta">${escapeHtml(item.meta)}</div>
+        </div>
+        <span class="rec-cta">${escapeHtml(item.cta || 'add')} →</span>
+      </div>
+    `).join('');
+  }
+
+  async function generateActivities() {
+    generateActivitiesStatus.textContent = 'Generating May 26-28 itinerary from mind map...';
+    try {
+      const response = await fetch('/api/claude/itinerary', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ mindmap: mindmapState })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Itinerary request failed');
+
+      renderRecommendationList(activityRecs, data.itinerary.activity);
+      renderRecommendationList(wellnessRecs, data.itinerary.wellness);
+      renderRecommendationList(learningRecs, data.itinerary.learning);
+      generateActivitiesStatus.textContent = data.fallback
+        ? `Using fallback itinerary. ${data.warning || ''}`
+        : `Generated with ${data.model}.`;
+    } catch (error) {
+      generateActivitiesStatus.textContent = error.message;
+    }
+  }
+
   roleButtons.forEach(button => {
     button.addEventListener('click', () => {
       const isAdmin = button.dataset.role === 'admin';
@@ -1706,6 +1717,7 @@
   });
 
   mindmapButton?.addEventListener('click', generateMindmap);
+  generateActivitiesButton?.addEventListener('click', generateActivities);
 
   claudeButton?.addEventListener('click', async () => {
     const prompt = claudePrompt.value.trim();

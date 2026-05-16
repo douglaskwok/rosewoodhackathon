@@ -18,6 +18,7 @@ https://rosewoodhackathon.vercel.app/
 - Admin preference mind map with a reliable demo profile and optional Vertex AI embedding mode.
 - Editable hierarchical admin mind map saved locally in the browser.
 - Simple Claude API test interface at the bottom of the app.
+- Claude-generated May 26-28 activities and itinerary from the local mind map, with fallback JSON.
 
 ## Gmail OAuth Setup
 
