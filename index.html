@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rosewood — Personal Concierge</title>
+<title>rosewood - curated by tia ❤️</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
 
@@ -1283,8 +1283,8 @@
   <!-- LEFT: GREETING -->
   <div class="greeting">
     <div class="greeting-label">day 2 of 5 &nbsp;·&nbsp; suite 412</div>
-    <h1 class="greeting-title" id="userGreeting">Good evening,<br><em>your world, curated.</em></h1>
-    <p class="greeting-sub">We've shaped today around your patterns. Everything below is yours alone.</p>
+    <h1 class="greeting-title" id="userGreeting">rosewood -<br><em>curated by tia ❤️</em></h1>
+    <p class="greeting-sub">Good evening, your world is curated by Tia.</p>
   </div>
 
   <!-- RIGHT: GUEST CARD -->
@@ -2500,7 +2500,7 @@
         const firstName = firstNameFromProfile(profile);
         loginName.textContent = profile.name || profile.email || 'signed in';
         if (firstName) {
-          userGreeting.innerHTML = `Good evening, ${escapeHtml(firstName)}<br><em>your world, curated.</em>`;
+          userGreeting.innerHTML = `rosewood -<br><em>curated by tia ❤️</em>`;
           cardGuestName.textContent = `Welcome back, ${firstName}`;
           adminInfoTitle.textContent = `${firstName}'s info graph`;
         }
