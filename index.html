@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rosewood Compass Wireframe</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #f4f4f1;
+        color: #222;
+        font-family: Arial, sans-serif;
+      }
+
+      button,
+      a.button {
+        border: 1px solid #222;
+        border-radius: 6px;
+        background: white;
+        color: #222;
+        padding: 10px 12px;
+        font: inherit;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      button.active {
+        background: #222;
+        color: white;
+      }
+
+      header {
+        border-bottom: 1px solid #ccc;
+        background: white;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      main {
+        padding: 24px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      .screen {
+        display: none;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .panel {
+        border: 1px solid #bbb;
+        border-radius: 8px;
+        background: white;
+        padding: 18px;
+      }
+
+      .web-preview {
+        max-width: 1160px;
+        min-height: 680px;
+        margin: 0 auto;
+        border: 1px solid #222;
+        border-radius: 10px;
+        background: white;
+        overflow: hidden;
+      }
+
+      .preview-topbar {
+        min-height: 64px;
+        border-bottom: 1px solid #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 18px;
+      }
+
+      .preview-logo {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #222;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #fff7fa;
+        font-weight: bold;
+      }
+
+      .preview-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .preview-body {
+        min-height: 616px;
+        display: grid;
+        grid-template-columns: 1fr 320px;
+      }
+
+      .preview-main {
+        padding: 42px;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 26px;
+      }
+
+      .preview-main h1 {
+        max-width: 620px;
+        margin-bottom: 10px;
+        font-size: 44px;
+        line-height: 1.05;
+      }
+
+      .muted {
+        color: #666;
+      }
+
+      .preview-canvas {
+        border: 1px dashed #bbb;
+        border-radius: 8px;
+        background: #fafafa;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .preview-card {
+        min-height: 150px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background: white;
+        padding: 14px;
+      }
+
+      .integration-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .integration-row button {
+        min-height: 54px;
+        text-align: left;
+      }
+
+      .preview-side {
+        border-left: 1px solid #ccc;
+        background: #fbfbfb;
+        padding: 18px;
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .side-box {
+        min-height: 90px;
+        border: 1px dashed #bbb;
+        border-radius: 8px;
+        background: white;
+        padding: 12px;
+        color: #666;
+      }
+
+      .map {
+        min-height: 600px;
+        position: relative;
+        border: 1px dashed #bbb;
+        border-radius: 8px;
+        background: white;
+      }
+
+      .node {
+        position: absolute;
+        width: 150px;
+        border: 1px solid #222;
+        border-radius: 999px;
+        background: white;
+        padding: 10px 14px;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .line {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 2px;
+        height: 230px;
+        background: #ccc;
+        transform-origin: top center;
+      }
+
+      .center {
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: #f4f4f1;
+        font-weight: bold;
+      }
+
+      .node.food {
+        left: 12%;
+        top: 18%;
+      }
+
+      .node.wellness {
+        right: 12%;
+        top: 18%;
+      }
+
+      .node.schedule {
+        left: 12%;
+        bottom: 18%;
+      }
+
+      .node.experiences {
+        right: 12%;
+        bottom: 18%;
+      }
+
+      .line.food {
+        transform: rotate(232deg);
+      }
+
+      .line.wellness {
+        transform: rotate(310deg);
+      }
+
+      .line.schedule {
+        transform: rotate(128deg);
+      }
+
+      .line.experiences {
+        transform: rotate(48deg);
+      }
+
+      .calendar-title {
+        max-width: 1160px;
+        margin: 0 auto 14px;
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: end;
+      }
+
+      .week-calendar {
+        max-width: 1160px;
+        min-width: 980px;
+        margin: 0 auto;
+        border: 1px solid #aaa;
+        border-radius: 8px;
+        background: white;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 72px repeat(7, minmax(120px, 1fr));
+        grid-template-rows: 44px repeat(7, 132px);
+        position: relative;
+      }
+
+      .calendar-scroll {
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+
+      .corner,
+      .day-head,
+      .time-label {
+        border-right: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        background: #fafafa;
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      .corner {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .day-head {
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .time-label {
+        color: #666;
+        text-align: right;
+      }
+
+      .calendar-bg {
+        grid-column: 2 / -1;
+        grid-row: 2 / -1;
+        background-image:
+          linear-gradient(to right, #ddd 1px, transparent 1px),
+          linear-gradient(to bottom, #ddd 1px, transparent 1px);
+        background-size: calc(100% / 7) 132px;
+      }
+
+      .calendar-block {
+        z-index: 2;
+        margin: 8px;
+        border: 1px solid #222;
+        border-radius: 8px;
+        background: #fff;
+        padding: 10px;
+        color: #222;
+        text-decoration: none;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+        font-size: 13px;
+      }
+
+      .calendar-block strong {
+        font-size: 14px;
+      }
+
+      .image-slot {
+        min-height: 76px;
+        border: 1px dashed #aaa;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        color: #777;
+        background: #fafafa;
+      }
+
+      .travel {
+        background: #fff7df;
+      }
+
+      .wellness-block {
+        background: #eef8f4;
+      }
+
+      .dining {
+        background: #fbf0f2;
+      }
+
+      .experience {
+        background: #eef6f7;
+      }
+
+      .admin-only {
+        display: none;
+        color: #666;
+        border-top: 1px dashed #bbb;
+        padding-top: 8px;
+      }
+
+      body.admin .admin-only {
+        display: block;
+      }
+
+      @media (max-width: 860px) {
+        header {
+          display: block;
+        }
+
+        .controls {
+          margin-top: 12px;
+        }
+
+        main {
+          padding: 14px;
+        }
+
+        .preview-body {
+          grid-template-columns: 1fr;
+        }
+
+        .preview-side {
+          border-left: 0;
+          border-top: 1px solid #ccc;
+        }
+
+        .preview-main {
+          padding: 24px;
+        }
+
+        .preview-main h1 {
+          font-size: 34px;
+        }
+
+        .preview-canvas,
+        .integration-row {
+          grid-template-columns: 1fr;
+        }
+
+        .map {
+          min-height: 680px;
+        }
+
+        .node.food,
+        .node.schedule {
+          left: 5%;
+        }
+
+        .node.wellness,
+        .node.experiences {
+          right: 5%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Rosewood Compass Wireframe</strong>
+      <div class="controls">
+        <button class="active" data-role="user" type="button">User</button>
+        <button data-role="admin" type="button">Admin</button>
+        <button class="active" data-screen="onboarding" type="button">Home</button>
+        <button data-screen="calendar" type="button">Calendar</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="screen active" id="onboarding">
+        <div id="user-onboarding" class="web-preview">
+          <div class="preview-topbar">
+            <div class="preview-brand">
+              <div class="preview-logo">R</div>
+              <strong>Rosewood Compass</strong>
+            </div>
+            <a class="button" href="#calendar">View stay calendar</a>
+          </div>
+
+          <div class="preview-body">
+            <div class="preview-main">
+              <div>
+                <h1>Rosewood Compass</h1>
+                <p class="muted">A web app preview for personalizing a guest's stay.</p>
+              </div>
+
+              <div class="preview-canvas">
+                <div class="preview-card">
+                  <h3>Stay summary</h3>
+                  <p class="muted">Tuesday through Thursday at Rosewood.</p>
+                </div>
+                <div class="preview-card">
+                  <h3>Preferences</h3>
+                  <p class="muted">Food, wellness, schedule, experiences.</p>
+                </div>
+                <div class="preview-card">
+                  <h3>Next step</h3>
+                  <p class="muted">Connect sources to build the itinerary.</p>
+                </div>
+              </div>
+
+              <div class="integration-row">
+                <button type="button">Integrate calendar</button>
+                <button type="button">Integrate email</button>
+                <button type="button">Beli</button>
+                <button type="button">Arrival info (email)</button>
+              </div>
+            </div>
+
+            <aside class="preview-side">
+              <h3>Guest preview</h3>
+              <div class="side-box">Preference graph preview</div>
+              <div class="side-box">Upcoming reservations</div>
+              <div class="side-box">Concierge suggestions</div>
+            </aside>
+          </div>
+        </div>
+
+        <div id="admin-onboarding" class="panel" hidden>
+          <h2>Admin Onboarding</h2>
+          <div class="map">
+            <div class="line food"></div>
+            <div class="line wellness"></div>
+            <div class="line schedule"></div>
+            <div class="line experiences"></div>
+            <div class="node center">User preferences</div>
+            <div class="node food">Food</div>
+            <div class="node wellness">Wellness</div>
+            <div class="node schedule">Schedule</div>
+            <div class="node experiences">Experiences</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="calendar">
+        <div class="calendar-title">
+          <div>
+            <h2>Weekly Stay Calendar</h2>
+            <p class="muted">Traditional weekly view with large blocks for images and links.</p>
+          </div>
+          <span class="muted">Tue-Thu visit</span>
+        </div>
+
+        <div class="calendar-scroll">
+          <div class="week-calendar">
+            <div class="corner"></div>
+            <div class="day-head" style="grid-column: 2; grid-row: 1;">Mon</div>
+            <div class="day-head" style="grid-column: 3; grid-row: 1;">Tue</div>
+            <div class="day-head" style="grid-column: 4; grid-row: 1;">Wed</div>
+            <div class="day-head" style="grid-column: 5; grid-row: 1;">Thu</div>
+            <div class="day-head" style="grid-column: 6; grid-row: 1;">Fri</div>
+            <div class="day-head" style="grid-column: 7; grid-row: 1;">Sat</div>
+            <div class="day-head" style="grid-column: 8; grid-row: 1;">Sun</div>
+
+            <div class="time-label" style="grid-column: 1; grid-row: 2;">8 AM</div>
+            <div class="time-label" style="grid-column: 1; grid-row: 3;">10 AM</div>
+            <div class="time-label" style="grid-column: 1; grid-row: 4;">12 PM</div>
+            <div class="time-label" style="grid-column: 1; grid-row: 5;">2 PM</div>
+            <div class="time-label" style="grid-column: 1; grid-row: 6;">4 PM</div>
+            <div class="time-label" style="grid-column: 1; grid-row: 7;">6 PM</div>
+            <div class="time-label" style="grid-column: 1; grid-row: 8;">8 PM</div>
+
+            <div class="calendar-bg"></div>
+
+            <a class="calendar-block travel" href="#" style="grid-column: 3; grid-row: 3 / span 2;">
+              <strong>10:00 AM - Flight to SFO</strong>
+              <span>Inbound flight, pickup, and transfer to Rosewood.</span>
+              <span class="image-slot">flight card / map</span>
+              <span>Link: flight + arrival details</span>
+              <span class="admin-only">Admin: keep the first afternoon light.</span>
+            </a>
+
+            <a class="calendar-block wellness-block" href="#" style="grid-column: 3; grid-row: 6 / span 2;">
+              <strong>4:30 PM - Spa reset</strong>
+              <span>Recovery block after travel.</span>
+              <span class="image-slot">spa image</span>
+              <span>Link: spa menu</span>
+            </a>
+
+            <a class="calendar-block experience" href="#" style="grid-column: 4; grid-row: 3 / span 3;">
+              <strong>10:30 AM - Private tasting</strong>
+              <span>Large feature block for photos, notes, and booking links.</span>
+              <span class="image-slot">experience image</span>
+              <span>Link: experience details</span>
+            </a>
+
+            <a class="calendar-block dining" href="#" style="grid-column: 4; grid-row: 7 / span 2;">
+              <strong>6:30 PM - Dinner</strong>
+              <span>Preference-led dinner reservation.</span>
+              <span class="image-slot">restaurant image</span>
+              <span>Link: reservation</span>
+              <span class="admin-only">Admin: Beli preference source.</span>
+            </a>
+
+            <a class="calendar-block wellness-block" href="#" style="grid-column: 5; grid-row: 2 / span 2;">
+              <strong>8:30 AM - Garden walk</strong>
+              <span>Quiet movement before checkout.</span>
+              <span class="image-slot">route image</span>
+              <span>Link: walking route</span>
+            </a>
+
+            <a class="calendar-block travel" href="#" style="grid-column: 5; grid-row: 7 / span 2;">
+              <strong>6:00 PM - Flight home</strong>
+              <span>Checkout, airport transfer, and outbound flight.</span>
+              <span class="image-slot">flight card / map</span>
+              <span>Link: departure details</span>
+              <span class="admin-only">Admin: leave buffer after checkout.</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const roleButtons = document.querySelectorAll("[data-role]");
+      const screenButtons = document.querySelectorAll("[data-screen]");
+      const userOnboarding = document.getElementById("user-onboarding");
+      const adminOnboarding = document.getElementById("admin-onboarding");
+
+      function showScreen(screenId) {
+        document.querySelectorAll(".screen").forEach((screen) => {
+          screen.classList.toggle("active", screen.id === screenId);
+        });
+        screenButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.screen === screenId);
+        });
+      }
+
+      roleButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const isAdmin = button.dataset.role === "admin";
+          document.body.classList.toggle("admin", isAdmin);
+          userOnboarding.hidden = isAdmin;
+          adminOnboarding.hidden = !isAdmin;
+          roleButtons.forEach((item) => item.classList.toggle("active", item === button));
+        });
+      });
+
+      screenButtons.forEach((button) => {
+        button.addEventListener("click", () => showScreen(button.dataset.screen));
+      });
+
+      document.querySelector(".preview-topbar a").addEventListener("click", (event) => {
+        event.preventDefault();
+        showScreen("calendar");
+      });
+    </script>
+  </body>
+</html>
