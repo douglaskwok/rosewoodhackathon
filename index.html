@@ -709,6 +709,184 @@
     color: rgba(18,15,12,0.45);
   }
 
+  .itinerary-shell {
+    border-top: 0.5px solid rgba(28,25,20,0.12);
+    padding-top: 30px;
+  }
+
+  .itinerary-kicker {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .itinerary-kicker h2 {
+    margin: 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 64px;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 0.94;
+    color: rgba(18,15,12,0.94);
+  }
+
+  .itinerary-kicker p {
+    max-width: 410px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(18,15,12,0.58);
+  }
+
+  .itinerary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .day-column {
+    min-width: 0;
+    border-top: 0.5px solid rgba(28,25,20,0.20);
+    padding-top: 14px;
+  }
+
+  .day-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .day-name {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.55);
+  }
+
+  .day-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px;
+    line-height: 1;
+    color: rgba(18,15,12,0.86);
+  }
+
+  .day-stack {
+    display: grid;
+    gap: 14px;
+  }
+
+  .itinerary-card {
+    overflow: hidden;
+    border: 0.5px solid rgba(28,25,20,0.12);
+    background: rgba(255,255,255,0.50);
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  }
+
+  .itinerary-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(28,25,20,0.26);
+    background: rgba(255,255,255,0.70);
+  }
+
+  .itinerary-img {
+    position: relative;
+    min-height: 128px;
+    background-image: var(--card-image);
+    background-position: center;
+    background-size: cover;
+  }
+
+  .itinerary-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15,13,10,0.04), rgba(15,13,10,0.42));
+  }
+
+  .itinerary-chip {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    z-index: 1;
+    padding: 6px 9px;
+    border: 0.5px solid rgba(255,255,255,0.50);
+    background: rgba(18,15,12,0.34);
+    color: rgba(255,252,248,0.92);
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    backdrop-filter: blur(12px);
+  }
+
+  .itinerary-body {
+    padding: 15px 14px 14px;
+  }
+
+  .itinerary-time {
+    margin-bottom: 8px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.42);
+  }
+
+  .itinerary-title {
+    margin-bottom: 9px;
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 500;
+    color: rgba(18,15,12,0.92);
+  }
+
+  .itinerary-why {
+    padding-left: 10px;
+    border-left: 1px solid rgba(150,110,52,0.42);
+    font-size: 11px;
+    line-height: 1.55;
+    color: rgba(18,15,12,0.66);
+  }
+
+  .itinerary-action {
+    display: inline-flex;
+    margin-top: 13px;
+    font-size: 8px;
+    letter-spacing: 0.22em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.48);
+  }
+
+  .empty-card {
+    min-height: 260px;
+    display: grid;
+    place-items: center;
+    border: 0.5px dashed rgba(28,25,20,0.22);
+    color: rgba(18,15,12,0.34);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+  }
+
+  @media (max-width: 900px) {
+    .itinerary-kicker {
+      display: block;
+    }
+
+    .itinerary-kicker p {
+      margin-top: 12px;
+    }
+
+    .itinerary-kicker h2 {
+      font-size: 46px;
+    }
+
+    .itinerary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* ── GUEST CARD ─────────────────────────────────────── */
   .guest-card {
     margin: 0;
@@ -1279,96 +1457,41 @@
     <div class="dock-status" id="authMessage">Connect Gmail and Calendar to personalize your stay.</div>
   </div>
 
-  <!-- ACCORDION -->
+  <!-- ITINERARY -->
   <div class="section-container">
-  <div class="accordion">
+  <div class="itinerary-shell">
     <div class="generate-row">
       <button class="dock-btn" id="generateActivitiesButton" type="button">generate activities</button>
       <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
     </div>
 
-    <div class="accordion-item activity open">
-      <button class="accordion-hdr" onclick="toggleAccordion(this)">
-        <div class="acc-left">
-          <span class="acc-index">01</span>
-          <span class="acc-tag">movement &amp; energy</span>
+    <div class="itinerary-kicker">
+      <h2>three-day compass</h2>
+      <p>Generated from the guest memory graph, calendar context, and staff observations. Each card shows the experience and the reason it was recommended.</p>
+    </div>
+
+    <div class="itinerary-grid" id="itineraryBoard">
+      <div class="day-column">
+        <div class="day-head"><span class="day-name">tue</span><span class="day-num">26</span></div>
+        <div class="day-stack" data-day="26">
+          <div class="empty-card">generate itinerary</div>
         </div>
-        <h2 class="acc-title">activity</h2>
-        <div class="acc-indicator"></div>
-      </button>
-      <div class="accordion-body">
-        <div class="acc-body-inner">
-          <div class="acc-chips">
-            <span class="chip active">hiking</span>
-            <span class="chip active">morning run</span>
-            <span class="chip active">cycling</span>
-            <span class="chip">yoga</span>
-            <span class="chip">swimming</span>
-          </div>
-          <div class="acc-rule"></div>
-          <div class="recs-label">curated for today</div>
-          <div class="recs" id="activityRecs">
-            <div class="rec"><div class="rec-info"><div class="rec-name">No activities yet</div><div class="rec-meta">Generate activities from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
-          </div>
+      </div>
+      <div class="day-column">
+        <div class="day-head"><span class="day-name">wed</span><span class="day-num">27</span></div>
+        <div class="day-stack" data-day="27">
+          <div class="empty-card">preference-aware</div>
+        </div>
+      </div>
+      <div class="day-column">
+        <div class="day-head"><span class="day-name">thu</span><span class="day-num">28</span></div>
+        <div class="day-stack" data-day="28">
+          <div class="empty-card">ready to curate</div>
         </div>
       </div>
     </div>
 
-    <div class="accordion-item wellness">
-      <button class="accordion-hdr" onclick="toggleAccordion(this)">
-        <div class="acc-left">
-          <span class="acc-index">02</span>
-          <span class="acc-tag">restore &amp; regulate</span>
-        </div>
-        <h2 class="acc-title">wellness</h2>
-        <div class="acc-indicator"></div>
-      </button>
-      <div class="accordion-body">
-        <div class="acc-body-inner">
-          <div class="acc-chips">
-            <span class="chip active">sauna</span>
-            <span class="chip active">meditation</span>
-            <span class="chip active">sleep ritual</span>
-            <span class="chip">cold plunge</span>
-            <span class="chip active">journaling</span>
-          </div>
-          <div class="acc-rule"></div>
-          <div class="recs-label">prepared for you</div>
-          <div class="recs" id="wellnessRecs">
-            <div class="rec"><div class="rec-info"><div class="rec-name">No wellness plan yet</div><div class="rec-meta">Generate wellness from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="accordion-item learning">
-      <button class="accordion-hdr" onclick="toggleAccordion(this)">
-        <div class="acc-left">
-          <span class="acc-index">03</span>
-          <span class="acc-tag">culture &amp; growth</span>
-        </div>
-        <h2 class="acc-title">learning</h2>
-        <div class="acc-indicator"></div>
-      </button>
-      <div class="accordion-body">
-        <div class="acc-body-inner">
-          <div class="acc-chips">
-            <span class="chip active">workshops</span>
-            <span class="chip active">museums</span>
-            <span class="chip">language</span>
-            <span class="chip active">artisan crafts</span>
-            <span class="chip">architecture</span>
-          </div>
-          <div class="acc-rule"></div>
-          <div class="recs-label">exclusive experiences</div>
-          <div class="recs" id="learningRecs">
-            <div class="rec"><div class="rec-info"><div class="rec-name">No learning experiences yet</div><div class="rec-meta">Generate culture and learning from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /.accordion -->
+  </div><!-- /.itinerary-shell -->
   </div><!-- /.section-container -->
   </div><!-- /.user-view -->
 
@@ -1472,9 +1595,7 @@
   const claudeOutput = document.getElementById('claudeOutput');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
-  const activityRecs = document.getElementById('activityRecs');
-  const wellnessRecs = document.getElementById('wellnessRecs');
-  const learningRecs = document.getElementById('learningRecs');
+  const itineraryBoard = document.getElementById('itineraryBoard');
   const calendarWeekStart = new Date('2026-05-24T00:00:00-07:00');
   const calendarWeekEnd = new Date('2026-05-31T00:00:00-07:00');
   const mindmapStorageKey = 'rosewoodCompassMindmap';
@@ -1677,6 +1798,64 @@
     `).join('');
   }
 
+  const itineraryImages = {
+    activity: [
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee7?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80'
+    ],
+    wellness: [
+      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=900&q=80'
+    ],
+    learning: [
+      'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=900&q=80'
+    ]
+  };
+
+  function itineraryDay(meta, fallbackIndex) {
+    const match = String(meta || '').match(/May\s+(26|27|28)/i);
+    return match ? match[1] : String(26 + (fallbackIndex % 3));
+  }
+
+  function itineraryTime(meta) {
+    const text = String(meta || '');
+    return text.split('·')[0]?.trim() || 'May 26-28';
+  }
+
+  function renderItineraryBoard(itinerary) {
+    const categories = [
+      ['activity', itinerary?.activity || []],
+      ['wellness', itinerary?.wellness || []],
+      ['learning', itinerary?.learning || []]
+    ];
+    const byDay = { 26: [], 27: [], 28: [] };
+
+    categories.forEach(([category, items]) => {
+      items.forEach((item, index) => {
+        const day = itineraryDay(item.meta, index);
+        byDay[day].push({ ...item, category, image: itineraryImages[category][index % itineraryImages[category].length] });
+      });
+    });
+
+    itineraryBoard.querySelectorAll('[data-day]').forEach(stack => {
+      const items = byDay[stack.dataset.day] || [];
+      stack.innerHTML = items.length ? items.map(item => `
+        <article class="itinerary-card">
+          <div class="itinerary-img" style="--card-image:url('${item.image}')">
+            <span class="itinerary-chip">${escapeHtml(item.category)}</span>
+          </div>
+          <div class="itinerary-body">
+            <div class="itinerary-time">${escapeHtml(itineraryTime(item.meta))}</div>
+            <div class="itinerary-title">${escapeHtml(item.name)}</div>
+            <div class="itinerary-why">${escapeHtml(item.why || 'Personalized from your preference map and trip context.')}</div>
+            <span class="itinerary-action">${escapeHtml(item.cta || 'add')} →</span>
+          </div>
+        </article>
+      `).join('') : '<div class="empty-card">open afternoon</div>';
+    });
+  }
+
   async function generateActivities() {
     generateActivitiesStatus.textContent = 'Generating May 26-28 itinerary from mind map...';
     try {
@@ -1688,9 +1867,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Itinerary request failed');
 
-      renderRecommendationList(activityRecs, data.itinerary.activity);
-      renderRecommendationList(wellnessRecs, data.itinerary.wellness);
-      renderRecommendationList(learningRecs, data.itinerary.learning);
+      renderItineraryBoard(data.itinerary);
       generateActivitiesStatus.textContent = data.fallback
         ? `Using fallback itinerary. ${data.warning || ''}`
         : `Generated with ${data.model}.`;
