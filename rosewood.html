@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rosewood — Personal Concierge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── CANVAS ─────────────────────────────────────────── */
+  body {
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    color: rgba(18,15,12,0.92);
+    overflow-x: hidden;
+    background-color: #e8e2d8;
+  }
+
+  /* ── SLIDESHOW ──────────────────────────────────────── */
+  .slides {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.80) saturate(0.78) contrast(0.93);
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+  }
+
+  .slide.active { opacity: 1; }
+
+  /* Warm taupe overlay — consistent across all images */
+  .slides::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(232,224,212,0.55);
+    z-index: 1;
+  }
+
+  /* ── APP SHELL ──────────────────────────────────────── */
+  .app {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ────────────────────────────────────────────── */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 36px 64px;
+  }
+
+  .logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.42em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.85);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .guest-name {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.55);
+  }
+
+  .nav-link {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.70);
+    cursor: pointer;
+    border-bottom: 0.5px solid transparent;
+    padding-bottom: 1px;
+    transition: all 0.3s ease;
+  }
+  .nav-link:hover {
+    color: rgba(18,15,12,1);
+    border-bottom-color: rgba(18,15,12,0.4);
+  }
+
+  /* ── HERO SPLIT ─────────────────────────────────────── */
+  .hero-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    padding: 8vh 64px 0;
+  }
+
+  /* ── GREETING ───────────────────────────────────────── */
+  .greeting {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .greeting-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: lowercase;
+    color: rgba(30,48,36,0.65);
+    margin-bottom: 20px;
+    padding-top: 6px;
+  }
+
+  .greeting-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(40px, 5.5vw, 72px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: rgba(18,15,12,0.97);
+    margin-bottom: 28px;
+  }
+
+  .greeting-title em {
+    font-style: italic;
+    color: rgba(30,48,36,0.82);
+  }
+
+  .greeting-sub {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: rgba(18,15,12,0.72);
+    line-height: 1.85;
+    max-width: 420px;
+  }
+
+  /* ── SECTION CONTAINER ──────────────────────────────────── */
+  .section-container {
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 60px 40px;
+    border-radius: 0px;
+    margin-top: 8vh;
+  }
+
+  /* ── ACCORDION ─────────────────────────────────────────── */
+  .accordion {
+    padding: 0;
+    margin-top: 0;
+  }
+
+  .accordion-item {
+    border-bottom: 0.5px solid rgba(28,25,20,0.12);
+  }
+  .accordion-item:first-child {
+    border-top: 0.5px solid rgba(28,25,20,0.12);
+  }
+
+  .accordion-hdr {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 24px 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: opacity 0.2s ease;
+  }
+  .accordion-hdr:hover { opacity: 0.72; }
+
+  .acc-left {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    width: 260px;
+    flex-shrink: 0;
+  }
+
+  .acc-index {
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 0.32em;
+    color: rgba(28,25,20,0.22);
+  }
+
+  .acc-tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    border: 0.5px solid currentColor;
+  }
+
+  .accordion-item.activity .acc-tag { color: #1E3024; background: rgba(30,48,36,0.08); }
+  .accordion-item.wellness .acc-tag  { color: rgba(150,110,52,0.95); background: rgba(180,138,78,0.09); }
+  .accordion-item.learning .acc-tag  { color: rgba(100,85,155,0.95); background: rgba(128,112,180,0.09); }
+
+  .acc-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(34px, 4vw, 58px);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.95);
+    line-height: 1.0;
+    flex: 1;
+    text-align: right;
+    margin: 0;
+  }
+
+  .acc-indicator {
+    margin-left: 32px;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .acc-indicator::before,
+  .acc-indicator::after {
+    content: '';
+    position: absolute;
+    background: rgba(28,25,20,0.40);
+    transition: transform 0.35s ease, opacity 0.35s ease;
+  }
+  .acc-indicator::before {
+    width: 16px; height: 0.5px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .acc-indicator::after {
+    width: 0.5px; height: 16px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .accordion-item.open .acc-indicator::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+    opacity: 0;
+  }
+
+  /* Body */
+  .accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .accordion-item.open .accordion-body { max-height: 700px; }
+
+  .acc-body-inner { padding-bottom: 44px; }
+
+  /* Chips */
+  .acc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .chip {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.35);
+    padding: 4px 0;
+    border-bottom: 0.5px solid rgba(18,15,12,0.16);
+  }
+  .chip.active {
+    font-weight: 500;
+    color: rgba(18,15,12,0.82);
+    border-bottom-color: rgba(18,15,12,0.45);
+  }
+
+  /* Pillar rule */
+  .acc-rule {
+    width: 32px;
+    height: 0.5px;
+    margin-bottom: 28px;
+    opacity: 0.6;
+  }
+  .accordion-item.activity .acc-rule { background: #1E3024; }
+  .accordion-item.wellness .acc-rule { background: rgba(180,138,78,1); }
+  .accordion-item.learning .acc-rule { background: rgba(128,112,180,1); }
+
+  .recs-label {
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.60);
+    margin-bottom: 18px;
+  }
+
+  .recs { display: flex; flex-direction: column; }
+
+  .rec {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    padding: 18px 0;
+    border-top: 0.5px solid rgba(28,25,20,0.08);
+    cursor: pointer;
+    transition: opacity 0.25s ease;
+  }
+  .rec:last-child { border-bottom: 0.5px solid rgba(28,25,20,0.08); }
+  .rec:hover { opacity: 0.62; }
+
+  .rec-info { flex: 1; }
+
+  .rec-name {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgba(18,15,12,0.94);
+    margin-bottom: 4px;
+  }
+
+  .rec-meta {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: rgba(18,15,12,0.55);
+  }
+
+  .rec-cta {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.40);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+  .rec:hover .rec-cta { color: rgba(18,15,12,0.75); }
+
+  /* ── GUEST CARD ─────────────────────────────────────── */
+  .guest-card {
+    margin: 0;
+    max-width: 100%;
+    border: 0.5px solid rgba(255,252,248,0.20);
+    background: rgba(10,9,7,0.62);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* ── CARD TABS ───────────────────────────────────────── */
+  .card-tabs {
+    display: flex;
+    border-bottom: 0.5px solid rgba(255,252,248,0.1);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 0.28em;
+    text-transform: lowercase;
+    color: rgba(255,252,248,0.32);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    margin-bottom: -0.5px;
+    transition: all 0.25s ease;
+  }
+
+  .tab-btn.active {
+    color: rgba(255,252,248,0.82);
+    border-bottom-color: rgba(220,185,130,0.7);
+  }
+
+  .tab-btn:hover:not(.active) {
+    color: rgba(255,252,248,0.55);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── CALENDAR ────────────────────────────────────────── */
+  .cal-days {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    border-bottom: 0.5px solid rgba(255,252,248,0.08);
+  }
+
+  .cal-day-hdr {
+    padding: 10px 8px 8px;
+    text-align: center;
+    border-right: 0.5px solid rgba(255,252,248,0.07);
+  }
+  .cal-day-hdr:last-child { border-right: none; }
+
+  .cal-day-hdr.today { background: rgba(220,185,130,0.07); }
+
+  .cal-dow {
+    font-size: 8px;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: lowercase;
+    color: rgba(255,252,248,0.3);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .cal-date {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 300;
+    color: rgba(255,252,248,0.7);
+    display: block;
+    line-height: 1;
+  }
+
+  .cal-day-hdr.today .cal-date { color: rgba(220,185,130,0.9); }
+
+  .cal-events {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    min-height: 100px;
+  }
+
+  .cal-col {
+    padding: 0 6px;
+    border-right: 0.5px solid rgba(255,252,248,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .cal-col:last-child { border-right: none; }
+  .cal-col:first-child { padding-left: 0; }
+
+  .cal-event {
+    padding: 5px 7px;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+    border-left: 1.5px solid transparent;
+  }
+
+  .cal-event.activity {
+    background: rgba(155,210,175,0.07);
+    border-left-color: rgba(155,210,175,0.5);
+    color: rgba(155,210,175,0.82);
+  }
+
+  .cal-event.wellness {
+    background: rgba(220,185,130,0.07);
+    border-left-color: rgba(220,185,130,0.5);
+    color: rgba(220,185,130,0.82);
+  }
+
+  .cal-event.learning {
+    background: rgba(185,170,220,0.07);
+    border-left-color: rgba(185,170,220,0.5);
+    color: rgba(185,170,220,0.82);
+  }
+
+  .cal-event-time {
+    display: block;
+    font-size: 8px;
+    opacity: 0.6;
+    margin-bottom: 1px;
+    letter-spacing: 0.06em;
+  }
+
+  .cal-empty {
+    font-size: 9px;
+    color: rgba(255,252,248,0.15);
+    letter-spacing: 0.08em;
+    padding-top: 4px;
+  }
+
+  .card-header {
+    padding: 1.5rem;
+    border-bottom: 0.5px solid rgba(255,252,248,0.1);
+  }
+
+  .card-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .card-brand-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.28em;
+    text-transform: lowercase;
+    color: rgba(255,252,248,0.45);
+  }
+
+  .card-badge {
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    color: rgba(185,210,220,0.82);
+    background: rgba(185,210,220,0.1);
+    padding: 3px 10px;
+    border: 0.5px solid rgba(185,210,220,0.2);
+  }
+
+  .card-guest-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .card-avatar {
+    width: 48px;
+    height: 48px;
+    background: rgba(166,137,102,0.25);
+    border: 0.5px solid rgba(220,185,130,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: rgba(220,185,130,0.85);
+    flex-shrink: 0;
+  }
+
+  .card-guest-name {
+    font-size: 17px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: rgba(255,252,248,0.9);
+    margin: 0 0 4px;
+  }
+
+  .card-guest-meta {
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: rgba(255,252,248,0.35);
+    margin: 0;
+  }
+
+  .card-sep { opacity: 0.25; margin: 0 6px; }
+
+  .card-section {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 0.5px solid rgba(255,252,248,0.07);
+  }
+
+  .card-section-label {
+    font-size: 8px;
+    font-weight: 300;
+    letter-spacing: 0.32em;
+    text-transform: lowercase;
+    color: rgba(255,252,248,0.28);
+    margin: 0 0 12px;
+  }
+
+  .prefs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .pref-item {
+    background: rgba(255,252,248,0.05);
+    border: 0.5px solid rgba(255,252,248,0.08);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pref-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .pref-label {
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: rgba(255,252,248,0.35);
+    margin: 0 0 2px;
+  }
+
+  .pref-value {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255,252,248,0.78);
+    margin: 0;
+  }
+
+  .arrival-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .arrival-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+  }
+
+  .arrival-item.done {
+    background: rgba(155,210,175,0.08);
+    border: 0.5px solid rgba(155,210,175,0.15);
+    color: rgba(155,210,175,0.82);
+  }
+
+  .arrival-item.pending {
+    background: rgba(220,185,130,0.08);
+    border: 0.5px solid rgba(220,185,130,0.15);
+    color: rgba(220,185,130,0.82);
+  }
+
+  .arrival-icon { font-size: 14px; flex-shrink: 0; }
+
+  .card-actions {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    gap: 8px;
+  }
+
+  .card-btn-primary {
+    flex: 1;
+    background: rgba(220,185,130,0.18);
+    border: 0.5px solid rgba(220,185,130,0.35);
+    color: rgba(220,185,130,0.9);
+    padding: 10px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .card-btn-primary:hover {
+    background: rgba(220,185,130,0.28);
+    border-color: rgba(220,185,130,0.55);
+  }
+
+  .card-btn-ghost {
+    flex: 1;
+    background: transparent;
+    border: 0.5px solid rgba(255,252,248,0.14);
+    color: rgba(255,252,248,0.45);
+    padding: 10px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .card-btn-ghost:hover {
+    border-color: rgba(255,252,248,0.28);
+    color: rgba(255,252,248,0.72);
+  }
+
+  /* ── AMBIENT ────────────────────────────────────────── */
+  .ambient {
+    padding: 6vh 64px 14vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 48px;
+    border-top: 0.5px solid rgba(28,25,20,0.1);
+    max-width: 900px;
+  }
+
+  .ambient-label {
+    font-size: 8px;
+    font-weight: 300;
+    letter-spacing: 0.32em;
+    text-transform: lowercase;
+    color: rgba(28,25,20,0.25);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .ambient-signals {
+    display: flex;
+    gap: 48px;
+    flex: 1;
+  }
+
+  .signal {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .signal-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 500;
+    color: rgba(18,15,12,0.88);
+    line-height: 1;
+  }
+
+  .signal-lbl {
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.50);
+  }
+
+  .ambient-action {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.28em;
+    text-transform: lowercase;
+    color: rgba(28,25,20,0.40);
+    cursor: pointer;
+    border-bottom: 0.5px solid rgba(28,25,20,0.22);
+    padding-bottom: 2px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  .ambient-action:hover {
+    color: rgba(28,25,20,0.72);
+    border-bottom-color: rgba(28,25,20,0.45);
+  }
+
+  /* ── SLIDE LABEL (bottom right) ─────────────────────── */
+  .slide-label {
+    position: fixed;
+    bottom: 36px;
+    right: 64px;
+    z-index: 3;
+    font-size: 8px;
+    font-weight: 300;
+    letter-spacing: 0.28em;
+    text-transform: lowercase;
+    color: rgba(28,25,20,0.35);
+    transition: opacity 0.6s ease;
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDESHOW BACKGROUND -->
+<div class="slides">
+  <div class="slide active" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWNMK_Destination_Lake-Jetty_Lifestyle-7.jpg');background-position:center 40%;"></div>
+  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWDHA_Facilities_Houses_1601_PianoLounge-0045.jpg');background-position:center;"></div>
+  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWMDR_Facilities_Suite_Ocean-View-Mountain-Studio-Suite_Bedroom-with-Terrace-and-Pool.jpg');background-position:center 30%;"></div>
+  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWAMS_Facilities_Public-Spaces_Art_Statica_Frederik-Molenschot_1.jpg');background-position:center;"></div>
+  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWAMS_Facilities_Wellness_Asaya_Corridor_1.jpg');background-position:center top;"></div>
+</div>
+
+<div class="slide-label" id="slideLabel">rosewood new market &nbsp;·&nbsp; lake jetty</div>
+
+<div class="app">
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">rosewood</div>
+    <div class="nav-right">
+      <span class="guest-name">rosewood &nbsp;·&nbsp; london</span>
+      <span class="nav-link">my stay</span>
+      <span class="nav-link">concierge</span>
+    </div>
+  </nav>
+
+  <div class="hero-split">
+
+  <!-- LEFT: GREETING -->
+  <div class="greeting">
+    <div class="greeting-label">day 2 of 5 &nbsp;·&nbsp; suite 412</div>
+    <h1 class="greeting-title">Good evening,<br><em>your world, curated.</em></h1>
+    <p class="greeting-sub">We've shaped today around your patterns. Everything below is yours alone.</p>
+  </div>
+
+  <!-- RIGHT: GUEST CARD -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <div class="guest-card">
+
+    <div class="card-header">
+      <div class="card-brand">
+        <div class="card-brand-name">
+          <i class="ti ti-diamond" style="font-size:15px;color:rgba(220,185,130,0.7);"></i>
+          rosewood london
+        </div>
+        <span class="card-badge">platinum guest</span>
+      </div>
+      <div class="card-guest-row">
+        <div class="card-avatar">OM</div>
+        <div>
+          <p class="card-guest-name">Welcome back, Ms. Olivia</p>
+          <p class="card-guest-meta">Suite 1204 <span class="card-sep">|</span> May 16–20, 2026 <span class="card-sep">|</span> 4th stay</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="card-tabs">
+      <button class="tab-btn active" onclick="switchTab('profile', this)">profile</button>
+      <button class="tab-btn" onclick="switchTab('calendar', this)">calendar</button>
+    </div>
+
+    <!-- PROFILE PANEL -->
+    <div class="tab-panel active" id="tab-profile">
+      <div class="card-section">
+        <p class="card-section-label">remembered preferences</p>
+        <div class="prefs-grid">
+          <div class="pref-item">
+            <i class="ti ti-temperature pref-icon" style="color:rgba(155,210,175,0.8);"></i>
+            <div><p class="pref-label">room temp</p><p class="pref-value">21°C</p></div>
+          </div>
+          <div class="pref-item">
+            <i class="ti ti-pillow pref-icon" style="color:rgba(185,170,220,0.8);"></i>
+            <div><p class="pref-label">pillow type</p><p class="pref-value">Firm, buckwheat</p></div>
+          </div>
+          <div class="pref-item">
+            <i class="ti ti-coffee pref-icon" style="color:rgba(220,185,130,0.8);"></i>
+            <div><p class="pref-label">morning</p><p class="pref-value">Oat cappuccino, 7am</p></div>
+          </div>
+          <div class="pref-item">
+            <i class="ti ti-leaf pref-icon" style="color:rgba(155,210,175,0.8);"></i>
+            <div><p class="pref-label">dietary</p><p class="pref-value">Pescatarian, no nuts</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-section">
+        <p class="card-section-label">arrival preparation</p>
+        <div class="arrival-list">
+          <div class="arrival-item done"><i class="ti ti-check arrival-icon"></i>Suite pre-cooled to 21°C</div>
+          <div class="arrival-item done"><i class="ti ti-check arrival-icon"></i>Turndown with lavender linen spray</div>
+          <div class="arrival-item pending"><i class="ti ti-clock arrival-icon"></i>Welcome champagne — confirm rosé preference</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="card-btn-primary"><i class="ti ti-message" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>message guest</button>
+        <button class="card-btn-ghost"><i class="ti ti-edit" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>edit preferences</button>
+      </div>
+    </div>
+
+    <!-- CALENDAR PANEL -->
+    <div class="tab-panel" id="tab-calendar">
+      <div class="cal-days">
+        <div class="cal-day-hdr"><span class="cal-dow">sat</span><span class="cal-date">16</span></div>
+        <div class="cal-day-hdr today"><span class="cal-dow">sun</span><span class="cal-date">17</span></div>
+        <div class="cal-day-hdr"><span class="cal-dow">mon</span><span class="cal-date">18</span></div>
+        <div class="cal-day-hdr"><span class="cal-dow">tue</span><span class="cal-date">19</span></div>
+        <div class="cal-day-hdr"><span class="cal-dow">wed</span><span class="cal-date">20</span></div>
+      </div>
+      <div class="cal-events">
+        <div class="cal-col">
+          <div class="cal-event wellness"><span class="cal-event-time">6:30p</span>Sauna</div>
+          <div class="cal-event activity"><span class="cal-event-time">8:00a</span>Hyde Park ride</div>
+        </div>
+        <div class="cal-col">
+          <div class="cal-event activity"><span class="cal-event-time">7:00a</span>Heath trail</div>
+          <div class="cal-event wellness"><span class="cal-event-time">7:15a</span>Breathwork</div>
+          <div class="cal-event learning"><span class="cal-event-time">3:00p</span>Floris perfume</div>
+        </div>
+        <div class="cal-col">
+          <div class="cal-event learning"><span class="cal-event-time">7:00p</span>V&amp;A tour</div>
+          <div class="cal-event wellness"><span class="cal-event-time">9:45p</span>Turn-down</div>
+        </div>
+        <div class="cal-col">
+          <div class="cal-event activity"><span class="cal-event-time">9:00a</span>Cycling</div>
+          <div class="cal-event wellness"><span class="cal-event-time">4:00p</span>Spa</div>
+        </div>
+        <div class="cal-col">
+          <span class="cal-empty">checkout</span>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="card-btn-ghost" style="flex:1;"><i class="ti ti-plus" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>add experience</button>
+      </div>
+    </div>
+
+  </div><!-- /.guest-card -->
+
+  </div><!-- /.hero-split -->
+
+  <!-- ACCORDION -->
+  <div class="section-container">
+  <div class="accordion">
+
+    <div class="accordion-item activity open">
+      <button class="accordion-hdr" onclick="toggleAccordion(this)">
+        <div class="acc-left">
+          <span class="acc-index">01</span>
+          <span class="acc-tag">movement &amp; energy</span>
+        </div>
+        <h2 class="acc-title">activity</h2>
+        <div class="acc-indicator"></div>
+      </button>
+      <div class="accordion-body">
+        <div class="acc-body-inner">
+          <div class="acc-chips">
+            <span class="chip active">hiking</span>
+            <span class="chip active">morning run</span>
+            <span class="chip active">cycling</span>
+            <span class="chip">yoga</span>
+            <span class="chip">swimming</span>
+          </div>
+          <div class="acc-rule"></div>
+          <div class="recs-label">curated for today</div>
+          <div class="recs">
+            <div class="rec">
+              <div class="rec-info">
+                <div class="rec-name">Hampstead Heath Morning Trail</div>
+                <div class="rec-meta">6.2 km &nbsp;·&nbsp; 7:00 AM &nbsp;·&nbsp; guide available</div>
+              </div>
+              <span class="rec-cta">reserve guide →</span>
+            </div>
+            <div class="rec">
+              <div class="rec-info">
+                <div class="rec-name">Private Cycling — Hyde Park</div>
+                <div class="rec-meta">curated route &nbsp;·&nbsp; bicycle arranged</div>
+              </div>
+              <span class="rec-cta">schedule →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item wellness">
+      <button class="accordion-hdr" onclick="toggleAccordion(this)">
+        <div class="acc-left">
+          <span class="acc-index">02</span>
+          <span class="acc-tag">restore &amp; regulate</span>
+        </div>
+        <h2 class="acc-title">wellness</h2>
+        <div class="acc-indicator"></div>
+      </button>
+      <div class="accordion-body">
+        <div class="acc-body-inner">
+          <div class="acc-chips">
+            <span class="chip active">sauna</span>
+            <span class="chip active">meditation</span>
+            <span class="chip active">sleep ritual</span>
+            <span class="chip">cold plunge</span>
+            <span class="chip active">journaling</span>
+          </div>
+          <div class="acc-rule"></div>
+          <div class="recs-label">prepared for you</div>
+          <div class="recs">
+            <div class="rec">
+              <div class="rec-info">
+                <div class="rec-name">Finnish Sauna + Cold Plunge</div>
+                <div class="rec-meta">reserved 6:30 PM &nbsp;·&nbsp; private session</div>
+              </div>
+              <span class="rec-cta">confirmed →</span>
+            </div>
+            <div class="rec">
+              <div class="rec-info">
+                <div class="rec-name">Sleep Optimization Turn-Down</div>
+                <div class="rec-meta">magnesium tea, blackout, 18°C &nbsp;·&nbsp; 9:45 PM</div>
+              </div>
+              <span class="rec-cta">adjust preferences →</span>
+            </div>
+            <div class="rec">
+              <div class="rec-info">
+                <div class="rec-name">Morning Guided Breathwork</div>
+                <div class="rec-meta">7:15 AM &nbsp;·&nbsp; rooftop &nbsp;·&nbsp; 20 min</div>
+              </div>
+              <span class="rec-cta">add to morning →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item learning">
+      <button class="accordion-hdr" onclick="toggleAccordion(this)">
+        <div class="acc-left">
+          <span class="acc-index">03</span>
+          <span class="acc-tag">culture &amp; growth</span>
+        </div>
+        <h2 class="acc-title">learning</h2>
+        <div class="acc-indicator"></div>
+      </button>
+      <div class="accordion-body">
+        <div class="acc-body-inner">
+          <div class="acc-chips">
+            <span class="chip active">workshops</span>
+            <span class="chip active">museums</span>
+            <span class="chip">language</span>
+            <span class="chip active">artisan crafts</span>
+            <span class="chip">architecture</span>
+          </div>
+          <div class="acc-rule"></div>
+          <div class="recs-label">exclusive experiences</div>
+          <div class="recs">
+            <div class="rec">
+              <div class="rec-info">
+                <div class="rec-name">Perfume Making — Floris London</div>
+                <div class="rec-meta">private session &nbsp;·&nbsp; 3:00 PM tomorrow</div>
+              </div>
+              <span class="rec-cta">reserve 2 seats →</span>
+            </div>
+            <div class="rec">
+              <div class="rec-info">
+                <div class="rec-name">V&amp;A After-Hours Private Tour</div>
+                <div class="rec-meta">curator-led &nbsp;·&nbsp; textiles &amp; fashion</div>
+              </div>
+              <span class="rec-cta">check availability →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.accordion -->
+  </div><!-- /.section-container -->
+
+  <!-- AMBIENT -->
+  <div class="ambient">
+    <span class="ambient-label">ambient</span>
+    <div class="ambient-signals">
+      <div class="signal">
+        <div class="signal-val">22°</div>
+        <div class="signal-lbl">suite temp</div>
+      </div>
+      <div class="signal">
+        <div class="signal-val">7h 40</div>
+        <div class="signal-lbl">last sleep</div>
+      </div>
+      <div class="signal">
+        <div class="signal-val">cloudy</div>
+        <div class="signal-lbl">tomorrow AM</div>
+      </div>
+      <div class="signal">
+        <div class="signal-val">day 2</div>
+        <div class="signal-lbl">stay rhythm</div>
+      </div>
+    </div>
+    <span class="ambient-action">tell us more</span>
+  </div>
+
+</div><!-- /.app -->
+
+<script>
+  function toggleAccordion(btn) {
+    const item = btn.closest('.accordion-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  const slides = document.querySelectorAll('.slide');
+  const label  = document.getElementById('slideLabel');
+  const labels = [
+    'rosewood new market \u00b7 lake jetty',
+    'rosewood dhahran \u00b7 piano lounge',
+    'rosewood mandarina \u00b7 ocean suite',
+    'rosewood amsterdam \u00b7 public spaces',
+    'rosewood amsterdam \u00b7 asaya wellness',
+  ];
+
+  let current = 0;
+
+  setInterval(() => {
+    slides[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+    label.style.opacity = '0';
+    setTimeout(() => {
+      label.textContent = labels[current];
+      label.style.opacity = '1';
+    }, 1000);
+  }, 6000);
+</script>
+
+</body>
+</html>
