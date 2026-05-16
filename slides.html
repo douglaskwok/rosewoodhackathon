@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rosewood Hackathon — Problem Statement</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #e8e2d8;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── SLIDE BASE ──────────────────────────────────────── */
+  .slide {
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── NAV CONTROLS ───────────────────────────────────── */
+  .nav-prev, .nav-next {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 15vw;
+    z-index: 100;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  .nav-prev { left: 0; justify-content: flex-start; padding-left: 28px; }
+  .nav-next { right: 0; justify-content: flex-end; padding-right: 28px; }
+
+  .nav-arrow {
+    font-size: 18px;
+    color: rgba(18,15,12,0.22);
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+  }
+  .nav-prev:hover .nav-arrow,
+  .nav-next:hover .nav-arrow { opacity: 1; }
+
+  .slide-dots {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+  }
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(18,15,12,0.22);
+    transition: background 0.3s;
+    cursor: pointer;
+  }
+  .dot.active { background: rgba(18,15,12,0.60); }
+
+  .slide-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.85) saturate(0.72) contrast(0.92);
+  }
+
+  .slide-overlay {
+    position: absolute;
+    inset: 0;
+  }
+
+  .slide-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 52px 72px;
+  }
+
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .slide-brand {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.44em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.45);
+  }
+
+  .slide-num {
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    color: rgba(18,15,12,0.28);
+  }
+
+  .eyebrow {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.42em;
+    text-transform: lowercase;
+    color: #1E3024;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 28px;
+    height: 0.5px;
+    background: #1E3024;
+    flex-shrink: 0;
+  }
+
+
+  /* ══════════════════════════════════════════════
+     SLIDE 1 — THE PROBLEM STATEMENT
+     ══════════════════════════════════════════════ */
+  #slide-1 .slide-bg {
+    background-image: url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWDHA_Facilities_Houses_1601_PianoLounge-0045.jpg');
+    background-position: center;
+  }
+  #slide-1 .slide-overlay {
+    background: rgba(235,228,215,0.68);
+  }
+
+  .ps-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 6vh;
+  }
+
+  .ps-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 3.6vw, 52px);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: rgba(18,15,12,0.95);
+    margin-bottom: 28px;
+    max-width: 560px;
+  }
+
+  .ps-headline em {
+    font-style: italic;
+    color: rgba(18,15,12,0.42);
+  }
+
+  .ps-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .ps-card {
+    padding: 32px 28px;
+    background: rgba(255,255,255,0.52);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(18,15,12,0.08);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ps-card:nth-child(1) { border-top: 2px solid #1E3024; }
+  .ps-card:nth-child(2) { border-top: 2px solid rgba(180,138,78,0.85); }
+  .ps-card:nth-child(3) { border-top: 2px solid rgba(120,105,175,0.75); }
+
+  .ps-card-num {
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 0.36em;
+    color: rgba(18,15,12,0.22);
+    margin-bottom: 16px;
+  }
+
+  .ps-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: rgba(18,15,12,0.88);
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+
+  .ps-card-desc {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.72;
+    color: rgba(18,15,12,0.48);
+    flex: 1;
+  }
+
+  .ps-card-tag {
+    display: inline-flex;
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: lowercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    border: 0.5px solid currentColor;
+    margin-top: 20px;
+    align-self: flex-start;
+  }
+
+  .ps-card:nth-child(1) .ps-card-tag { color: #1E3024; }
+  .ps-card:nth-child(2) .ps-card-tag { color: rgba(150,110,50,0.90); }
+  .ps-card:nth-child(3) .ps-card-tag { color: rgba(100,85,155,0.90); }
+
+
+  /* ── FLOW (sense → reason → surface) ─────────── */
+  .flow-row {
+    display: grid;
+    grid-template-columns: 1fr 20px 1fr 20px 1fr;
+    gap: 0;
+    margin-top: 24px;
+    align-items: stretch;
+  }
+
+  .flow-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: rgba(18,15,12,0.20);
+  }
+
+  .flow-step {
+    padding: 22px 22px 18px;
+    background: rgba(255,255,255,0.52);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(18,15,12,0.08);
+    border-top: 2px solid rgba(18,15,12,0.15);
+  }
+
+  .flow-step:nth-child(1) { border-top-color: #1E3024; }
+  .flow-step:nth-child(2) { border-top-color: rgba(180,138,78,0.85); }
+  .flow-step:nth-child(3) { border-top-color: rgba(120,105,175,0.80); }
+
+  .flow-layer {
+    font-size: 7.5px;
+    font-weight: 500;
+    letter-spacing: 0.38em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.28);
+    margin-bottom: 8px;
+  }
+
+  .flow-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: rgba(18,15,12,0.90);
+    margin-bottom: 12px;
+    line-height: 1.1;
+  }
+
+  .flow-signals {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+
+  .flow-signal {
+    font-size: 10.5px;
+    font-weight: 400;
+    color: rgba(18,15,12,0.48);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    line-height: 1.45;
+  }
+
+  .flow-signal::before {
+    content: '·';
+    color: rgba(18,15,12,0.22);
+    flex-shrink: 0;
+  }
+
+  .flow-signal strong {
+    font-weight: 500;
+    color: rgba(18,15,12,0.75);
+  }
+
+  .flow-ref {
+    font-size: 7.5px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.28);
+    padding: 3px 9px;
+    border: 0.5px solid rgba(18,15,12,0.16);
+    border-radius: 100px;
+    display: inline-block;
+  }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 2 — DATA + JUDGING
+     ══════════════════════════════════════════════ */
+  #slide-2 .slide-bg {
+    background-image: url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWAMS_Facilities_Wellness_Asaya_Corridor_1.jpg');
+    background-position: center top;
+  }
+  #slide-2 .slide-overlay {
+    background: rgba(235,228,215,0.70);
+  }
+
+  .data-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 8vh;
+  }
+
+  .data-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+    margin-bottom: 48px;
+    align-items: end;
+  }
+
+  .data-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: rgba(18,15,12,0.95);
+  }
+
+  .data-headline em {
+    font-style: italic;
+    color: rgba(18,15,12,0.40);
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-bottom: 2px;
+  }
+
+  .stat-box {
+    padding: 28px 28px 24px;
+    background: rgba(255,255,255,0.52);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(18,15,12,0.08);
+  }
+
+  .stat-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 44px;
+    font-weight: 400;
+    color: rgba(18,15,12,0.90);
+    line-height: 1;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: rgba(18,15,12,0.48);
+    margin-bottom: 10px;
+  }
+
+  .stat-source {
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.22);
+  }
+
+  /* Judging bar */
+  .judging-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .judge-item {
+    padding: 18px 28px;
+    background: rgba(255,255,255,0.38);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(18,15,12,0.08);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .judge-pct {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: rgba(18,15,12,0.75);
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+  }
+
+  .judge-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: rgba(18,15,12,0.55);
+    line-height: 1.4;
+  }
+
+  .judge-sublabel {
+    font-size: 9px;
+    font-weight: 400;
+    color: rgba(18,15,12,0.30);
+    letter-spacing: 0.04em;
+  }
+
+  .judging-header {
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.36em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.30);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+
+  /* ══════════════════════════════════════════════
+     SLIDE 3 — TEAM
+     ══════════════════════════════════════════════ */
+  #slide-3 .slide-bg {
+    background-image: url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWMDR_Facilities_Suite_Ocean-View-Mountain-Studio-Suite_Bedroom-with-Terrace-and-Pool.jpg');
+    background-position: center 30%;
+  }
+  #slide-3 .slide-overlay {
+    background: rgba(235,228,215,0.65);
+  }
+
+  .team-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 9vh;
+  }
+
+  .team-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    color: rgba(18,15,12,0.95);
+    line-height: 1.06;
+    margin-bottom: 48px;
+  }
+
+  .team-headline em {
+    font-style: italic;
+    color: rgba(18,15,12,0.40);
+  }
+
+  .team-members {
+    display: flex;
+    gap: 2px;
+  }
+
+  .member {
+    flex: 1;
+    padding: 28px 24px;
+    background: rgba(255,255,255,0.52);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(18,15,12,0.08);
+    border-top: 1.5px solid rgba(18,15,12,0.22);
+  }
+
+  .member-name {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: rgba(18,15,12,0.90);
+    margin-bottom: 5px;
+  }
+
+  .member-role {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.24em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.38);
+    margin-bottom: 16px;
+  }
+
+  .member-focus {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: rgba(18,15,12,0.45);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 1 — PROBLEM STATEMENTS
+     ══════════════════════════════════════════ -->
+<section class="slide active" id="slide-1">
+  <div class="slide-bg"></div>
+  <div class="slide-overlay"></div>
+  <div class="slide-content">
+
+    <div class="slide-header">
+      <span class="slide-brand">rosewood &nbsp;·&nbsp; hackathon 2026</span>
+      <span class="slide-num">01 / 03</span>
+    </div>
+
+    <div class="ps-body">
+      <div class="eyebrow">the invisible concierge</div>
+      <h1 class="ps-headline">
+        The right moment,<br><em>before the guest asks.</em>
+      </h1>
+
+      <div class="flow-row">
+        <div class="flow-step">
+          <div class="flow-layer">sense</div>
+          <div class="flow-title">Read the room</div>
+          <div class="flow-signals">
+            <div class="flow-signal"><strong>Suite temp</strong> 22°C · set low overnight</div>
+            <div class="flow-signal"><strong>Sleep</strong> 7h 40m · slightly below baseline</div>
+            <div class="flow-signal"><strong>Tomorrow</strong> cloudy, 16° · no outdoor plan</div>
+            <div class="flow-signal"><strong>Stay rhythm</strong> day 2 of 5 · exploration</div>
+          </div>
+          <span class="flow-ref">ambient strip</span>
+        </div>
+        <div class="flow-connector">→</div>
+        <div class="flow-step">
+          <div class="flow-layer">reason</div>
+          <div class="flow-title">Understand the guest</div>
+          <div class="flow-signals">
+            <div class="flow-signal"><strong>Activity</strong> movement &amp; energy</div>
+            <div class="flow-signal"><strong>Wellness</strong> restore &amp; regulate</div>
+            <div class="flow-signal"><strong>Learning</strong> culture &amp; growth</div>
+          </div>
+          <span class="flow-ref">claude opus 4.6 × guest profile</span>
+        </div>
+        <div class="flow-connector">→</div>
+        <div class="flow-step">
+          <div class="flow-layer">surface</div>
+          <div class="flow-title">Surface the moment</div>
+          <div class="flow-signals">
+            <div class="flow-signal"><strong>7:00 am</strong> Coastal trail run · 8 km</div>
+            <div class="flow-signal"><strong>6:30 pm</strong> Asaya sauna ritual · 60 min</div>
+            <div class="flow-signal"><strong>3:00 pm</strong> Floris scent workshop</div>
+          </div>
+          <span class="flow-ref">accordion recommendations</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SLIDE 2 — DATA + JUDGING CRITERIA
+     ══════════════════════════════════════════ -->
+<section class="slide" id="slide-2">
+  <div class="slide-bg"></div>
+  <div class="slide-overlay"></div>
+  <div class="slide-content">
+
+    <div class="slide-header">
+      <span class="slide-brand">rosewood &nbsp;·&nbsp; hackathon 2026</span>
+      <span class="slide-num">02 / 03</span>
+    </div>
+
+    <div class="data-body">
+      <div class="data-top">
+        <div>
+          <div class="eyebrow">why it matters</div>
+          <h2 class="data-headline">
+            The gap between<br>expectation and reality<br><em>is measurable.</em>
+          </h2>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val">71%</div>
+          <div class="stat-label">of consumers expect personalized interactions — 76% get frustrated when it doesn't happen</div>
+          <div class="stat-source">McKinsey & Company, 2024</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">23%</div>
+          <div class="stat-label">of hotel stays are rated "highly personalized" — despite personalization being guests' #1 loyalty driver</div>
+          <div class="stat-source">Medallia Hospitality Report</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">+25%</div>
+          <div class="stat-label">more revenue per stay unlocked when guests receive a genuinely personalized experience</div>
+          <div class="stat-source">PwC Customer Experience Survey</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SLIDE 3 — TEAM
+     ══════════════════════════════════════════ -->
+<section class="slide" id="slide-3">
+  <div class="slide-bg"></div>
+  <div class="slide-overlay"></div>
+  <div class="slide-content">
+
+    <div class="slide-header">
+      <span class="slide-brand">rosewood &nbsp;·&nbsp; hackathon 2026</span>
+      <span class="slide-num">03 / 03</span>
+    </div>
+
+    <div class="team-body">
+      <div class="eyebrow">the team</div>
+      <h2 class="team-headline">
+        Built in 5 hours.<br><em>Designed to last.</em>
+      </h2>
+
+      <div class="team-members">
+        <div class="member">
+          <div class="member-name">Douglas Kwok</div>
+          <div class="member-role">engineering</div>
+          <div class="member-focus">Full-stack development, Claude API integration &amp; backend architecture</div>
+        </div>
+        <div class="member">
+          <div class="member-name">Olivia Xiaodan Meng</div>
+          <div class="member-role">product &amp; design</div>
+          <div class="member-focus">Product vision, UX design &amp; guest experience strategy</div>
+        </div>
+        <div class="member">
+          <div class="member-name">Aastha Manocha</div>
+          <div class="member-role">data &amp; personalization</div>
+          <div class="member-focus">Guest signal modeling, preference inference &amp; personalization logic</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Navigation -->
+<div class="nav-prev" onclick="navigate(-1)"><span class="nav-arrow">←</span></div>
+<div class="nav-next" onclick="navigate(1)"><span class="nav-arrow">→</span></div>
+<div class="slide-dots">
+  <div class="dot active" onclick="goTo(0)"></div>
+  <div class="dot" onclick="goTo(1)"></div>
+  <div class="dot" onclick="goTo(2)"></div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+  let current = 0;
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  function navigate(dir) { goTo(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
+  });
+</script>
+
+</body>
+</html>
