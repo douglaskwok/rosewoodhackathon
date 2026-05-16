@@ -1575,7 +1575,9 @@
             <input class="booking-input" id="bookingTime" type="time" value="19:00">
           </div>
           <input class="booking-input" id="bookingCovers" type="number" min="1" max="12" value="2" aria-label="Party size">
+          <input class="booking-input" id="bookingEmail" type="email" placeholder="you@example.com" aria-label="Confirmation email">
           <button class="dock-btn" id="maderaBookingButton" type="button">open madera</button>
+          <button class="dock-btn" id="bookingEmailButton" type="button">send confirmation</button>
         </div>
         <div class="booking-note" id="bookingStatus">Uses OpenTable's restaurant booking page; direct reservation creation requires partner API access.</div>
       </div>
@@ -1631,6 +1633,8 @@
   const bookingDate = document.getElementById('bookingDate');
   const bookingTime = document.getElementById('bookingTime');
   const bookingCovers = document.getElementById('bookingCovers');
+  const bookingEmail = document.getElementById('bookingEmail');
+  const bookingEmailButton = document.getElementById('bookingEmailButton');
   const bookingStatus = document.getElementById('bookingStatus');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
