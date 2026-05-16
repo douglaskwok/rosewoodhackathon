@@ -1752,16 +1752,17 @@
     };
   }
 
-  function recommendationToActivity(item, category) {
+  function recommendationToActivity(item, category = 'activity') {
     const start = itemStart(item);
     const end = start ? itemEnd(item, start) : null;
+    const source = ['activity', 'wellness', 'learning'].includes(category) ? category : 'activity';
     return {
       ...item,
       name: item.name,
       meta: item.meta,
       why: item.why,
       cta: item.cta || 'add',
-      source: category,
+      source,
       start,
       end
     };
@@ -1769,36 +1770,38 @@
 
   function mergeCalendarWithRecommendations(itinerary, calendarEvents) {
     const fixed = tripCalendarEvents(calendarEvents).map(calendarEventToActivity);
+    const merged = { activity: [...fixed], wellness: [], learning: [], skipped: [] };
     const occupied = fixed
       .filter(item => item.start && item.end)
       .map(item => ({ start: item.start, end: item.end }));
-    const accepted = [...fixed];
-    const skipped = [];
 
     ['activity', 'wellness', 'learning'].forEach(category => {
       (itinerary?.[category] || []).forEach(item => {
-        const recommendation = recommendationToActivity(item, category);
+        const recommendation = recommendationToActivity(item, item.category || category);
+        const bucket = recommendation.source || 'activity';
         if (!recommendation.start || !recommendation.end) {
-          accepted.push(recommendation);
+          merged[bucket].push(recommendation);
           return;
         }
         const busy = { start: recommendation.start, end: recommendation.end };
         if (occupied.some(slot => overlaps(slot, busy))) {
-          skipped.push(recommendation);
+          merged.skipped.push(recommendation);
           return;
         }
         occupied.push(busy);
-        accepted.push(recommendation);
+        merged[bucket].push(recommendation);
       });
     });
 
-    accepted.sort((a, b) => {
-      const aTime = a.start ? a.start.getTime() : Number.MAX_SAFE_INTEGER;
-      const bTime = b.start ? b.start.getTime() : Number.MAX_SAFE_INTEGER;
-      return aTime - bTime;
+    ['activity', 'wellness', 'learning'].forEach(category => {
+      merged[category].sort((a, b) => {
+        const aTime = a.start ? a.start.getTime() : Number.MAX_SAFE_INTEGER;
+        const bTime = b.start ? b.start.getTime() : Number.MAX_SAFE_INTEGER;
+        return aTime - bTime;
+      });
     });
 
-    return { activity: accepted, wellness: [], learning: [], skipped };
+    return merged;
   }
 
   async function generateActivities() {
