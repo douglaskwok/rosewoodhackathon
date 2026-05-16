@@ -15,6 +15,7 @@ https://rosewoodhackathon.vercel.app/
 - Google login status that shows the signed-in user's name.
 - Google Calendar week view for May 24-30, 2026.
 - Arrival info card that shows the latest arrival-related Gmail message.
+- Admin preference mind map generated from Gmail snippets using Vertex AI embeddings.
 
 ## Gmail OAuth Setup
 
@@ -56,6 +57,22 @@ https://rosewoodhackathon.vercel.app/api/calendar/debug
 It should include `calendar.readonly` in `tokenScopes`.
 
 After adding Calendar integration, sign in again so Google can ask for the new Calendar read-only permission.
+
+## Vertex AI Embeddings Setup
+
+Enable the Vertex AI API in the same Google Cloud project, then create a service account with permission to call Vertex AI.
+
+Add these Vercel Environment Variables:
+
+```txt
+GCP_PROJECT_ID=your-google-cloud-project-id
+GCP_LOCATION=us-central1
+GCP_SERVICE_ACCOUNT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+GCP_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+GCP_EMBEDDING_MODEL=gemini-embedding-001
+```
+
+The admin mind map calls `/api/preferences/mindmap`, embeds relevant Gmail snippets, and groups them into food preferences, favorite events, and latent goals.
 
 ## Run
 

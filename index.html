@@ -211,13 +211,19 @@
 
       .node {
         position: absolute;
-        width: 150px;
+        width: 190px;
         border: 1px solid #222;
-        border-radius: 999px;
+        border-radius: 8px;
         background: white;
         padding: 10px 14px;
         text-align: center;
-        font-size: 14px;
+        font-size: 13px;
+        line-height: 1.3;
+      }
+
+      .node strong {
+        display: block;
+        margin-bottom: 4px;
       }
 
       .line {
@@ -540,16 +546,17 @@
 
         <div id="admin-onboarding" class="panel" hidden>
           <h2>Admin Onboarding</h2>
+          <p class="muted" id="mindmap-status">Switch to admin after Google is connected to generate inbox-based preferences.</p>
           <div class="map">
             <div class="line food"></div>
             <div class="line wellness"></div>
             <div class="line schedule"></div>
             <div class="line experiences"></div>
             <div class="node center">User preferences</div>
-            <div class="node food">Food</div>
-            <div class="node wellness">Wellness</div>
-            <div class="node schedule">Schedule</div>
-            <div class="node experiences">Experiences</div>
+            <div class="node food" id="node-food"><strong>Food preferences</strong>Waiting for inbox embedding</div>
+            <div class="node wellness" id="node-events"><strong>Favorite events</strong>Waiting for inbox embedding</div>
+            <div class="node schedule" id="node-goals"><strong>Latent goals</strong>Waiting for inbox embedding</div>
+            <div class="node experiences" id="node-evidence"><strong>Evidence</strong>Email subjects will appear here</div>
           </div>
         </div>
       </section>
@@ -601,6 +608,7 @@
       const authMessage = document.getElementById("auth-message");
       const weekCalendar = document.getElementById("week-calendar");
       const calendarLoadState = document.getElementById("calendar-load-state");
+      const mindmapStatus = document.getElementById("mindmap-status");
       const calendarWeekStart = new Date("2026-05-24T00:00:00-07:00");
       const calendarWeekEnd = new Date("2026-05-31T00:00:00-07:00");
       const calendarStartHour = 8;
@@ -632,6 +640,7 @@
           userOnboarding.hidden = isAdmin;
           adminOnboarding.hidden = !isAdmin;
           roleButtons.forEach((item) => item.classList.toggle("active", item === button));
+          if (isAdmin) loadPreferenceMindmap();
         });
       });
 
@@ -744,6 +753,36 @@
         }
         renderCalendarWeek(data.events || []);
         return data;
+      }
+
+      function setMindmapNode(id, title, body) {
+        document.getElementById(id).innerHTML = `<strong>${escapeHtml(title)}</strong>${escapeHtml(body)}`;
+      }
+
+      async function loadPreferenceMindmap() {
+        mindmapStatus.textContent = "Generating preference mind map from Gmail embeddings...";
+        try {
+          const response = await fetch("/api/preferences/mindmap");
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || "Preference mind map request failed");
+          }
+
+          const byKey = Object.fromEntries((data.nodes || []).map((node) => [node.key, node]));
+          setMindmapNode("node-food", "Food + dietary", byKey.foodPreferences?.insight || "No signal yet");
+          setMindmapNode("node-events", "Favorite events", byKey.favoriteEvents?.insight || "No signal yet");
+          setMindmapNode("node-goals", "Latent goals", byKey.latentGoals?.insight || "No signal yet");
+
+          const evidence = (data.nodes || [])
+            .flatMap((node) => node.evidence || [])
+            .slice(0, 3)
+            .map((item) => item.subject)
+            .join("; ");
+          setMindmapNode("node-evidence", "Evidence", evidence || "No matching emails found");
+          mindmapStatus.textContent = `Generated with ${data.provider || "embeddings"} / ${data.model}.`;
+        } catch (error) {
+          mindmapStatus.textContent = `Mind map error: ${error.message}`;
+        }
       }
 
       async function loadArrivalEmail() {
