@@ -1405,6 +1405,7 @@
   <div class="accordion">
     <div class="generate-row">
       <button class="dock-btn" id="generateActivitiesButton" type="button">generate activities</button>
+      <button class="dock-btn" id="publishPlanButton" type="button" disabled>add to calendar + email</button>
       <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
     </div>
 
@@ -1639,6 +1640,7 @@
   const bookingTestButton = document.getElementById('bookingTestButton');
   const bookingStatus = document.getElementById('bookingStatus');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
+  const publishPlanButton = document.getElementById('publishPlanButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
   const activityRecs = document.getElementById('activityRecs');
   const wellnessRecs = document.getElementById('wellnessRecs');
@@ -1652,6 +1654,7 @@
   let isListening = false;
   let adminRecognition = null;
   let adminTranscript = '';
+  let lastPublishablePlan = [];
   const mindmapStorageKey = 'rosewoodCompassMindmap';
   const defaultMindmap = {
     food: ['Japanese', 'Mediterranean', 'Seasonal tasting menus', 'Nut allergy', 'Needs sparkling water', 'Quiet tables'],
@@ -2059,6 +2062,8 @@
       why: item.why,
       cta: item.cta || 'add',
       source,
+      startsAt: item.startsAt || (start ? start.toISOString() : ''),
+      endsAt: item.endsAt || (end ? end.toISOString() : ''),
       start,
       end
     };
@@ -2123,6 +2128,17 @@
       renderRecommendationList(activityRecs, merged.activity);
       renderRecommendationList(wellnessRecs, merged.wellness);
       renderRecommendationList(learningRecs, merged.learning);
+      lastPublishablePlan = [...merged.activity, ...merged.wellness, ...merged.learning]
+        .filter(item => item.source !== 'calendar' && item.startsAt && item.endsAt)
+        .map(item => ({
+          name: item.name,
+          meta: item.meta,
+          why: item.why,
+          startsAt: item.startsAt,
+          endsAt: item.endsAt,
+          source: item.source
+        }));
+      publishPlanButton.disabled = lastPublishablePlan.length === 0;
       generateActivitiesStatus.textContent = data.fallback
         ? `Merged calendar with fallback itinerary. Skipped ${merged.skipped.length} conflict(s). ${data.warning || ''}`
         : `Merged calendar with ${data.model}. Skipped ${merged.skipped.length} conflict(s).`;
@@ -2227,6 +2243,39 @@
 
   mindmapButton?.addEventListener('click', generateMindmap);
   generateActivitiesButton?.addEventListener('click', generateActivities);
+
+  publishPlanButton?.addEventListener('click', async () => {
+    if (!lastPublishablePlan.length) {
+      generateActivitiesStatus.textContent = 'Generate activities first.';
+      return;
+    }
+
+    publishPlanButton.disabled = true;
+    generateActivitiesStatus.textContent = 'Adding plan to Google Calendar and sending emails...';
+    try {
+      const response = await fetch('/api/calendar/publish-plan', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          items: lastPublishablePlan,
+          email: bookingEmail.value.trim() || 'bananachocolatebrownie@gmail.com'
+        })
+      });
+      const raw = await response.text();
+      let data = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = { error: raw || 'Publish route returned a non-JSON response' };
+      }
+      if (!response.ok) throw new Error(data.error || 'Plan publish failed');
+      generateActivitiesStatus.textContent = `Added ${data.created.length} calendar event(s) and sent ${data.emailed.length} email(s).`;
+      loadCalendarEvents().catch(() => {});
+    } catch (error) {
+      publishPlanButton.disabled = false;
+      generateActivitiesStatus.textContent = error.message;
+    }
+  });
 
   adminRecordButton?.addEventListener('click', () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
