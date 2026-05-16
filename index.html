@@ -329,6 +329,23 @@
     color: rgba(255,252,248,0.42);
   }
 
+  .admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .admin-note {
+    margin: 0 0 18px;
+    border-left: 1px solid rgba(30,48,36,0.32);
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.26);
+    font-size: 11px;
+    line-height: 1.6;
+    color: rgba(18,15,12,0.58);
+  }
+
   .mindmap {
     position: relative;
     height: 620px;
@@ -1396,7 +1413,11 @@
         <section class="admin-panel">
           <h2 class="admin-title">preference mind map</h2>
           <p class="admin-copy" id="mindmapStatus">Generated from demo profile signals. Edit the small nodes or add observations; changes save locally.</p>
-          <button class="dock-btn" id="mindmapButton" type="button">generate mind map</button>
+          <div class="admin-actions">
+            <button class="dock-btn" id="mindmapButton" type="button">generate mind map</button>
+            <button class="dock-btn" id="adminRecordButton" type="button">record conversation</button>
+          </div>
+          <div class="admin-note" id="adminRecordStatus">Record a staff conversation; Claude will add one concise mind map item.</div>
           <div class="mindmap" id="mindmap">
             <svg id="mindmapLines" aria-hidden="true"></svg>
             <div id="mindmapLayer"></div>
@@ -1485,6 +1506,8 @@
   const mindmapLayer = document.getElementById('mindmapLayer');
   const mindmapStatus = document.getElementById('mindmapStatus');
   const mindmapButton = document.getElementById('mindmapButton');
+  const adminRecordButton = document.getElementById('adminRecordButton');
+  const adminRecordStatus = document.getElementById('adminRecordStatus');
   const adminCalendarList = document.getElementById('adminCalendarList');
   const claudePrompt = document.getElementById('claudePrompt');
   const claudeButton = document.getElementById('claudeButton');
@@ -1504,6 +1527,8 @@
   let lastCalendarEvents = [];
   let activeRecognition = null;
   let isListening = false;
+  let adminRecognition = null;
+  let adminTranscript = '';
   const mindmapStorageKey = 'rosewoodCompassMindmap';
   const defaultMindmap = {
     food: ['Japanese', 'Mediterranean', 'Seasonal tasting menus', 'Nut allergy', 'Needs sparkling water', 'Quiet tables'],
@@ -1606,6 +1631,67 @@
   function replaceMindmap(nextState) {
     mindmapState = { ...defaultMindmap, ...nextState };
     renderMindmap();
+  }
+
+  function localMindmapNote(transcript) {
+    const text = transcript.toLowerCase();
+    if (/no\s+caffeine\s+after\s+11|caffeine\s+after\s+11|no\s+coffee\s+after\s+11/.test(text)) {
+      return {
+        branch: 'food',
+        item: 'No caffeine after 11',
+        reason: 'Fallback captured caffeine timing preference.'
+      };
+    }
+
+    let branch = 'observations';
+    if (/(allerg|diet|food|drink|water|coffee|tea|wine|restaurant|table|breakfast|dinner|lunch)/.test(text)) branch = 'food';
+    if (/(event|meet|meeting|concert|rave|museum|art|hike|bird|tasting|class|tour|show)/.test(text)) branch = 'events';
+    if (/(goal|wants?|trying|hopes?|needs to|fitness|fit|rest|sleep|focus|recharge|bond|discover)/.test(text)) branch = 'goals';
+    const cleaned = transcript
+      .replace(/\s+/g, ' ')
+      .replace(/^(the guest|guest|she|he|they)\s+/i, '')
+      .trim();
+    return {
+      branch,
+      item: cleaned.split(' ').slice(0, 9).join(' ') || 'Staff conversation note',
+      reason: 'Local fallback from transcript keywords.'
+    };
+  }
+
+  async function addMindmapNoteFromTranscript(transcript) {
+    adminRecordStatus.textContent = 'Asking Claude where this belongs...';
+    let note;
+    try {
+      const response = await fetch('/api/claude/mindmap-note', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ transcript })
+      });
+      const raw = await response.text();
+      let data = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = { error: raw || 'Claude returned a non-JSON response' };
+      }
+      if (!response.ok) throw new Error(data.error || 'Mind map note request failed');
+      note = data;
+    } catch (error) {
+      note = localMindmapNote(transcript);
+      adminRecordStatus.textContent = `Using local fallback. ${error.message}`;
+    }
+
+    const branch = mindmapState[note.branch] ? note.branch : 'observations';
+    const item = String(note.item || '').trim();
+    if (!item) {
+      adminRecordStatus.textContent = 'Claude did not find a clear preference to add.';
+      return;
+    }
+    if (!mindmapState[branch].some(existing => existing.toLowerCase() === item.toLowerCase())) {
+      mindmapState[branch].push(item);
+    }
+    renderMindmap();
+    adminRecordStatus.textContent = `Added to ${mindmapBranches[branch].title}: ${item}`;
   }
 
   async function generateMindmap() {
@@ -1894,6 +1980,69 @@
 
   mindmapButton?.addEventListener('click', generateMindmap);
   generateActivitiesButton?.addEventListener('click', generateActivities);
+
+  adminRecordButton?.addEventListener('click', () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      adminRecordStatus.textContent = 'Voice capture is not supported in this browser. Try Chrome.';
+      return;
+    }
+
+    if (adminRecognition) {
+      adminRecordButton.textContent = 'processing...';
+      adminRecordStatus.textContent = 'Processing conversation...';
+      adminRecognition.stop();
+      return;
+    }
+
+    adminTranscript = '';
+    const recognition = new SpeechRecognition();
+    adminRecognition = recognition;
+    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    adminRecordButton.textContent = 'stop recording';
+    adminRecordStatus.textContent = 'Listening for staff conversation...';
+
+    recognition.onresult = event => {
+      let interim = '';
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const phrase = event.results[index][0]?.transcript || '';
+        if (event.results[index].isFinal) {
+          adminTranscript += ` ${phrase}`;
+        } else {
+          interim += phrase;
+        }
+      }
+      const preview = `${adminTranscript} ${interim}`.trim();
+      adminRecordStatus.textContent = preview
+        ? `Transcript: ${preview}`
+        : 'Listening for staff conversation...';
+    };
+
+    recognition.onerror = event => {
+      const message = event.error === 'aborted'
+        ? 'Recording stopped. Tap record again to retry.'
+        : event.error === 'no-speech'
+          ? 'No speech heard yet. Keep speaking or tap stop.'
+          : `Recording error: ${event.error || 'unknown'}`;
+      adminRecordStatus.textContent = message;
+    };
+
+    recognition.onend = () => {
+      const transcript = adminTranscript.trim();
+      adminRecognition = null;
+      adminRecordButton.textContent = 'record conversation';
+      if (!transcript) {
+        adminRecordStatus.textContent = 'No transcript captured. Tap record and speak clearly.';
+        return;
+      }
+      addMindmapNoteFromTranscript(transcript);
+    };
+
+    recognition.start();
+  });
 
   async function speakClaudeText(text) {
     if (!text) return;
