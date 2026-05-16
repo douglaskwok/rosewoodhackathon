@@ -462,7 +462,7 @@
 
   .claude-row {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
     gap: 10px;
   }
 
@@ -485,6 +485,14 @@
     font-size: 13px;
     line-height: 1.7;
     white-space: pre-wrap;
+  }
+
+  .voice-status {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    color: rgba(18,15,12,0.46);
   }
 
   /* ── ACCORDION ─────────────────────────────────────────── */
@@ -1428,9 +1436,12 @@
     <p class="claude-copy">A small verification surface for Anthropic. Try asking for a guest-facing concierge note.</p>
     <div class="claude-row">
       <textarea class="claude-input" id="claudePrompt">Write a warm one-sentence welcome note for a Rosewood guest who has a nut allergy and prefers sparkling water.</textarea>
+      <button class="dock-btn" id="voiceButton" type="button">talk</button>
       <button class="dock-btn" id="claudeButton" type="button">send</button>
     </div>
     <div class="claude-output" id="claudeOutput">Claude response will appear here.</div>
+    <div class="voice-status" id="voiceStatus">Voice input uses your browser mic; replies play through ElevenLabs.</div>
+    <audio id="claudeAudio" hidden></audio>
   </section>
 
 </div><!-- /.app -->
@@ -1470,6 +1481,9 @@
   const claudePrompt = document.getElementById('claudePrompt');
   const claudeButton = document.getElementById('claudeButton');
   const claudeOutput = document.getElementById('claudeOutput');
+  const voiceButton = document.getElementById('voiceButton');
+  const voiceStatus = document.getElementById('voiceStatus');
+  const claudeAudio = document.getElementById('claudeAudio');
   const generateActivitiesButton = document.getElementById('generateActivitiesButton');
   const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
   const activityRecs = document.getElementById('activityRecs');
@@ -1871,7 +1885,26 @@
   mindmapButton?.addEventListener('click', generateMindmap);
   generateActivitiesButton?.addEventListener('click', generateActivities);
 
-  claudeButton?.addEventListener('click', async () => {
+  async function speakClaudeText(text) {
+    if (!text) return;
+    voiceStatus.textContent = 'Generating ElevenLabs audio...';
+    const response = await fetch('/api/elevenlabs/speech', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'ElevenLabs request failed');
+    }
+    const blob = await response.blob();
+    if (claudeAudio.src) URL.revokeObjectURL(claudeAudio.src);
+    claudeAudio.src = URL.createObjectURL(blob);
+    await claudeAudio.play();
+    voiceStatus.textContent = 'Playing Claude response.';
+  }
+
+  async function askClaude({ speak = false } = {}) {
     const prompt = claudePrompt.value.trim();
     if (!prompt) {
       claudeOutput.textContent = 'Please enter a prompt.';
@@ -1879,6 +1912,7 @@
     }
 
     claudeOutput.textContent = 'Asking Claude...';
+    voiceStatus.textContent = speak ? 'Sending your voice prompt to Claude...' : 'Ready for voice.';
     try {
       const response = await fetch('/api/claude/chat', {
         method: 'POST',
@@ -1888,9 +1922,48 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Claude request failed');
       claudeOutput.textContent = data.text || '(empty response)';
+      if (speak) {
+        await speakClaudeText(data.text || '');
+      }
     } catch (error) {
       claudeOutput.textContent = error.message;
+      voiceStatus.textContent = error.message;
     }
+  }
+
+  claudeButton?.addEventListener('click', () => askClaude());
+
+  voiceButton?.addEventListener('click', () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      voiceStatus.textContent = 'Voice input is not supported in this browser. Try Chrome.';
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    voiceStatus.textContent = 'Listening...';
+    voiceButton.textContent = 'listening';
+
+    recognition.onresult = event => {
+      const transcript = event.results?.[0]?.[0]?.transcript || '';
+      claudePrompt.value = transcript;
+      voiceStatus.textContent = `Heard: ${transcript}`;
+      askClaude({ speak: true });
+    };
+
+    recognition.onerror = event => {
+      voiceStatus.textContent = `Mic error: ${event.error || 'unknown'}`;
+      voiceButton.textContent = 'talk';
+    };
+
+    recognition.onend = () => {
+      voiceButton.textContent = 'talk';
+    };
+
+    recognition.start();
   });
 
   mindmap?.addEventListener('click', event => {
