@@ -5,11 +5,13 @@ const FALLBACK_ITINERARY = {
     {
       name: "Morning walk through the Stanford Dish foothills",
       meta: "May 26, 8:30 AM · private guide · sparkling water packed",
+      why: "You want to stay fit during the trip, and this keeps movement low-friction after arrival.",
       cta: "reserve guide"
     },
     {
       name: "Low-impact private Pilates at Rosewood",
       meta: "May 28, 10:00 AM · quiet studio · nut-free recovery snack",
+      why: "Your profile favors wellness that supports energy without over-scheduling the day.",
       cta: "add to calendar"
     }
   ],
@@ -17,11 +19,13 @@ const FALLBACK_ITINERARY = {
     {
       name: "Asaya-inspired recovery ritual",
       meta: "May 26, 4:30 PM · steam, massage, hydration service",
+      why: "Staff notes show you value recovery windows and sparkling water after travel.",
       cta: "book spa"
     },
     {
       name: "Sleep-focused turndown",
       meta: "May 27, 9:00 PM · cool room, charger left bedside, sparkling water",
+      why: "This reflects staff observations about room temperature, bedside setup, and evening routine.",
       cta: "confirm setup"
     }
   ],
@@ -29,11 +33,13 @@ const FALLBACK_ITINERARY = {
     {
       name: "Private estate tasting with nut-free pairings",
       meta: "May 27, 3:00 PM · chef-reviewed allergy notes",
+      why: "You enjoy private tastings, and the nut allergy needs to be handled before service.",
       cta: "reserve tasting"
     },
     {
       name: "Cantor Arts Center private preview",
       meta: "May 28, 1:30 PM · short transfer · low-crowd window",
+      why: "Your latent goal is local culture without overplanning or long transfer time.",
       cta: "request access"
     }
   ]
@@ -69,16 +75,16 @@ ${JSON.stringify(mindmap, null, 2)}
 Return only valid JSON with this exact shape:
 {
   "activity": [
-    { "name": "...", "meta": "May 26, 9:00 AM · ...", "cta": "..." }
+    { "name": "...", "meta": "May 26, 9:00 AM · ...", "why": "One sentence explaining which guest preference, person, calendar event, or staff observation caused this recommendation.", "cta": "..." }
   ],
   "wellness": [
-    { "name": "...", "meta": "May 27, 4:00 PM · ...", "cta": "..." }
+    { "name": "...", "meta": "May 27, 4:00 PM · ...", "why": "One sentence explaining which guest preference, person, calendar event, or staff observation caused this recommendation.", "cta": "..." }
   ],
   "learning": [
-    { "name": "...", "meta": "May 28, 2:00 PM · ...", "cta": "..." }
+    { "name": "...", "meta": "May 28, 2:00 PM · ...", "why": "One sentence explaining which guest preference, person, calendar event, or staff observation caused this recommendation.", "cta": "..." }
   ]
 }
-Give 2 items per category. Respect nut allergy and sparkling water preference. Keep recommendations specific to Rosewood Sand Hill / Menlo Park / Bay Area luxury.
+Give 2 items per category. Respect nut allergy and sparkling water preference. Keep recommendations specific to Rosewood Sand Hill / Menlo Park / Bay Area luxury. The "why" must be specific, like "You're meeting John and he likes birdwatching" or "You want to stay fit during the trip."
 `;
 
     const response = await fetch(ANTHROPIC_URL, {

@@ -668,6 +668,21 @@
     color: rgba(18,15,12,0.55);
   }
 
+  .rec-why {
+    max-width: 460px;
+    margin-top: 8px;
+    font-size: 10px;
+    line-height: 1.55;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: rgba(18,15,12,0.68);
+  }
+
+  .rec-why span {
+    color: rgba(18,15,12,0.42);
+    text-transform: lowercase;
+  }
+
   .rec-cta {
     font-size: 9px;
     font-weight: 400;
@@ -1655,6 +1670,7 @@
         <div class="rec-info">
           <div class="rec-name">${escapeHtml(item.name)}</div>
           <div class="rec-meta">${escapeHtml(item.meta)}</div>
+          <div class="rec-why"><span>why:</span> ${escapeHtml(item.why || 'Personalized from your preference map and trip context.')}</div>
         </div>
         <span class="rec-cta">${escapeHtml(item.cta || 'add')} →</span>
       </div>
