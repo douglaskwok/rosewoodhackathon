@@ -200,6 +200,39 @@
     margin-bottom: 16px;
   }
 
+  .dock-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .dock-minimize {
+    background: transparent;
+    border: 0.5px solid rgba(28,25,20,0.18);
+    color: rgba(18,15,12,0.58);
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: lowercase;
+    cursor: pointer;
+  }
+
+  .integration-dock.minimized {
+    width: auto;
+    padding: 14px 16px;
+  }
+
+  .integration-dock.minimized .dock-grid,
+  .integration-dock.minimized .dock-status {
+    display: none;
+  }
+
+  .integration-dock.minimized .dock-label {
+    margin-bottom: 0;
+  }
+
   .dock-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1204,7 +1237,10 @@
   </div><!-- /.hero-split -->
 
   <div class="integration-dock">
-    <div class="dock-label">connected signals</div>
+    <div class="dock-head">
+      <div class="dock-label">connected signals</div>
+      <button class="dock-minimize" id="dockMinimize" type="button">minimize</button>
+    </div>
     <div class="dock-grid">
       <a class="dock-btn" id="calendarButton" href="/api/auth/google">integrate calendar</a>
       <a class="dock-btn" id="gmailButton" href="/api/auth/google">integrate gmail</a>
@@ -1431,6 +1467,8 @@
   const gmailButton = document.getElementById('gmailButton');
   const calendarButton = document.getElementById('calendarButton');
   const arrivalButton = document.getElementById('arrivalButton');
+  const integrationDock = document.querySelector('.integration-dock');
+  const dockMinimize = document.getElementById('dockMinimize');
   const authMessage = document.getElementById('authMessage');
   const userGreeting = document.getElementById('userGreeting');
   const cardGuestName = document.getElementById('cardGuestName');
@@ -1654,6 +1692,11 @@
       authMessage.textContent = 'Opening Google sign-in...';
       window.location.assign('/api/auth/google');
     });
+  });
+
+  dockMinimize?.addEventListener('click', () => {
+    const minimized = integrationDock.classList.toggle('minimized');
+    dockMinimize.textContent = minimized ? 'expand' : 'minimize';
   });
 
   arrivalButton?.addEventListener('click', () => {
