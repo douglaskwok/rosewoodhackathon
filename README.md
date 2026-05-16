@@ -14,6 +14,7 @@ https://rosewoodhackathon.vercel.app/
 - Real Google OAuth entry point for Gmail read-only integration.
 - Google login status that shows the signed-in user's name.
 - Google Calendar week view for May 24-30, 2026.
+- Arrival info card that shows the latest arrival-related Gmail message.
 
 ## Gmail OAuth Setup
 

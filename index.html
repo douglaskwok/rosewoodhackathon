@@ -506,7 +506,7 @@
                 <a class="button" id="calendar-button" href="/api/auth/google">Integrate calendar</a>
                 <a class="button" id="gmail-button" href="/api/auth/google">Sign in with Google</a>
                 <button type="button">Beli</button>
-                <button type="button">Arrival info (email)</button>
+                <a class="button" id="arrival-button" href="/api/auth/google">Arrival info (email)</a>
               </div>
               <div class="status-message" id="auth-message"></div>
             </div>
@@ -528,6 +528,10 @@
               <div class="side-box" id="calendar-status">
                 <strong>Calendar signals</strong>
                 Connect Google Calendar to preview upcoming events.
+              </div>
+              <div class="side-box" id="arrival-info">
+                <strong>Arrival info</strong>
+                Connect Gmail to view the latest arrival-related email.
               </div>
               <div class="side-box">Concierge suggestions</div>
             </aside>
@@ -593,6 +597,7 @@
       const adminOnboarding = document.getElementById("admin-onboarding");
       const gmailButton = document.getElementById("gmail-button");
       const calendarButton = document.getElementById("calendar-button");
+      const arrivalButton = document.getElementById("arrival-button");
       const authMessage = document.getElementById("auth-message");
       const weekCalendar = document.getElementById("week-calendar");
       const calendarLoadState = document.getElementById("calendar-load-state");
@@ -658,6 +663,17 @@
         }
 
         authMessage.textContent = "Opening Google Calendar consent...";
+        window.location.assign("/api/auth/google");
+      });
+
+      arrivalButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (window.location.protocol === "file:") {
+          authMessage.textContent = "Arrival email extraction only works on the deployed Vercel site.";
+          return;
+        }
+
+        authMessage.textContent = "Opening Google sign-in for arrival email access...";
         window.location.assign("/api/auth/google");
       });
 
@@ -745,6 +761,7 @@
         const statusBox = document.getElementById("gmail-status");
         const messagesBox = document.getElementById("gmail-messages");
         const calendarStatus = document.getElementById("calendar-status");
+        const arrivalInfo = document.getElementById("arrival-info");
         const loginName = document.getElementById("login-name");
         const profileBox = document.getElementById("google-profile");
 
@@ -775,6 +792,7 @@
             statusBox.innerHTML = "<strong>Gmail</strong>Connected";
             gmailButton.textContent = "Google connected";
             calendarButton.textContent = "Calendar connected";
+            arrivalButton.textContent = "Arrival email connected";
           }
 
           if (status.connected) {
@@ -790,6 +808,37 @@
               }
             } catch (error) {
               messagesBox.innerHTML = "<strong>Email signals</strong>Could not load Gmail messages.";
+            }
+
+            try {
+              const arrivalResponse = await fetch("/api/gmail/arrival");
+              const arrivalData = await arrivalResponse.json();
+              if (!arrivalResponse.ok) {
+                throw new Error(arrivalData.error || "Arrival email request failed");
+              }
+              if (!arrivalData.arrivalEmail) {
+                arrivalInfo.innerHTML = "<strong>Arrival info</strong>No recent arrival-related email found.";
+              } else {
+                const email = arrivalData.arrivalEmail;
+                const clues = email.extracted || {};
+                const clueText = [
+                  clues.dates?.length ? `Dates: ${clues.dates.map(escapeHtml).join(", ")}` : "",
+                  clues.times?.length ? `Times: ${clues.times.map(escapeHtml).join(", ")}` : "",
+                  clues.airportCodes?.length ? `Airports: ${clues.airportCodes.map(escapeHtml).join(", ")}` : ""
+                ].filter(Boolean).join("<br>");
+
+                arrivalInfo.innerHTML = `
+                  <strong>Arrival info</strong>
+                  ${escapeHtml(email.subject)}<br>
+                  <span>${escapeHtml(email.from)}</span><br>
+                  <span>${escapeHtml(email.date)}</span><br>
+                  <br>
+                  ${escapeHtml(email.snippet)}
+                  ${clueText ? `<br><br>${clueText}` : ""}
+                `;
+              }
+            } catch (error) {
+              arrivalInfo.innerHTML = `<strong>Arrival info</strong>${escapeHtml(error.message)}`;
             }
           }
 
