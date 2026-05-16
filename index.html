@@ -1502,6 +1502,8 @@
   const tripStart = new Date('2026-05-26T00:00:00-07:00');
   const tripEnd = new Date('2026-05-29T00:00:00-07:00');
   let lastCalendarEvents = [];
+  let activeRecognition = null;
+  let isListening = false;
   const mindmapStorageKey = 'rosewoodCompassMindmap';
   const defaultMindmap = {
     food: ['Japanese', 'Mediterranean', 'Seasonal tasting menus', 'Nut allergy', 'Needs sparkling water', 'Quiet tables'],
@@ -1902,7 +1904,13 @@
       body: JSON.stringify({ text })
     });
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
+      const errorText = await response.text();
+      let error = {};
+      try {
+        error = errorText ? JSON.parse(errorText) : {};
+      } catch {
+        error = { error: errorText };
+      }
       throw new Error(error.error || 'ElevenLabs request failed');
     }
     const blob = await response.blob();
@@ -1927,7 +1935,13 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ prompt })
       });
-      const data = await response.json();
+      const raw = await response.text();
+      let data = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = { error: raw || 'Claude returned a non-JSON response' };
+      }
       if (!response.ok) throw new Error(data.error || 'Claude request failed');
       claudeOutput.textContent = data.text || '(empty response)';
       if (speak) {
@@ -1948,14 +1962,25 @@
       return;
     }
 
+    if (isListening && activeRecognition) {
+      activeRecognition.stop();
+      voiceStatus.textContent = 'Stopped listening.';
+      return;
+    }
+
     const recognition = new SpeechRecognition();
+    activeRecognition = recognition;
+    isListening = true;
+    let heardSpeech = false;
     recognition.lang = 'en-US';
+    recognition.continuous = false;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     voiceStatus.textContent = 'Listening...';
     voiceButton.textContent = '…';
 
     recognition.onresult = event => {
+      heardSpeech = true;
       const transcript = event.results?.[0]?.[0]?.transcript || '';
       claudePrompt.value = transcript;
       voiceStatus.textContent = `Heard: ${transcript}`;
@@ -1963,12 +1988,24 @@
     };
 
     recognition.onerror = event => {
-      voiceStatus.textContent = `Mic error: ${event.error || 'unknown'}`;
+      const message = event.error === 'aborted'
+        ? 'Listening stopped. Tap the mic again and speak after the browser prompt.'
+        : event.error === 'no-speech'
+          ? 'I did not hear anything. Tap the mic and try again.'
+          : `Mic error: ${event.error || 'unknown'}`;
+      voiceStatus.textContent = message;
       voiceButton.textContent = '🎙';
+      isListening = false;
+      activeRecognition = null;
     };
 
     recognition.onend = () => {
       voiceButton.textContent = '🎙';
+      isListening = false;
+      activeRecognition = null;
+      if (!heardSpeech && voiceStatus.textContent === 'Listening...') {
+        voiceStatus.textContent = 'Listening ended. Tap the mic to try again.';
+      }
     };
 
     recognition.start();
