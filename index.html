@@ -400,6 +400,60 @@
     margin-bottom: 4px;
   }
 
+  .claude-test {
+    position: relative;
+    z-index: 2;
+    margin: 0 64px 96px;
+    max-width: 900px;
+    background: rgba(255,255,255,0.50);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 0.5px solid rgba(28,25,20,0.14);
+    padding: 28px;
+  }
+
+  .claude-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+
+  .claude-copy {
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(18,15,12,0.62);
+    margin-bottom: 18px;
+  }
+
+  .claude-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+
+  .claude-input {
+    min-height: 48px;
+    border: 0.5px solid rgba(28,25,20,0.18);
+    background: rgba(255,255,255,0.42);
+    color: rgba(18,15,12,0.86);
+    padding: 12px 14px;
+    font: inherit;
+    resize: vertical;
+  }
+
+  .claude-output {
+    margin-top: 16px;
+    border-left: 1.5px solid rgba(30,48,36,0.45);
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.28);
+    color: rgba(18,15,12,0.72);
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
   /* ── ACCORDION ─────────────────────────────────────────── */
   .accordion {
     padding: 0;
@@ -1345,6 +1399,17 @@
     <span class="ambient-action">tell us more</span>
   </div>
 
+  <section class="claude-test">
+    <div class="dock-label">claude api test</div>
+    <h2 class="claude-title">Ask Claude</h2>
+    <p class="claude-copy">A small verification surface for Anthropic. Try asking for a guest-facing concierge note.</p>
+    <div class="claude-row">
+      <textarea class="claude-input" id="claudePrompt">Write a warm one-sentence welcome note for a Rosewood guest who has a nut allergy and prefers sparkling water.</textarea>
+      <button class="dock-btn" id="claudeButton" type="button">send</button>
+    </div>
+    <div class="claude-output" id="claudeOutput">Claude response will appear here.</div>
+  </section>
+
 </div><!-- /.app -->
 
 <script>
@@ -1377,6 +1442,9 @@
   const mindmapStatus = document.getElementById('mindmapStatus');
   const mindmapButton = document.getElementById('mindmapButton');
   const adminCalendarList = document.getElementById('adminCalendarList');
+  const claudePrompt = document.getElementById('claudePrompt');
+  const claudeButton = document.getElementById('claudeButton');
+  const claudeOutput = document.getElementById('claudeOutput');
   const calendarWeekStart = new Date('2026-05-24T00:00:00-07:00');
   const calendarWeekEnd = new Date('2026-05-31T00:00:00-07:00');
   const mindmapStorageKey = 'rosewoodCompassMindmap';
@@ -1595,6 +1663,28 @@
   });
 
   mindmapButton?.addEventListener('click', generateMindmap);
+
+  claudeButton?.addEventListener('click', async () => {
+    const prompt = claudePrompt.value.trim();
+    if (!prompt) {
+      claudeOutput.textContent = 'Please enter a prompt.';
+      return;
+    }
+
+    claudeOutput.textContent = 'Asking Claude...';
+    try {
+      const response = await fetch('/api/claude/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Claude request failed');
+      claudeOutput.textContent = data.text || '(empty response)';
+    } catch (error) {
+      claudeOutput.textContent = error.message;
+    }
+  });
 
   mindmap?.addEventListener('click', event => {
     const addButton = event.target.closest('[data-add]');

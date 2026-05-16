@@ -17,6 +17,7 @@ https://rosewoodhackathon.vercel.app/
 - Arrival info card that shows the latest arrival-related Gmail message.
 - Admin preference mind map with a reliable demo profile and optional Vertex AI embedding mode.
 - Editable hierarchical admin mind map saved locally in the browser.
+- Simple Claude API test interface at the bottom of the app.
 
 ## Gmail OAuth Setup
 
@@ -80,6 +81,17 @@ USE_VERTEX_MINDMAP=true
 ```
 
 Then the endpoint embeds relevant Gmail snippets and groups them into food preferences, favorite events, and latent goals.
+
+## Claude API Setup
+
+Add these Vercel Environment Variables:
+
+```txt
+ANTHROPIC_API_KEY=your-anthropic-key
+ANTHROPIC_MODEL=claude-sonnet-4-5
+```
+
+The bottom test box calls `/api/claude/chat` so the API key stays server-side.
 
 ## Run
 
