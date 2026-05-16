@@ -16,6 +16,7 @@ https://rosewoodhackathon.vercel.app/
 - Google Calendar week view for May 24-30, 2026.
 - Arrival info card that shows the latest arrival-related Gmail message.
 - Admin preference mind map with a reliable demo profile and optional Vertex AI embedding mode.
+- Editable hierarchical admin mind map saved locally in the browser.
 
 ## Gmail OAuth Setup
 
