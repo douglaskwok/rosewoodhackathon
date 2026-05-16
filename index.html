@@ -462,15 +462,16 @@
 
   .claude-row {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
     gap: 10px;
   }
 
-  .voice-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 12px;
+  .mic-btn {
+    min-width: 44px;
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 16px;
+    letter-spacing: 0;
   }
 
   .claude-input {
@@ -495,6 +496,7 @@
   }
 
   .voice-status {
+    margin-top: 10px;
     font-size: 10px;
     letter-spacing: 0.12em;
     text-transform: lowercase;
@@ -1442,13 +1444,11 @@
     <p class="claude-copy">A small verification surface for Anthropic. Try asking for a guest-facing concierge note.</p>
     <div class="claude-row">
       <textarea class="claude-input" id="claudePrompt">Write a warm one-sentence welcome note for a Rosewood guest who has a nut allergy and prefers sparkling water.</textarea>
+      <button class="dock-btn mic-btn" id="voiceButton" type="button" aria-label="Talk to Claude">🎙</button>
       <button class="dock-btn" id="claudeButton" type="button">send</button>
     </div>
     <div class="claude-output" id="claudeOutput">Claude response will appear here.</div>
-    <div class="voice-row">
-      <button class="dock-btn" id="voiceButton" type="button">voice mode: talk</button>
-      <div class="voice-status" id="voiceStatus">Voice input uses your browser mic; replies play through ElevenLabs.</div>
-    </div>
+    <div class="voice-status" id="voiceStatus">Voice input uses your browser mic; replies play through ElevenLabs.</div>
     <audio id="claudeAudio" hidden></audio>
   </section>
 
@@ -1953,7 +1953,7 @@
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     voiceStatus.textContent = 'Listening...';
-    voiceButton.textContent = 'listening...';
+    voiceButton.textContent = '…';
 
     recognition.onresult = event => {
       const transcript = event.results?.[0]?.[0]?.transcript || '';
@@ -1964,11 +1964,11 @@
 
     recognition.onerror = event => {
       voiceStatus.textContent = `Mic error: ${event.error || 'unknown'}`;
-      voiceButton.textContent = 'voice mode: talk';
+      voiceButton.textContent = '🎙';
     };
 
     recognition.onend = () => {
-      voiceButton.textContent = 'voice mode: talk';
+      voiceButton.textContent = '🎙';
     };
 
     recognition.start();
