@@ -1965,7 +1965,7 @@
           const stored = JSON.parse(localStorage.getItem(mindmapStorageKey));
           if (stored?.evidence && !stored.observations)
             stored.observations = stored.evidence;
-          return { ...defaultMindmap, ...(stored || {}) };
+          return normalizeMindmapState({ ...defaultMindmap, ...(stored || {}) });
         } catch {
           return JSON.parse(JSON.stringify(defaultMindmap));
         }
@@ -2033,6 +2033,7 @@
 
       function renderMindmap() {
         if (!mindmap) return;
+        mindmapState = normalizeMindmapState(mindmapState);
         mindmapLayer.innerHTML = "";
         mindmapLines.innerHTML = "";
         mindmapLines.setAttribute(
@@ -2117,7 +2118,7 @@
       }
 
       function replaceMindmap(nextState) {
-        mindmapState = { ...defaultMindmap, ...nextState };
+        mindmapState = normalizeMindmapState({ ...defaultMindmap, ...nextState });
         renderMindmap();
       }
 
@@ -2125,11 +2126,20 @@
         const items = Array.isArray(value) ? value : [value];
         const cleaned = items
           .flatMap((item) =>
-            String(item || "").split(/\s+\|\s+|\n+|\s*,\s*|\s*;\s*|\s+\+\s+/),
+            String(item || "").split(/\s*\|\s*|\n+|\s*,\s*|\s*;\s*|\s+\+\s+/),
           )
           .map((item) => item.trim())
           .filter((item) => item && item.toLowerCase() !== "no signal yet");
         return cleaned.length ? cleaned : fallback;
+      }
+
+      function normalizeMindmapState(state) {
+        return Object.fromEntries(
+          Object.keys(defaultMindmap).map((key) => [
+            key,
+            splitMindmapItems(state?.[key], defaultMindmap[key]),
+          ]),
+        );
       }
 
       function localMindmapNotes(transcript) {
