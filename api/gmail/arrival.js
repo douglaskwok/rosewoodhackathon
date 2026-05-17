@@ -1,8 +1,13 @@
 const { getValidAccessToken, requireGoogleEnv } = require("../_google");
 
+const TRAVEL_SUBJECTS = [
+  "Your Air Canada Booking is Confirmed",
+  "Your Reservation at Rosewood Sand Hill is Confirmed"
+];
+
 const ARRIVAL_SEARCH = [
-  "newer_than:180d",
-  "(arrival OR arriving OR flight OR itinerary OR confirmation OR reservation OR landing)"
+  "newer_than:365d",
+  `("${TRAVEL_SUBJECTS[0]}" OR "${TRAVEL_SUBJECTS[1]}")`
 ].join(" ");
 
 async function gmailFetch(path, accessToken) {
@@ -33,6 +38,12 @@ function extractArrivalClues(text) {
     times,
     dates
   };
+}
+
+function travelSubjectRank(subject = "") {
+  const normalized = subject.toLowerCase();
+  const index = TRAVEL_SUBJECTS.findIndex((target) => normalized.includes(target.toLowerCase()));
+  return index === -1 ? Number.POSITIVE_INFINITY : index;
 }
 
 module.exports = async function handler(req, res) {
@@ -68,7 +79,13 @@ module.exports = async function handler(req, res) {
       })
     );
 
-    const latest = messages.sort((a, b) => b.internalDate - a.internalDate)[0] || null;
+    const travelMessages = messages
+      .filter((message) => travelSubjectRank(message.subject) !== Number.POSITIVE_INFINITY)
+      .sort((a, b) => {
+        const rankDiff = travelSubjectRank(a.subject) - travelSubjectRank(b.subject);
+        return rankDiff || b.internalDate - a.internalDate;
+      });
+    const latest = travelMessages[0] || null;
     if (!latest) {
       res.status(200).json({ query: ARRIVAL_SEARCH, arrivalEmail: null });
       return;
@@ -76,6 +93,7 @@ module.exports = async function handler(req, res) {
 
     res.status(200).json({
       query: ARRIVAL_SEARCH,
+      travelEmails: travelMessages,
       arrivalEmail: {
         ...latest,
         extracted: extractArrivalClues(`${latest.subject} ${latest.snippet}`)

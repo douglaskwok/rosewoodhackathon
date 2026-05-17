@@ -2395,16 +2395,21 @@
       }
 
       async function loadArrivalEmail() {
-        authMessage.textContent = "Loading latest arrival email...";
+        authMessage.textContent = "Loading travel info emails...";
         const response = await fetch("/api/gmail/arrival");
         const data = await response.json();
         if (!response.ok)
           throw new Error(data.error || "Arrival email request failed");
         if (!data.arrivalEmail) {
-          authMessage.textContent = "No recent arrival-related email found.";
+          authMessage.textContent =
+            "No Air Canada or Rosewood Sand Hill travel email found.";
           return;
         }
-        authMessage.textContent = `Arrival email: ${data.arrivalEmail.subject}`;
+        const subjects = (data.travelEmails || [data.arrivalEmail])
+          .slice(0, 2)
+          .map((email) => email.subject)
+          .join(" + ");
+        authMessage.textContent = `Travel info: ${subjects}`;
       }
 
       function renderRecommendationList(container, items) {
