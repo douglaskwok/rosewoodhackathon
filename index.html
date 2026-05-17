@@ -1334,13 +1334,14 @@
           >
         </div>
       </nav>
-      <button class="music-toggle" id="musicToggle" type="button">
-        music off
+      <button class="music-toggle active" id="musicToggle" type="button">
+        music on
       </button>
       <audio
         id="ambientMusic"
         src="music/konstantinpazuzustudio-spa-harp-for-relaxation-495248.mp3"
         loop
+        autoplay
         preload="auto"
       ></audio>
 
@@ -1893,6 +1894,7 @@
       let calendarAgentRecognition = null;
       let lastPublishablePlan = [];
       let guestEmail = "bananachocolatebrownie@gmail.com";
+      let ambientMusicWanted = true;
       const mindmapStorageKey = "rosewoodCompassMindmap";
       const defaultMindmap = {
         food: [
@@ -2709,23 +2711,43 @@
         });
       });
 
-      musicToggle?.addEventListener("click", async () => {
+      async function playAmbientMusic() {
         if (!ambientMusic) return;
         ambientMusic.volume = 0.14;
+        try {
+          await ambientMusic.play();
+          ambientMusicWanted = true;
+          musicToggle.textContent = "music on";
+          musicToggle.classList.add("active");
+        } catch {
+          musicToggle.textContent = "music on";
+        }
+      }
+
+      musicToggle?.addEventListener("click", async () => {
+        if (!ambientMusic) return;
         if (ambientMusic.paused) {
-          try {
-            await ambientMusic.play();
-            musicToggle.textContent = "music on";
-            musicToggle.classList.add("active");
-          } catch (error) {
-            musicToggle.textContent = "music blocked";
-          }
+          ambientMusicWanted = true;
+          await playAmbientMusic();
           return;
         }
+        ambientMusicWanted = false;
         ambientMusic.pause();
         musicToggle.textContent = "music off";
         musicToggle.classList.remove("active");
       });
+
+      window.addEventListener(
+        "pointerdown",
+        () => {
+          if (ambientMusicWanted && ambientMusic?.paused) {
+            playAmbientMusic();
+          }
+        },
+        { once: true },
+      );
+
+      playAmbientMusic();
 
       openTableButton?.addEventListener("click", () => {
         openMaderaBooking("2026-05-27", "19:00", "2");
