@@ -1,6 +1,6 @@
-# Rosewood Compass Wireframe
+# Rosewood: Curated by Tia
 
-Minimal static HTML wireframe for a Rosewood Compass web app.
+Minimal concierge web app prototype for Rosewood, curated by Tia.
 
 ## Live Demo
 
@@ -8,7 +8,7 @@ https://rosewoodhackathon.vercel.app/
 
 ## Includes
 
-- User onboarding screen with logo, title, and integration buttons.
+- User onboarding screen with logo, warm greeting, and integration buttons.
 - Admin onboarding screen with a simple preference mind map.
 - User/admin weekly calendar screen that renders connected Google Calendar events.
 - Real Google OAuth entry point for Gmail read-only integration.
@@ -17,8 +17,8 @@ https://rosewoodhackathon.vercel.app/
 - Arrival info card that shows the latest arrival-related Gmail message.
 - Admin preference mind map with a reliable demo profile and optional Vertex AI embedding mode.
 - Editable hierarchical admin mind map saved locally in the browser.
-- Simple Claude API test interface at the bottom of the app.
 - Claude-generated May 26-28 activities and itinerary from the local mind map, with fallback JSON.
+- Tia booking flow that can add recommended activities to Google Calendar and send booking-style confirmations.
 
 ## Gmail OAuth Setup
 
@@ -76,7 +76,7 @@ ANTHROPIC_API_KEY=your-anthropic-key
 ANTHROPIC_MODEL=claude-sonnet-4-5
 ```
 
-The bottom test box calls `/api/claude/chat` so the API key stays server-side.
+Claude routes run server-side so the API key stays private.
 
 ## Run
 

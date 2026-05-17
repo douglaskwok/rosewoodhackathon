@@ -389,7 +389,7 @@
 
   .mindmap {
     position: relative;
-    height: 620px;
+    height: 680px;
     overflow: hidden;
     border: 0.5px solid rgba(28,25,20,0.12);
     background: rgba(255,252,248,0.28);
@@ -410,7 +410,7 @@
     background: rgba(255,255,255,0.70);
     padding: 9px 12px;
     min-width: 136px;
-    max-width: 185px;
+    max-width: 174px;
     text-align: center;
     font-size: 10px;
     line-height: 1.35;
@@ -492,11 +492,8 @@
   }
 
   .mic-btn {
-    min-width: 44px;
-    padding-left: 12px;
-    padding-right: 12px;
-    font-size: 16px;
-    letter-spacing: 0;
+    min-width: 0;
+    justify-content: space-between;
   }
 
   /* ── ACCORDION ─────────────────────────────────────────── */
@@ -1323,12 +1320,12 @@
   <div class="accordion">
     <div class="generate-row">
       <button class="dock-btn" id="generateActivitiesButton" type="button">generate activities</button>
-      <button class="dock-btn" id="publishPlanButton" type="button" disabled>add to calendar + email</button>
-      <button class="dock-btn mic-btn" id="calendarAgentButton" type="button" aria-label="Edit activity by voice">edit activity</button>
+      <button class="dock-btn" id="publishPlanButton" type="button" disabled>book and add to calendar</button>
+      <button class="dock-btn mic-btn" id="calendarAgentButton" type="button" aria-label="Edit calendar via voice">edit calendar via voice</button>
       <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
     </div>
     <div class="agent-dialogue" id="calendarAgentDialogue">
-      <div class="agent-line"><span>tia calendar agent</span>Try: “move Madera to Thursday at 8” or “delete the spa booking.”</div>
+      <div class="agent-line"><span>tia calendar agent</span>Tell Tia what to add, move, or remove from your trip plan.</div>
     </div>
 
     <div class="accordion-item activity open">
@@ -1543,6 +1540,12 @@
     observations: { title: 'Staff observations', branch: { x: 72, y: 78 }, add: { x: 89, y: 53 }, children: [{ x: 90, y: 92 }, { x: 87, y: 80 }, { x: 90, y: 68 }, { x: 71, y: 92 }, { x: 72, y: 62 }, { x: 58, y: 84 }] }
   };
   let mindmapState = loadMindmapState();
+  const mindmapChildGrids = {
+    food: { x: [10, 25, 40], y: [7, 18, 31, 43] },
+    events: { x: [90, 75, 60], y: [7, 18, 31, 43] },
+    goals: { x: [10, 25, 40], y: [93, 82, 69, 57] },
+    observations: { x: [90, 75, 60], y: [93, 82, 69, 57] }
+  };
 
   function escapeHtml(value) {
     return String(value || '')
@@ -1599,6 +1602,19 @@
     mindmapLayer.appendChild(node);
   }
 
+  function childPointForBranch(key, index) {
+    const grid = mindmapChildGrids[key];
+    if (!grid) return mindmapBranches[key].children[index] || mindmapBranches[key].children[0];
+    const row = Math.floor(index / grid.x.length);
+    const col = index % grid.x.length;
+    const y = grid.y[Math.min(row, grid.y.length - 1)];
+    const extraOffset = row >= grid.y.length ? (row - grid.y.length + 1) * 4 : 0;
+    return {
+      x: grid.x[col],
+      y: key === 'food' || key === 'events' ? Math.min(47, y + extraOffset) : Math.max(53, y - extraOffset)
+    };
+  }
+
   function renderMindmap() {
     if (!mindmap) return;
     mindmapLayer.innerHTML = '';
@@ -1611,10 +1627,7 @@
       drawCurve(root, config.branch, 3);
       makeMindNode(`branch ${key}`, config.branch, escapeHtml(config.title));
       mindmapState[key].forEach((item, index) => {
-        const point = config.children[index] || {
-          x: config.children[config.children.length - 1].x,
-          y: config.children[config.children.length - 1].y + (index - config.children.length + 1) * 7
-        };
+        const point = childPointForBranch(key, index);
         drawCurve(config.branch, point, 1.5);
         makeMindNode(
           `child ${key}-child`,
@@ -1663,6 +1676,15 @@
   function replaceMindmap(nextState) {
     mindmapState = { ...defaultMindmap, ...nextState };
     renderMindmap();
+  }
+
+  function splitMindmapItems(value, fallback = []) {
+    const items = Array.isArray(value) ? value : [value];
+    const cleaned = items
+      .flatMap(item => String(item || '').split(/\s*,\s*|\s*;\s*|\s+\+\s+/))
+      .map(item => item.trim())
+      .filter(item => item && item.toLowerCase() !== 'no signal yet');
+    return cleaned.length ? cleaned : fallback;
   }
 
   function localMindmapNotes(transcript) {
@@ -1766,9 +1788,9 @@
       const byKey = Object.fromEntries((data.nodes || []).map(node => [node.key, node]));
       const evidence = (data.nodes || []).flatMap(node => node.evidence || []).slice(0, 3).map(item => item.subject).filter(Boolean);
       replaceMindmap({
-        food: [byKey.foodPreferences?.insight || 'No signal yet', 'Nut allergy', 'Needs sparkling water'],
-        events: [byKey.favoriteEvents?.insight || 'No signal yet'],
-        goals: [byKey.latentGoals?.insight || 'No signal yet'],
+        food: splitMindmapItems(byKey.foodPreferences?.insight, ['Nut allergy', 'Needs sparkling water']),
+        events: splitMindmapItems(byKey.favoriteEvents?.insight, defaultMindmap.events.slice(0, 2)),
+        goals: splitMindmapItems(byKey.latentGoals?.insight, defaultMindmap.goals.slice(0, 2)),
         observations: evidence.length ? evidence : defaultMindmap.observations
       });
       mindmapStatus.textContent = `Generated with ${data.provider || 'demo'} / ${data.model}.`;
@@ -2189,12 +2211,12 @@
           : `Calendar mic error: ${event.error || 'unknown'}`;
       generateActivitiesStatus.textContent = message;
       addAgentDialogue('tia calendar agent', message);
-      calendarAgentButton.textContent = 'edit activity';
+      calendarAgentButton.textContent = 'edit calendar via voice';
       calendarAgentRecognition = null;
     };
 
     recognition.onend = () => {
-      calendarAgentButton.textContent = 'edit activity';
+      calendarAgentButton.textContent = 'edit calendar via voice';
       calendarAgentRecognition = null;
     };
 
