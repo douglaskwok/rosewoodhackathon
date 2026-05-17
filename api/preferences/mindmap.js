@@ -45,7 +45,7 @@ const DEMO_NODES = [
   {
     key: "foodPreferences",
     label: "Food preferences + dietary needs",
-    insight: "Japanese, Mediterranean, seasonal tasting menus; prefers quiet tables; light dairy",
+    insight: "Japanese | Mediterranean | seasonal tasting menus | prefers quiet tables | light dairy",
     confidence: 0.92,
     evidence: [
       {
@@ -60,7 +60,7 @@ const DEMO_NODES = [
   {
     key: "favoriteEvents",
     label: "Favorite events",
-    insight: "Private tastings, wellness classes, art/design tours, intimate dinners",
+    insight: "Private tastings | wellness classes | art/design tours | intimate dinners",
     confidence: 0.88,
     evidence: [
       {
@@ -75,7 +75,7 @@ const DEMO_NODES = [
   {
     key: "latentGoals",
     label: "Latent goals",
-    insight: "Recharge between work commitments; stay fit while traveling; discover local culture without overplanning",
+    insight: "Recharge between work commitments | stay fit while traveling | discover local culture without overplanning",
     confidence: 0.84,
     evidence: [
       {
@@ -155,7 +155,7 @@ function findTags(key, texts) {
 }
 
 function fallbackInsight(key, tags) {
-  if (tags.length) return tags.join(", ");
+  if (tags.length) return tags.join(" | ");
   if (key === "foodPreferences") return "No strong dietary signal yet";
   if (key === "favoriteEvents") return "No strong event pattern yet";
   return "Not enough evidence for a latent goal yet";

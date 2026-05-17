@@ -1,1871 +1,2405 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rosewood — Personal Concierge</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  /* ── CANVAS ─────────────────────────────────────────── */
-  body {
-    min-height: 100vh;
-    font-family: 'Inter', sans-serif;
-    font-weight: 400;
-    color: rgba(18,15,12,0.92);
-    overflow-x: hidden;
-    background-color: #e8e2d8;
-  }
-
-  /* ── SLIDESHOW ──────────────────────────────────────── */
-  .slides {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-  }
-
-  .slide {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    filter: brightness(0.80) saturate(0.78) contrast(0.93);
-    opacity: 0;
-    transition: opacity 2s ease-in-out;
-  }
-
-  .slide.active { opacity: 1; }
-
-  /* Warm taupe overlay — consistent across all images */
-  .slides::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(232,224,212,0.55);
-    z-index: 1;
-  }
-
-  /* ── APP SHELL ──────────────────────────────────────── */
-  .app {
-    position: relative;
-    z-index: 2;
-    min-height: 100vh;
-  }
-
-  /* ── NAV ────────────────────────────────────────────── */
-  nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 36px 64px;
-  }
-
-  .logo {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.85);
-  }
-
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-  }
-
-  .guest-name {
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.22em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.55);
-  }
-
-  .nav-link {
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.22em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.70);
-    cursor: pointer;
-    border-bottom: 0.5px solid transparent;
-    padding-bottom: 1px;
-    transition: all 0.3s ease;
-  }
-  .nav-link:hover {
-    color: rgba(18,15,12,1);
-    border-bottom-color: rgba(18,15,12,0.4);
-  }
-
-  .role-pill {
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 0.22em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.70);
-    background: transparent;
-    border: 0.5px solid rgba(18,15,12,0.22);
-    padding: 7px 12px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .role-pill.active {
-    color: rgba(255,252,248,0.88);
-    background: rgba(18,15,12,0.78);
-    border-color: rgba(18,15,12,0.78);
-  }
-
-  /* ── HERO SPLIT ─────────────────────────────────────── */
-  .hero-split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: start;
-    padding: 8vh 64px 0;
-  }
-
-  /* ── GREETING ───────────────────────────────────────── */
-  .greeting {
-    padding: 0;
-    max-width: 100%;
-  }
-
-  .greeting-label {
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 0.32em;
-    text-transform: lowercase;
-    color: rgba(30,48,36,0.65);
-    margin-bottom: 20px;
-    padding-top: 6px;
-  }
-
-  .greeting-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(40px, 5.5vw, 72px);
-    font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
-    color: rgba(18,15,12,0.97);
-    margin-bottom: 28px;
-  }
-
-  .greeting-title em {
-    font-style: italic;
-    color: rgba(30,48,36,0.82);
-  }
-
-  .greeting-sub {
-    font-size: 13px;
-    font-weight: 400;
-    letter-spacing: 0.03em;
-    color: rgba(18,15,12,0.72);
-    line-height: 1.85;
-    max-width: 420px;
-  }
-
-  /* ── SECTION CONTAINER ──────────────────────────────────── */
-  .section-container {
-    background: rgba(255,255,255,0.45);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 60px 40px;
-    border-radius: 0px;
-    margin-top: 8vh;
-  }
-
-  .integration-dock {
-    position: fixed;
-    left: 64px;
-    bottom: 34px;
-    z-index: 5;
-    width: min(560px, calc(100vw - 128px));
-    background: rgba(255,255,255,0.48);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 0.5px solid rgba(28,25,20,0.14);
-    padding: 26px;
-  }
-
-  .dock-label {
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.48);
-    margin-bottom: 16px;
-  }
-
-  .dock-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .dock-minimize {
-    background: transparent;
-    border: 0.5px solid rgba(28,25,20,0.18);
-    color: rgba(18,15,12,0.58);
-    min-height: 28px;
-    padding: 0 10px;
-    font-size: 9px;
-    letter-spacing: 0.16em;
-    text-transform: lowercase;
-    cursor: pointer;
-  }
-
-  .integration-dock.minimized {
-    width: auto;
-    padding: 14px 16px;
-  }
-
-  .integration-dock.minimized .dock-grid,
-  .integration-dock.minimized .dock-status {
-    display: none;
-  }
-
-  .integration-dock.minimized .dock-label {
-    margin-bottom: 0;
-  }
-
-  .dock-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .dock-btn {
-    background: rgba(255,255,255,0.28);
-    border: 0.5px solid rgba(28,25,20,0.18);
-    color: rgba(18,15,12,0.76);
-    min-height: 74px;
-    padding: 18px 20px;
-    font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 0.16em;
-    text-transform: lowercase;
-    cursor: pointer;
-    text-decoration: none;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    transition: all 0.25s ease;
-  }
-  .dock-btn::after {
-    content: '+';
-    font-size: 22px;
-    font-weight: 300;
-    line-height: 1;
-    color: rgba(18,15,12,0.38);
-  }
-  .dock-btn:hover {
-    background: rgba(255,255,255,0.55);
-    border-color: rgba(28,25,20,0.34);
-    color: rgba(18,15,12,0.95);
-  }
-
-  .dock-status {
-    margin-top: 16px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: rgba(18,15,12,0.55);
-  }
-
-  .admin-view { display: none; }
-  body.admin-mode .user-view { display: none; }
-  body.admin-mode .admin-view { display: block; }
-  body.admin-mode .integration-dock,
-  body.admin-mode .ambient { display: none; }
-
-  .admin-dashboard {
-    padding: 8vh 64px 12vh;
-  }
-
-  .admin-shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
-    gap: 32px;
-    align-items: start;
-  }
-
-  .admin-panel {
-    background: rgba(255,255,255,0.48);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-    border: 0.5px solid rgba(28,25,20,0.14);
-    padding: 28px;
-  }
-
-  .admin-panel.dark {
-    background: rgba(10,9,7,0.62);
-    border-color: rgba(255,252,248,0.12);
-    color: rgba(255,252,248,0.82);
-  }
-
-  .admin-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(36px, 4vw, 58px);
-    font-weight: 400;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    margin-bottom: 12px;
-  }
-
-  .admin-copy {
-    font-size: 12px;
-    line-height: 1.7;
-    color: rgba(18,15,12,0.62);
-    margin-bottom: 20px;
-  }
-
-  .admin-panel.dark .admin-copy {
-    color: rgba(255,252,248,0.42);
-  }
-
-  .admin-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-
-  .admin-note {
-    margin: 0 0 18px;
-    border-left: 1px solid rgba(30,48,36,0.32);
-    padding: 10px 12px;
-    background: rgba(255,255,255,0.26);
-    font-size: 11px;
-    line-height: 1.6;
-    color: rgba(18,15,12,0.58);
-  }
-
-  .key-notes {
-    display: grid;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .key-note {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 9px;
-    align-items: start;
-    padding: 9px 11px;
-    background: rgba(255,255,255,0.30);
-    border-top: 0.5px solid rgba(28,25,20,0.08);
-    font-size: 11px;
-    line-height: 1.45;
-    color: rgba(18,15,12,0.68);
-  }
-
-  .admin-panel.dark .key-note {
-    background: rgba(255,252,248,0.06);
-    border-top-color: rgba(255,252,248,0.08);
-    color: rgba(255,252,248,0.68);
-  }
-
-  .key-note span {
-    font-size: 8px;
-    letter-spacing: 0.16em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.38);
-  }
-
-  .admin-panel.dark .key-note span {
-    color: rgba(220,185,130,0.58);
-  }
-
-  .key-title {
-    margin-top: 28px;
-    font-size: 30px;
-  }
-
-  .mindmap {
-    position: relative;
-    height: 680px;
-    overflow: hidden;
-    border: 0.5px solid rgba(28,25,20,0.12);
-    background: rgba(255,252,248,0.28);
-  }
-
-  .mindmap svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-
-  .mind-node {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    border: 0.5px solid rgba(28,25,20,0.28);
-    background: rgba(255,255,255,0.70);
-    padding: 9px 12px;
-    min-width: 136px;
-    max-width: 174px;
-    text-align: center;
-    font-size: 10px;
-    line-height: 1.35;
-    letter-spacing: 0.05em;
-    box-shadow: 0 2px 18px rgba(28,25,20,0.06);
-  }
-
-  .mind-node.root,
-  .mind-node.branch {
-    border-radius: 999px;
-    font-weight: 500;
-    text-transform: lowercase;
-  }
-
-  .mind-node.root {
-    background: rgba(28,25,20,0.86);
-    color: rgba(255,252,248,0.90);
-    min-width: 170px;
-    min-height: 82px;
-    display: grid;
-    place-items: center;
-  }
-
-  .mind-node.child {
-    border-radius: 999px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 6px;
-    text-align: left;
-  }
-
-  .mind-node.child span { outline: none; }
-  .mind-node.child button,
-  .mind-node.add button {
-    border: 0.5px solid rgba(28,25,20,0.18);
-    background: transparent;
-    color: inherit;
-    min-height: 20px;
-    padding: 0 6px;
-    cursor: pointer;
-  }
-
-  .mind-node.add {
-    border-style: dashed;
-    background: rgba(255,255,255,0.42);
-  }
-
-  .mind-node.add input {
-    width: 110px;
-    border: 0;
-    border-bottom: 0.5px solid rgba(28,25,20,0.22);
-    background: transparent;
-    padding: 4px;
-    font: inherit;
-    outline: none;
-  }
-
-  .admin-calendar-list {
-    display: grid;
-    gap: 10px;
-    margin-top: 18px;
-  }
-
-  .admin-cal-item {
-    border-left: 1.5px solid rgba(220,185,130,0.65);
-    background: rgba(255,252,248,0.06);
-    padding: 10px 12px;
-    font-size: 11px;
-    color: rgba(255,252,248,0.74);
-  }
-
-  .admin-cal-time {
-    display: block;
-    color: rgba(220,185,130,0.82);
-    font-size: 9px;
-    letter-spacing: 0.16em;
-    text-transform: lowercase;
-    margin-bottom: 4px;
-  }
-
-  .mic-btn {
-    min-width: 0;
-    justify-content: space-between;
-  }
-
-  /* ── ACCORDION ─────────────────────────────────────────── */
-  .accordion {
-    padding: 0;
-    margin-top: 0;
-  }
-
-  .accordion-item {
-    border-bottom: 0.5px solid rgba(28,25,20,0.12);
-  }
-  .accordion-item:first-child {
-    border-top: 0.5px solid rgba(28,25,20,0.12);
-  }
-
-  .accordion-hdr {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    padding: 24px 0;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    transition: opacity 0.2s ease;
-  }
-  .accordion-hdr:hover { opacity: 0.72; }
-
-  .acc-left {
-    display: flex;
-    align-items: baseline;
-    gap: 20px;
-    width: 260px;
-    flex-shrink: 0;
-  }
-
-  .acc-index {
-    font-size: 9px;
-    font-weight: 300;
-    letter-spacing: 0.32em;
-    color: rgba(28,25,20,0.22);
-  }
-
-  .acc-tag {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: lowercase;
-    padding: 5px 14px;
-    border-radius: 100px;
-    border: 0.5px solid currentColor;
-  }
-
-  .accordion-item.activity .acc-tag { color: #1E3024; background: rgba(30,48,36,0.08); }
-  .accordion-item.wellness .acc-tag  { color: rgba(150,110,52,0.95); background: rgba(180,138,78,0.09); }
-  .accordion-item.learning .acc-tag  { color: rgba(100,85,155,0.95); background: rgba(128,112,180,0.09); }
-
-  .acc-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(34px, 4vw, 58px);
-    font-weight: 500;
-    letter-spacing: -0.03em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.95);
-    line-height: 1.0;
-    flex: 1;
-    text-align: right;
-    margin: 0;
-  }
-
-  .acc-indicator {
-    margin-left: 32px;
-    width: 20px;
-    height: 20px;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .acc-indicator::before,
-  .acc-indicator::after {
-    content: '';
-    position: absolute;
-    background: rgba(28,25,20,0.40);
-    transition: transform 0.35s ease, opacity 0.35s ease;
-  }
-  .acc-indicator::before {
-    width: 16px; height: 0.5px;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .acc-indicator::after {
-    width: 0.5px; height: 16px;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .accordion-item.open .acc-indicator::after {
-    transform: translate(-50%, -50%) rotate(90deg);
-    opacity: 0;
-  }
-
-  /* Body */
-  .accordion-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .accordion-item.open .accordion-body { max-height: 700px; }
-
-  .acc-body-inner { padding-bottom: 44px; }
-
-  /* Chips */
-  .acc-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 32px;
-  }
-
-  .chip {
-    font-size: 9px;
-    font-weight: 400;
-    letter-spacing: 0.18em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.35);
-    padding: 4px 0;
-    border-bottom: 0.5px solid rgba(18,15,12,0.16);
-  }
-  .chip.active {
-    font-weight: 500;
-    color: rgba(18,15,12,0.82);
-    border-bottom-color: rgba(18,15,12,0.45);
-  }
-
-  /* Pillar rule */
-  .acc-rule {
-    width: 32px;
-    height: 0.5px;
-    margin-bottom: 28px;
-    opacity: 0.6;
-  }
-  .accordion-item.activity .acc-rule { background: #1E3024; }
-  .accordion-item.wellness .acc-rule { background: rgba(180,138,78,1); }
-  .accordion-item.learning .acc-rule { background: rgba(128,112,180,1); }
-
-  .recs-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.60);
-    margin-bottom: 18px;
-  }
-
-  .recs { display: flex; flex-direction: column; }
-
-  .rec {
-    display: flex;
-    align-items: baseline;
-    gap: 24px;
-    padding: 18px 0;
-    border-top: 0.5px solid rgba(28,25,20,0.08);
-    cursor: pointer;
-    transition: opacity 0.25s ease;
-  }
-  .rec:last-child { border-bottom: 0.5px solid rgba(28,25,20,0.08); }
-  .rec:hover { opacity: 0.62; }
-
-  .rec-info { flex: 1; }
-
-  .rec-name {
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: rgba(18,15,12,0.94);
-    margin-bottom: 4px;
-  }
-
-  .rec-meta {
-    font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 0.03em;
-    color: rgba(18,15,12,0.55);
-  }
-
-  .rec-why {
-    max-width: 460px;
-    margin-top: 8px;
-    font-size: 12px;
-    line-height: 1.55;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    color: rgba(18,15,12,0.68);
-  }
-
-  .rec-why span {
-    color: rgba(18,15,12,0.42);
-    text-transform: lowercase;
-  }
-
-  .rec-cta {
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 0.22em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.40);
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: color 0.2s;
-  }
-  .rec:hover .rec-cta { color: rgba(18,15,12,0.75); }
-
-  .generate-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-
-  .generate-status {
-    font-size: 14px;
-    line-height: 1.45;
-    letter-spacing: 0.02em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.45);
-  }
-
-  .agent-dialogue {
-    display: grid;
-    gap: 8px;
-    margin: -8px 0 24px;
-    max-width: 820px;
-  }
-
-  .agent-line {
-    border-left: 1.5px solid rgba(30,48,36,0.35);
-    background: rgba(255,255,255,0.30);
-    padding: 10px 12px;
-    font-size: 13px;
-    line-height: 1.55;
-    color: rgba(18,15,12,0.70);
-  }
-
-  .agent-line span {
-    display: block;
-    margin-bottom: 3px;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.42);
-  }
-
-  /* ── GUEST CARD ─────────────────────────────────────── */
-  .guest-card {
-    margin: 0;
-    max-width: 100%;
-    border: 0.5px solid rgba(255,252,248,0.20);
-    background: rgba(10,9,7,0.62);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  /* ── CARD TABS ───────────────────────────────────────── */
-  .card-tabs {
-    display: flex;
-    border-bottom: 0.5px solid rgba(255,252,248,0.1);
-  }
-
-  .tab-btn {
-    flex: 1;
-    padding: 10px 0;
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    font-weight: 300;
-    letter-spacing: 0.28em;
-    text-transform: lowercase;
-    color: rgba(255,252,248,0.32);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    border-bottom: 1px solid transparent;
-    margin-bottom: -0.5px;
-    transition: all 0.25s ease;
-  }
-
-  .tab-btn.active {
-    color: rgba(255,252,248,0.82);
-    border-bottom-color: rgba(220,185,130,0.7);
-  }
-
-  .tab-btn:hover:not(.active) {
-    color: rgba(255,252,248,0.55);
-  }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* ── CALENDAR ────────────────────────────────────────── */
-  .cal-days {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0;
-    border-bottom: 0.5px solid rgba(255,252,248,0.08);
-  }
-
-  .cal-day-hdr {
-    padding: 10px 8px 8px;
-    text-align: center;
-    border-right: 0.5px solid rgba(255,252,248,0.07);
-  }
-  .cal-day-hdr:last-child { border-right: none; }
-
-  .cal-day-hdr.today { background: rgba(220,185,130,0.07); }
-
-  .cal-dow {
-    font-size: 8px;
-    font-weight: 300;
-    letter-spacing: 0.2em;
-    text-transform: lowercase;
-    color: rgba(255,252,248,0.3);
-    display: block;
-    margin-bottom: 4px;
-  }
-
-  .cal-date {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 20px;
-    font-weight: 300;
-    color: rgba(255,252,248,0.7);
-    display: block;
-    line-height: 1;
-  }
-
-  .cal-day-hdr.today .cal-date { color: rgba(220,185,130,0.9); }
-
-  .cal-events {
-    padding: 12px;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0;
-    min-height: 100px;
-  }
-
-  .cal-col {
-    padding: 0 6px;
-    border-right: 0.5px solid rgba(255,252,248,0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .cal-col:last-child { border-right: none; }
-  .cal-col:first-child { padding-left: 0; }
-
-  .cal-event {
-    padding: 5px 7px;
-    font-size: 9px;
-    font-weight: 300;
-    letter-spacing: 0.04em;
-    line-height: 1.35;
-    border-left: 1.5px solid transparent;
-  }
-
-  .cal-event.activity {
-    background: rgba(155,210,175,0.07);
-    border-left-color: rgba(155,210,175,0.5);
-    color: rgba(155,210,175,0.82);
-  }
-
-  .cal-event.wellness {
-    background: rgba(220,185,130,0.07);
-    border-left-color: rgba(220,185,130,0.5);
-    color: rgba(220,185,130,0.82);
-  }
-
-  .cal-event.learning {
-    background: rgba(185,170,220,0.07);
-    border-left-color: rgba(185,170,220,0.5);
-    color: rgba(185,170,220,0.82);
-  }
-
-  .cal-event-time {
-    display: block;
-    font-size: 8px;
-    opacity: 0.6;
-    margin-bottom: 1px;
-    letter-spacing: 0.06em;
-  }
-
-  .cal-empty {
-    font-size: 9px;
-    color: rgba(255,252,248,0.15);
-    letter-spacing: 0.08em;
-    padding-top: 4px;
-  }
-
-  .card-header {
-    padding: 1.5rem;
-    border-bottom: 0.5px solid rgba(255,252,248,0.1);
-  }
-
-  .card-brand {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-  }
-
-  .card-brand-name {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 10px;
-    font-weight: 300;
-    letter-spacing: 0.28em;
-    text-transform: lowercase;
-    color: rgba(255,252,248,0.45);
-  }
-
-  .card-badge {
-    font-size: 10px;
-    font-weight: 300;
-    letter-spacing: 0.12em;
-    text-transform: lowercase;
-    color: rgba(185,210,220,0.82);
-    background: rgba(185,210,220,0.1);
-    padding: 3px 10px;
-    border: 0.5px solid rgba(185,210,220,0.2);
-  }
-
-  .card-guest-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .card-avatar {
-    width: 48px;
-    height: 48px;
-    background: rgba(166,137,102,0.25);
-    border: 0.5px solid rgba(220,185,130,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 300;
-    letter-spacing: 0.08em;
-    color: rgba(220,185,130,0.85);
-    flex-shrink: 0;
-  }
-
-  .card-guest-name {
-    font-size: 17px;
-    font-weight: 300;
-    letter-spacing: 0.02em;
-    color: rgba(255,252,248,0.9);
-    margin: 0 0 4px;
-  }
-
-  .card-guest-meta {
-    font-size: 11px;
-    font-weight: 300;
-    letter-spacing: 0.06em;
-    color: rgba(255,252,248,0.35);
-    margin: 0;
-  }
-
-  .card-sep { opacity: 0.25; margin: 0 6px; }
-
-  .card-section {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 0.5px solid rgba(255,252,248,0.07);
-  }
-
-  .card-section-label {
-    font-size: 8px;
-    font-weight: 300;
-    letter-spacing: 0.32em;
-    text-transform: lowercase;
-    color: rgba(255,252,248,0.28);
-    margin: 0 0 12px;
-  }
-
-  .prefs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .pref-item {
-    background: rgba(255,252,248,0.05);
-    border: 0.5px solid rgba(255,252,248,0.08);
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .pref-icon {
-    font-size: 16px;
-    flex-shrink: 0;
-    opacity: 0.7;
-  }
-
-  .pref-label {
-    font-size: 10px;
-    font-weight: 300;
-    letter-spacing: 0.08em;
-    color: rgba(255,252,248,0.35);
-    margin: 0 0 2px;
-  }
-
-  .pref-value {
-    font-size: 12px;
-    font-weight: 400;
-    color: rgba(255,252,248,0.78);
-    margin: 0;
-  }
-
-  .arrival-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .arrival-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 300;
-    letter-spacing: 0.03em;
-  }
-
-  .arrival-item.done {
-    background: rgba(155,210,175,0.08);
-    border: 0.5px solid rgba(155,210,175,0.15);
-    color: rgba(155,210,175,0.82);
-  }
-
-  .arrival-item.pending {
-    background: rgba(220,185,130,0.08);
-    border: 0.5px solid rgba(220,185,130,0.15);
-    color: rgba(220,185,130,0.82);
-  }
-
-  .arrival-icon { font-size: 14px; flex-shrink: 0; }
-
-  .card-actions {
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    gap: 8px;
-  }
-
-  .card-btn-primary {
-    flex: 1;
-    background: rgba(220,185,130,0.18);
-    border: 0.5px solid rgba(220,185,130,0.35);
-    color: rgba(220,185,130,0.9);
-    padding: 10px 0;
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 300;
-    letter-spacing: 0.18em;
-    text-transform: lowercase;
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .card-btn-primary:hover {
-    background: rgba(220,185,130,0.28);
-    border-color: rgba(220,185,130,0.55);
-  }
-
-  .card-btn-ghost {
-    flex: 1;
-    background: transparent;
-    border: 0.5px solid rgba(255,252,248,0.14);
-    color: rgba(255,252,248,0.45);
-    padding: 10px 0;
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 300;
-    letter-spacing: 0.18em;
-    text-transform: lowercase;
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .card-btn-ghost:hover {
-    border-color: rgba(255,252,248,0.28);
-    color: rgba(255,252,248,0.72);
-  }
-
-  /* ── AMBIENT ────────────────────────────────────────── */
-  .ambient {
-    padding: 6vh 64px 14vh;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 48px;
-    border-top: 0.5px solid rgba(28,25,20,0.1);
-    max-width: 900px;
-  }
-
-  .ambient-label {
-    font-size: 8px;
-    font-weight: 300;
-    letter-spacing: 0.32em;
-    text-transform: lowercase;
-    color: rgba(28,25,20,0.25);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .ambient-signals {
-    display: flex;
-    gap: 48px;
-    flex: 1;
-  }
-
-  .signal {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .signal-val {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 26px;
-    font-weight: 500;
-    color: rgba(18,15,12,0.88);
-    line-height: 1;
-  }
-
-  .signal-lbl {
-    font-size: 8px;
-    font-weight: 400;
-    letter-spacing: 0.25em;
-    text-transform: lowercase;
-    color: rgba(18,15,12,0.50);
-  }
-
-  .ambient-action {
-    font-size: 9px;
-    font-weight: 400;
-    letter-spacing: 0.28em;
-    text-transform: lowercase;
-    color: rgba(28,25,20,0.40);
-    cursor: pointer;
-    border-bottom: 0.5px solid rgba(28,25,20,0.22);
-    padding-bottom: 2px;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-  }
-  .ambient-action:hover {
-    color: rgba(28,25,20,0.72);
-    border-bottom-color: rgba(28,25,20,0.45);
-  }
-
-  /* ── SLIDE LABEL (bottom right) ─────────────────────── */
-  .slide-label {
-    position: fixed;
-    bottom: 36px;
-    right: 64px;
-    z-index: 3;
-    font-size: 8px;
-    font-weight: 300;
-    letter-spacing: 0.28em;
-    text-transform: lowercase;
-    color: rgba(28,25,20,0.35);
-    transition: opacity 0.6s ease;
-  }
-</style>
-</head>
-<body>
-
-<!-- SLIDESHOW BACKGROUND -->
-<div class="slides">
-  <div class="slide active" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWNMK_Destination_Lake-Jetty_Lifestyle-7.jpg');background-position:center 40%;"></div>
-  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWDHA_Facilities_Houses_1601_PianoLounge-0045.jpg');background-position:center;"></div>
-  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWMDR_Facilities_Suite_Ocean-View-Mountain-Studio-Suite_Bedroom-with-Terrace-and-Pool.jpg');background-position:center 30%;"></div>
-  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWAMS_Facilities_Public-Spaces_Art_Statica_Frederik-Molenschot_1.jpg');background-position:center;"></div>
-  <div class="slide" style="background-image:url('https://hoteldesigns.net/wp-content/uploads/2025/10/RWAMS_Facilities_Wellness_Asaya_Corridor_1.jpg');background-position:center top;"></div>
-</div>
-
-<div class="slide-label" id="slideLabel">rosewood new market &nbsp;·&nbsp; lake jetty</div>
-
-<div class="app">
-
-  <!-- NAV -->
-  <nav>
-    <div class="logo">rosewood: curated by tia ❤️</div>
-    <div class="nav-right">
-      <span class="guest-name" id="loginName">not signed in</span>
-      <button class="role-pill active" data-role="user" type="button">guest</button>
-      <button class="role-pill" data-role="admin" type="button">admin</button>
-      <span class="nav-link" onclick="switchTab('calendar', document.querySelector('[data-tab-calendar]'))">calendar</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rosewood — Personal Concierge</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* ── CANVAS ─────────────────────────────────────────── */
+      body {
+        min-height: 100vh;
+        font-family: "Inter", sans-serif;
+        font-weight: 400;
+        color: rgba(18, 15, 12, 0.92);
+        overflow-x: hidden;
+        background-color: #e8e2d8;
+      }
+
+      /* ── SLIDESHOW ──────────────────────────────────────── */
+      .slides {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        filter: brightness(0.8) saturate(0.78) contrast(0.93);
+        opacity: 0;
+        transition: opacity 2s ease-in-out;
+      }
+
+      .slide.active {
+        opacity: 1;
+      }
+
+      /* Warm taupe overlay — consistent across all images */
+      .slides::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(232, 224, 212, 0.55);
+        z-index: 1;
+      }
+
+      /* ── APP SHELL ──────────────────────────────────────── */
+      .app {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+      }
+
+      /* ── NAV ────────────────────────────────────────────── */
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 36px 64px;
+      }
+
+      .logo {
+        font-family: "Inter", sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.85);
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+      }
+
+      .guest-name {
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.22em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.55);
+      }
+
+      .nav-link {
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.22em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.7);
+        cursor: pointer;
+        border-bottom: 0.5px solid transparent;
+        padding-bottom: 1px;
+        transition: all 0.3s ease;
+      }
+      .nav-link:hover {
+        color: rgba(18, 15, 12, 1);
+        border-bottom-color: rgba(18, 15, 12, 0.4);
+      }
+
+      .role-pill {
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.22em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.7);
+        background: transparent;
+        border: 0.5px solid rgba(18, 15, 12, 0.22);
+        padding: 7px 12px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+      .role-pill.active {
+        color: rgba(255, 252, 248, 0.88);
+        background: rgba(18, 15, 12, 0.78);
+        border-color: rgba(18, 15, 12, 0.78);
+      }
+
+      /* ── HERO SPLIT ─────────────────────────────────────── */
+      .hero-split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 48px;
+        align-items: start;
+        padding: 8vh 64px 0;
+      }
+
+      /* ── GREETING ───────────────────────────────────────── */
+      .greeting {
+        padding: 0;
+        max-width: 100%;
+      }
+
+      .greeting-label {
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.32em;
+        text-transform: lowercase;
+        color: rgba(30, 48, 36, 0.65);
+        margin-bottom: 20px;
+        padding-top: 6px;
+      }
+
+      .greeting-title {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(40px, 5.5vw, 72px);
+        font-weight: 400;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        color: rgba(18, 15, 12, 0.97);
+        margin-bottom: 28px;
+      }
+
+      .greeting-title em {
+        font-style: italic;
+        color: rgba(30, 48, 36, 0.82);
+      }
+
+      .greeting-sub {
+        font-size: 13px;
+        font-weight: 400;
+        letter-spacing: 0.03em;
+        color: rgba(18, 15, 12, 0.72);
+        line-height: 1.85;
+        max-width: 420px;
+      }
+
+      /* ── SECTION CONTAINER ──────────────────────────────────── */
+      .section-container {
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 60px 40px;
+        border-radius: 0px;
+        margin-top: 8vh;
+      }
+
+      .integration-dock {
+        position: fixed;
+        left: 64px;
+        bottom: 34px;
+        z-index: 5;
+        width: min(560px, calc(100vw - 128px));
+        background: rgba(255, 255, 255, 0.48);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 0.5px solid rgba(28, 25, 20, 0.14);
+        padding: 26px;
+      }
+
+      .dock-label {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.48);
+        margin-bottom: 16px;
+      }
+
+      .dock-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .dock-minimize {
+        background: transparent;
+        border: 0.5px solid rgba(28, 25, 20, 0.18);
+        color: rgba(18, 15, 12, 0.58);
+        min-height: 28px;
+        padding: 0 10px;
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: lowercase;
+        cursor: pointer;
+      }
+
+      .integration-dock.minimized {
+        width: auto;
+        padding: 14px 16px;
+      }
+
+      .integration-dock.minimized .dock-grid,
+      .integration-dock.minimized .dock-status {
+        display: none;
+      }
+
+      .integration-dock.minimized .dock-label {
+        margin-bottom: 0;
+      }
+
+      .dock-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .dock-btn {
+        background: rgba(255, 255, 255, 0.28);
+        border: 0.5px solid rgba(28, 25, 20, 0.18);
+        color: rgba(18, 15, 12, 0.76);
+        min-height: 74px;
+        padding: 18px 20px;
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0.16em;
+        text-transform: lowercase;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        transition: all 0.25s ease;
+      }
+      .dock-btn::after {
+        content: "+";
+        font-size: 22px;
+        font-weight: 300;
+        line-height: 1;
+        color: rgba(18, 15, 12, 0.38);
+      }
+      .dock-btn:hover {
+        background: rgba(255, 255, 255, 0.55);
+        border-color: rgba(28, 25, 20, 0.34);
+        color: rgba(18, 15, 12, 0.95);
+      }
+
+      .dock-status {
+        margin-top: 16px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(18, 15, 12, 0.55);
+      }
+
+      .admin-view {
+        display: none;
+      }
+      body.admin-mode .user-view {
+        display: none;
+      }
+      body.admin-mode .admin-view {
+        display: block;
+      }
+      body.admin-mode .integration-dock,
+      body.admin-mode .ambient {
+        display: none;
+      }
+
+      .admin-dashboard {
+        padding: 8vh 64px 12vh;
+      }
+
+      .admin-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+        gap: 32px;
+        align-items: start;
+      }
+
+      .admin-panel {
+        background: rgba(255, 255, 255, 0.48);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        border: 0.5px solid rgba(28, 25, 20, 0.14);
+        padding: 28px;
+      }
+
+      .admin-panel.dark {
+        background: rgba(10, 9, 7, 0.62);
+        border-color: rgba(255, 252, 248, 0.12);
+        color: rgba(255, 252, 248, 0.82);
+      }
+
+      .admin-title {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(36px, 4vw, 58px);
+        font-weight: 400;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        margin-bottom: 12px;
+      }
+
+      .admin-copy {
+        font-size: 12px;
+        line-height: 1.7;
+        color: rgba(18, 15, 12, 0.62);
+        margin-bottom: 20px;
+      }
+
+      .admin-panel.dark .admin-copy {
+        color: rgba(255, 252, 248, 0.42);
+      }
+
+      .admin-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .admin-note {
+        margin: 0 0 18px;
+        border-left: 1px solid rgba(30, 48, 36, 0.32);
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.26);
+        font-size: 11px;
+        line-height: 1.6;
+        color: rgba(18, 15, 12, 0.58);
+      }
+
+      .key-notes {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .key-note {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 9px;
+        align-items: start;
+        padding: 9px 11px;
+        background: rgba(255, 255, 255, 0.3);
+        border-top: 0.5px solid rgba(28, 25, 20, 0.08);
+        font-size: 11px;
+        line-height: 1.45;
+        color: rgba(18, 15, 12, 0.68);
+      }
+
+      .admin-panel.dark .key-note {
+        background: rgba(255, 252, 248, 0.06);
+        border-top-color: rgba(255, 252, 248, 0.08);
+        color: rgba(255, 252, 248, 0.68);
+      }
+
+      .key-note span {
+        font-size: 8px;
+        letter-spacing: 0.16em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.38);
+      }
+
+      .admin-panel.dark .key-note span {
+        color: rgba(220, 185, 130, 0.58);
+      }
+
+      .key-title {
+        margin-top: 28px;
+        font-size: 30px;
+      }
+
+      .mindmap {
+        position: relative;
+        height: 680px;
+        overflow: hidden;
+        border: 0.5px solid rgba(28, 25, 20, 0.12);
+        background: rgba(255, 252, 248, 0.28);
+      }
+
+      .mindmap svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .mind-node {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        border: 0.5px solid rgba(28, 25, 20, 0.28);
+        background: rgba(255, 255, 255, 0.7);
+        padding: 9px 12px;
+        min-width: 136px;
+        max-width: 174px;
+        text-align: center;
+        font-size: 10px;
+        line-height: 1.35;
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 18px rgba(28, 25, 20, 0.06);
+      }
+
+      .mind-node.root,
+      .mind-node.branch {
+        border-radius: 999px;
+        font-weight: 500;
+        text-transform: lowercase;
+      }
+
+      .mind-node.root {
+        background: rgba(28, 25, 20, 0.86);
+        color: rgba(255, 252, 248, 0.9);
+        min-width: 170px;
+        min-height: 82px;
+        display: grid;
+        place-items: center;
+      }
+
+      .mind-node.child {
+        border-radius: 999px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px;
+        text-align: left;
+      }
+
+      .mind-node.child span {
+        outline: none;
+      }
+      .mind-node.child button,
+      .mind-node.add button {
+        border: 0.5px solid rgba(28, 25, 20, 0.18);
+        background: transparent;
+        color: inherit;
+        min-height: 20px;
+        padding: 0 6px;
+        cursor: pointer;
+      }
+
+      .mind-node.add {
+        border-style: dashed;
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .mind-node.add input {
+        width: 110px;
+        border: 0;
+        border-bottom: 0.5px solid rgba(28, 25, 20, 0.22);
+        background: transparent;
+        padding: 4px;
+        font: inherit;
+        outline: none;
+      }
+
+      .admin-calendar-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .admin-cal-item {
+        border-left: 1.5px solid rgba(220, 185, 130, 0.65);
+        background: rgba(255, 252, 248, 0.06);
+        padding: 10px 12px;
+        font-size: 11px;
+        color: rgba(255, 252, 248, 0.74);
+      }
+
+      .admin-cal-time {
+        display: block;
+        color: rgba(220, 185, 130, 0.82);
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: lowercase;
+        margin-bottom: 4px;
+      }
+
+      .mic-btn {
+        min-width: 0;
+        justify-content: space-between;
+      }
+
+      /* ── ACCORDION ─────────────────────────────────────────── */
+      .accordion {
+        padding: 0;
+        margin-top: 0;
+      }
+
+      .accordion-item {
+        border-bottom: 0.5px solid rgba(28, 25, 20, 0.12);
+      }
+      .accordion-item:first-child {
+        border-top: 0.5px solid rgba(28, 25, 20, 0.12);
+      }
+
+      .accordion-hdr {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        padding: 24px 0;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        transition: opacity 0.2s ease;
+      }
+      .accordion-hdr:hover {
+        opacity: 0.72;
+      }
+
+      .acc-left {
+        display: flex;
+        align-items: baseline;
+        gap: 20px;
+        width: 260px;
+        flex-shrink: 0;
+      }
+
+      .acc-index {
+        font-size: 9px;
+        font-weight: 300;
+        letter-spacing: 0.32em;
+        color: rgba(28, 25, 20, 0.22);
+      }
+
+      .acc-tag {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        padding: 5px 14px;
+        border-radius: 100px;
+        border: 0.5px solid currentColor;
+      }
+
+      .accordion-item.activity .acc-tag {
+        color: #1e3024;
+        background: rgba(30, 48, 36, 0.08);
+      }
+      .accordion-item.wellness .acc-tag {
+        color: rgba(150, 110, 52, 0.95);
+        background: rgba(180, 138, 78, 0.09);
+      }
+      .accordion-item.learning .acc-tag {
+        color: rgba(100, 85, 155, 0.95);
+        background: rgba(128, 112, 180, 0.09);
+      }
+
+      .acc-title {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(34px, 4vw, 58px);
+        font-weight: 500;
+        letter-spacing: -0.03em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.95);
+        line-height: 1;
+        flex: 1;
+        text-align: right;
+        margin: 0;
+      }
+
+      .acc-indicator {
+        margin-left: 32px;
+        width: 20px;
+        height: 20px;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .acc-indicator::before,
+      .acc-indicator::after {
+        content: "";
+        position: absolute;
+        background: rgba(28, 25, 20, 0.4);
+        transition:
+          transform 0.35s ease,
+          opacity 0.35s ease;
+      }
+      .acc-indicator::before {
+        width: 16px;
+        height: 0.5px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .acc-indicator::after {
+        width: 0.5px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .accordion-item.open .acc-indicator::after {
+        transform: translate(-50%, -50%) rotate(90deg);
+        opacity: 0;
+      }
+
+      /* Body */
+      .accordion-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .accordion-item.open .accordion-body {
+        max-height: 700px;
+      }
+
+      .acc-body-inner {
+        padding-bottom: 44px;
+      }
+
+      /* Chips */
+      .acc-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 32px;
+      }
+
+      .chip {
+        font-size: 9px;
+        font-weight: 400;
+        letter-spacing: 0.18em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.35);
+        padding: 4px 0;
+        border-bottom: 0.5px solid rgba(18, 15, 12, 0.16);
+      }
+      .chip.active {
+        font-weight: 500;
+        color: rgba(18, 15, 12, 0.82);
+        border-bottom-color: rgba(18, 15, 12, 0.45);
+      }
+
+      /* Pillar rule */
+      .acc-rule {
+        width: 32px;
+        height: 0.5px;
+        margin-bottom: 28px;
+        opacity: 0.6;
+      }
+      .accordion-item.activity .acc-rule {
+        background: #1e3024;
+      }
+      .accordion-item.wellness .acc-rule {
+        background: rgba(180, 138, 78, 1);
+      }
+      .accordion-item.learning .acc-rule {
+        background: rgba(128, 112, 180, 1);
+      }
+
+      .recs-label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.6);
+        margin-bottom: 18px;
+      }
+
+      .recs {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .rec {
+        display: flex;
+        align-items: baseline;
+        gap: 24px;
+        padding: 18px 0;
+        border-top: 0.5px solid rgba(28, 25, 20, 0.08);
+        cursor: pointer;
+        transition: opacity 0.25s ease;
+      }
+      .rec:last-child {
+        border-bottom: 0.5px solid rgba(28, 25, 20, 0.08);
+      }
+      .rec:hover {
+        opacity: 0.62;
+      }
+
+      .rec-info {
+        flex: 1;
+      }
+
+      .rec-name {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: rgba(18, 15, 12, 0.94);
+        margin-bottom: 4px;
+      }
+
+      .rec-meta {
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0.03em;
+        color: rgba(18, 15, 12, 0.55);
+      }
+
+      .rec-why {
+        max-width: 460px;
+        margin-top: 8px;
+        font-size: 12px;
+        line-height: 1.55;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        color: rgba(18, 15, 12, 0.68);
+      }
+
+      .rec-why span {
+        color: rgba(18, 15, 12, 0.42);
+        text-transform: lowercase;
+      }
+
+      .rec-cta {
+        font-size: 11px;
+        font-weight: 400;
+        letter-spacing: 0.22em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.4);
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: color 0.2s;
+      }
+      .rec:hover .rec-cta {
+        color: rgba(18, 15, 12, 0.75);
+      }
+
+      .generate-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+
+      .generate-status {
+        font-size: 14px;
+        line-height: 1.45;
+        letter-spacing: 0.02em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.45);
+      }
+
+      .agent-dialogue {
+        display: grid;
+        gap: 8px;
+        margin: -8px 0 24px;
+        max-width: 820px;
+      }
+
+      .agent-line {
+        border-left: 1.5px solid rgba(30, 48, 36, 0.35);
+        background: rgba(255, 255, 255, 0.3);
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: rgba(18, 15, 12, 0.7);
+      }
+
+      .agent-line span {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.42);
+      }
+
+      /* ── GUEST CARD ─────────────────────────────────────── */
+      .guest-card {
+        margin: 0;
+        max-width: 100%;
+        border: 0.5px solid rgba(255, 252, 248, 0.2);
+        background: rgba(10, 9, 7, 0.62);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      /* ── CARD TABS ───────────────────────────────────────── */
+      .card-tabs {
+        display: flex;
+        border-bottom: 0.5px solid rgba(255, 252, 248, 0.1);
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 10px 0;
+        font-family: "Inter", sans-serif;
+        font-size: 9px;
+        font-weight: 300;
+        letter-spacing: 0.28em;
+        text-transform: lowercase;
+        color: rgba(255, 252, 248, 0.32);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-bottom: 1px solid transparent;
+        margin-bottom: -0.5px;
+        transition: all 0.25s ease;
+      }
+
+      .tab-btn.active {
+        color: rgba(255, 252, 248, 0.82);
+        border-bottom-color: rgba(220, 185, 130, 0.7);
+      }
+
+      .tab-btn:hover:not(.active) {
+        color: rgba(255, 252, 248, 0.55);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+
+      /* ── CALENDAR ────────────────────────────────────────── */
+      .cal-days {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0;
+        border-bottom: 0.5px solid rgba(255, 252, 248, 0.08);
+      }
+
+      .cal-day-hdr {
+        padding: 10px 8px 8px;
+        text-align: center;
+        border-right: 0.5px solid rgba(255, 252, 248, 0.07);
+      }
+      .cal-day-hdr:last-child {
+        border-right: none;
+      }
+
+      .cal-day-hdr.today {
+        background: rgba(220, 185, 130, 0.07);
+      }
+
+      .cal-dow {
+        font-size: 8px;
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        text-transform: lowercase;
+        color: rgba(255, 252, 248, 0.3);
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .cal-date {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 20px;
+        font-weight: 300;
+        color: rgba(255, 252, 248, 0.7);
+        display: block;
+        line-height: 1;
+      }
+
+      .cal-day-hdr.today .cal-date {
+        color: rgba(220, 185, 130, 0.9);
+      }
+
+      .cal-events {
+        padding: 12px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0;
+        min-height: 100px;
+      }
+
+      .cal-col {
+        padding: 0 6px;
+        border-right: 0.5px solid rgba(255, 252, 248, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .cal-col:last-child {
+        border-right: none;
+      }
+      .cal-col:first-child {
+        padding-left: 0;
+      }
+
+      .cal-event {
+        padding: 5px 7px;
+        font-size: 9px;
+        font-weight: 300;
+        letter-spacing: 0.04em;
+        line-height: 1.35;
+        border-left: 1.5px solid transparent;
+      }
+
+      .cal-event.activity {
+        background: rgba(155, 210, 175, 0.07);
+        border-left-color: rgba(155, 210, 175, 0.5);
+        color: rgba(155, 210, 175, 0.82);
+      }
+
+      .cal-event.wellness {
+        background: rgba(220, 185, 130, 0.07);
+        border-left-color: rgba(220, 185, 130, 0.5);
+        color: rgba(220, 185, 130, 0.82);
+      }
+
+      .cal-event.learning {
+        background: rgba(185, 170, 220, 0.07);
+        border-left-color: rgba(185, 170, 220, 0.5);
+        color: rgba(185, 170, 220, 0.82);
+      }
+
+      .cal-event-time {
+        display: block;
+        font-size: 8px;
+        opacity: 0.6;
+        margin-bottom: 1px;
+        letter-spacing: 0.06em;
+      }
+
+      .cal-empty {
+        font-size: 9px;
+        color: rgba(255, 252, 248, 0.15);
+        letter-spacing: 0.08em;
+        padding-top: 4px;
+      }
+
+      .card-header {
+        padding: 1.5rem;
+        border-bottom: 0.5px solid rgba(255, 252, 248, 0.1);
+      }
+
+      .card-brand {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .card-brand-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 10px;
+        font-weight: 300;
+        letter-spacing: 0.28em;
+        text-transform: lowercase;
+        color: rgba(255, 252, 248, 0.45);
+      }
+
+      .card-badge {
+        font-size: 10px;
+        font-weight: 300;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        color: rgba(185, 210, 220, 0.82);
+        background: rgba(185, 210, 220, 0.1);
+        padding: 3px 10px;
+        border: 0.5px solid rgba(185, 210, 220, 0.2);
+      }
+
+      .card-guest-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .card-avatar {
+        width: 48px;
+        height: 48px;
+        background: rgba(166, 137, 102, 0.25);
+        border: 0.5px solid rgba(220, 185, 130, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 300;
+        letter-spacing: 0.08em;
+        color: rgba(220, 185, 130, 0.85);
+        flex-shrink: 0;
+      }
+
+      .card-guest-name {
+        font-size: 17px;
+        font-weight: 300;
+        letter-spacing: 0.02em;
+        color: rgba(255, 252, 248, 0.9);
+        margin: 0 0 4px;
+      }
+
+      .card-guest-meta {
+        font-size: 11px;
+        font-weight: 300;
+        letter-spacing: 0.06em;
+        color: rgba(255, 252, 248, 0.35);
+        margin: 0;
+      }
+
+      .card-sep {
+        opacity: 0.25;
+        margin: 0 6px;
+      }
+
+      .card-section {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 0.5px solid rgba(255, 252, 248, 0.07);
+      }
+
+      .card-section-label {
+        font-size: 8px;
+        font-weight: 300;
+        letter-spacing: 0.32em;
+        text-transform: lowercase;
+        color: rgba(255, 252, 248, 0.28);
+        margin: 0 0 12px;
+      }
+
+      .prefs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .pref-item {
+        background: rgba(255, 252, 248, 0.05);
+        border: 0.5px solid rgba(255, 252, 248, 0.08);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pref-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+        opacity: 0.7;
+      }
+
+      .pref-label {
+        font-size: 10px;
+        font-weight: 300;
+        letter-spacing: 0.08em;
+        color: rgba(255, 252, 248, 0.35);
+        margin: 0 0 2px;
+      }
+
+      .pref-value {
+        font-size: 12px;
+        font-weight: 400;
+        color: rgba(255, 252, 248, 0.78);
+        margin: 0;
+      }
+
+      .arrival-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .arrival-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 300;
+        letter-spacing: 0.03em;
+      }
+
+      .arrival-item.done {
+        background: rgba(155, 210, 175, 0.08);
+        border: 0.5px solid rgba(155, 210, 175, 0.15);
+        color: rgba(155, 210, 175, 0.82);
+      }
+
+      .arrival-item.pending {
+        background: rgba(220, 185, 130, 0.08);
+        border: 0.5px solid rgba(220, 185, 130, 0.15);
+        color: rgba(220, 185, 130, 0.82);
+      }
+
+      .arrival-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+
+      .card-actions {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        gap: 8px;
+      }
+
+      .card-btn-primary {
+        flex: 1;
+        background: rgba(220, 185, 130, 0.18);
+        border: 0.5px solid rgba(220, 185, 130, 0.35);
+        color: rgba(220, 185, 130, 0.9);
+        padding: 10px 0;
+        font-family: "Inter", sans-serif;
+        font-size: 10px;
+        font-weight: 300;
+        letter-spacing: 0.18em;
+        text-transform: lowercase;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+      .card-btn-primary:hover {
+        background: rgba(220, 185, 130, 0.28);
+        border-color: rgba(220, 185, 130, 0.55);
+      }
+
+      .card-btn-ghost {
+        flex: 1;
+        background: transparent;
+        border: 0.5px solid rgba(255, 252, 248, 0.14);
+        color: rgba(255, 252, 248, 0.45);
+        padding: 10px 0;
+        font-family: "Inter", sans-serif;
+        font-size: 10px;
+        font-weight: 300;
+        letter-spacing: 0.18em;
+        text-transform: lowercase;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+      .card-btn-ghost:hover {
+        border-color: rgba(255, 252, 248, 0.28);
+        color: rgba(255, 252, 248, 0.72);
+      }
+
+      /* ── AMBIENT ────────────────────────────────────────── */
+      .ambient {
+        padding: 6vh 64px 14vh;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 48px;
+        border-top: 0.5px solid rgba(28, 25, 20, 0.1);
+        max-width: 900px;
+      }
+
+      .ambient-label {
+        font-size: 8px;
+        font-weight: 300;
+        letter-spacing: 0.32em;
+        text-transform: lowercase;
+        color: rgba(28, 25, 20, 0.25);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .ambient-signals {
+        display: flex;
+        gap: 48px;
+        flex: 1;
+      }
+
+      .signal {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .signal-val {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 26px;
+        font-weight: 500;
+        color: rgba(18, 15, 12, 0.88);
+        line-height: 1;
+      }
+
+      .signal-lbl {
+        font-size: 8px;
+        font-weight: 400;
+        letter-spacing: 0.25em;
+        text-transform: lowercase;
+        color: rgba(18, 15, 12, 0.5);
+      }
+
+      .ambient-action {
+        font-size: 9px;
+        font-weight: 400;
+        letter-spacing: 0.28em;
+        text-transform: lowercase;
+        color: rgba(28, 25, 20, 0.4);
+        cursor: pointer;
+        border-bottom: 0.5px solid rgba(28, 25, 20, 0.22);
+        padding-bottom: 2px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+      .ambient-action:hover {
+        color: rgba(28, 25, 20, 0.72);
+        border-bottom-color: rgba(28, 25, 20, 0.45);
+      }
+
+      /* ── SLIDE LABEL (bottom right) ─────────────────────── */
+      .slide-label {
+        position: fixed;
+        bottom: 36px;
+        right: 64px;
+        z-index: 3;
+        font-size: 8px;
+        font-weight: 300;
+        letter-spacing: 0.28em;
+        text-transform: lowercase;
+        color: rgba(28, 25, 20, 0.35);
+        transition: opacity 0.6s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- SLIDESHOW BACKGROUND -->
+    <div class="slides">
+      <div
+        class="slide active"
+        style="
+          background-image: url(&quot;https://hoteldesigns.net/wp-content/uploads/2025/10/RWNMK_Destination_Lake-Jetty_Lifestyle-7.jpg&quot;);
+          background-position: center 40%;
+        "
+      ></div>
+      <div
+        class="slide"
+        style="
+          background-image: url(&quot;https://hoteldesigns.net/wp-content/uploads/2025/10/RWDHA_Facilities_Houses_1601_PianoLounge-0045.jpg&quot;);
+          background-position: center;
+        "
+      ></div>
+      <div
+        class="slide"
+        style="
+          background-image: url(&quot;https://hoteldesigns.net/wp-content/uploads/2025/10/RWMDR_Facilities_Suite_Ocean-View-Mountain-Studio-Suite_Bedroom-with-Terrace-and-Pool.jpg&quot;);
+          background-position: center 30%;
+        "
+      ></div>
+      <div
+        class="slide"
+        style="
+          background-image: url(&quot;https://hoteldesigns.net/wp-content/uploads/2025/10/RWAMS_Facilities_Public-Spaces_Art_Statica_Frederik-Molenschot_1.jpg&quot;);
+          background-position: center;
+        "
+      ></div>
+      <div
+        class="slide"
+        style="
+          background-image: url(&quot;https://hoteldesigns.net/wp-content/uploads/2025/10/RWAMS_Facilities_Wellness_Asaya_Corridor_1.jpg&quot;);
+          background-position: center top;
+        "
+      ></div>
     </div>
-  </nav>
 
-  <div class="user-view">
-  <div class="hero-split">
+    <div class="slide-label" id="slideLabel">
+      rosewood new market &nbsp;·&nbsp; lake jetty
+    </div>
 
-  <!-- LEFT: GREETING -->
-  <div class="greeting">
-    <div class="greeting-label">day 2 of 5 &nbsp;·&nbsp; suite 412</div>
-    <h1 class="greeting-title" id="userGreeting">Good evening,<br><em>your world, curated.</em></h1>
-    <p class="greeting-sub">We've shaped today around your patterns. Everything below is yours alone.</p>
-  </div>
-
-  <!-- RIGHT: GUEST CARD -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <div class="guest-card">
-
-    <div class="card-header">
-      <div class="card-brand">
-        <div class="card-brand-name">
-          <i class="ti ti-diamond" style="font-size:15px;color:rgba(220,185,130,0.7);"></i>
-          rosewood sand hill
+    <div class="app">
+      <!-- NAV -->
+      <nav>
+        <div class="logo">rosewood: curated by tia ❤️</div>
+        <div class="nav-right">
+          <span class="guest-name" id="loginName">not signed in</span>
+          <button class="role-pill active" data-role="user" type="button">
+            guest
+          </button>
+          <button class="role-pill" data-role="admin" type="button">
+            admin
+          </button>
+          <span
+            class="nav-link"
+            onclick="
+              switchTab(
+                'calendar',
+                document.querySelector('[data-tab-calendar]'),
+              )
+            "
+            >calendar</span
+          >
         </div>
-        <span class="card-badge">platinum guest</span>
-      </div>
-      <div class="card-guest-row">
-        <div class="card-avatar">OM</div>
-        <div>
-          <p class="card-guest-name" id="cardGuestName">Welcome back</p>
-          <p class="card-guest-meta">Suite 1204 <span class="card-sep">|</span> May 26–28, 2026 <span class="card-sep">|</span> 4th stay</p>
-        </div>
-      </div>
-    </div>
+      </nav>
 
-    <!-- TABS -->
-    <div class="card-tabs">
-      <button class="tab-btn active" onclick="switchTab('profile', this)">profile</button>
-      <button class="tab-btn" data-tab-calendar onclick="switchTab('calendar', this)">calendar</button>
-    </div>
-
-    <!-- PROFILE PANEL -->
-    <div class="tab-panel active" id="tab-profile">
-      <div class="card-section">
-        <p class="card-section-label">remembered preferences</p>
-        <div class="prefs-grid">
-          <div class="pref-item">
-            <i class="ti ti-temperature pref-icon" style="color:rgba(155,210,175,0.8);"></i>
-            <div><p class="pref-label">room temp</p><p class="pref-value">21°C</p></div>
+      <div class="user-view">
+        <div class="hero-split">
+          <!-- LEFT: GREETING -->
+          <div class="greeting">
+            <div class="greeting-label">day 2 of 5 &nbsp;·&nbsp; suite 412</div>
+            <h1 class="greeting-title" id="userGreeting">
+              Good evening,<br /><em>your world, curated.</em>
+            </h1>
+            <p class="greeting-sub">
+              We've shaped today around your patterns. Everything below is yours
+              alone.
+            </p>
           </div>
-          <div class="pref-item">
-            <i class="ti ti-pillow pref-icon" style="color:rgba(185,170,220,0.8);"></i>
-            <div><p class="pref-label">pillow type</p><p class="pref-value">Firm, buckwheat</p></div>
+
+          <!-- RIGHT: GUEST CARD -->
+          <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"
+          />
+          <div class="guest-card">
+            <div class="card-header">
+              <div class="card-brand">
+                <div class="card-brand-name">
+                  <i
+                    class="ti ti-diamond"
+                    style="font-size: 15px; color: rgba(220, 185, 130, 0.7)"
+                  ></i>
+                  rosewood sand hill
+                </div>
+                <span class="card-badge">platinum guest</span>
+              </div>
+              <div class="card-guest-row">
+                <div class="card-avatar">OM</div>
+                <div>
+                  <p class="card-guest-name" id="cardGuestName">Welcome back</p>
+                  <p class="card-guest-meta">
+                    Suite 1204 <span class="card-sep">|</span> May 26–28, 2026
+                    <span class="card-sep">|</span> 4th stay
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="card-tabs">
+              <button
+                class="tab-btn active"
+                onclick="switchTab('profile', this)"
+              >
+                profile
+              </button>
+              <button
+                class="tab-btn"
+                data-tab-calendar
+                onclick="switchTab('calendar', this)"
+              >
+                calendar
+              </button>
+            </div>
+
+            <!-- PROFILE PANEL -->
+            <div class="tab-panel active" id="tab-profile">
+              <div class="card-section">
+                <p class="card-section-label">remembered preferences</p>
+                <div class="prefs-grid">
+                  <div class="pref-item">
+                    <i
+                      class="ti ti-temperature pref-icon"
+                      style="color: rgba(155, 210, 175, 0.8)"
+                    ></i>
+                    <div>
+                      <p class="pref-label">room temp</p>
+                      <p class="pref-value">21°C</p>
+                    </div>
+                  </div>
+                  <div class="pref-item">
+                    <i
+                      class="ti ti-pillow pref-icon"
+                      style="color: rgba(185, 170, 220, 0.8)"
+                    ></i>
+                    <div>
+                      <p class="pref-label">pillow type</p>
+                      <p class="pref-value">Firm, buckwheat</p>
+                    </div>
+                  </div>
+                  <div class="pref-item">
+                    <i
+                      class="ti ti-coffee pref-icon"
+                      style="color: rgba(220, 185, 130, 0.8)"
+                    ></i>
+                    <div>
+                      <p class="pref-label">morning</p>
+                      <p class="pref-value">Oat cappuccino, 7am</p>
+                    </div>
+                  </div>
+                  <div class="pref-item">
+                    <i
+                      class="ti ti-leaf pref-icon"
+                      style="color: rgba(155, 210, 175, 0.8)"
+                    ></i>
+                    <div>
+                      <p class="pref-label">dietary</p>
+                      <p class="pref-value">Pescatarian, no nuts</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-section">
+                <p class="card-section-label">arrival preparation</p>
+                <div class="arrival-list">
+                  <div class="arrival-item done">
+                    <i class="ti ti-check arrival-icon"></i>Suite pre-cooled to
+                    21°C
+                  </div>
+                  <div class="arrival-item done">
+                    <i class="ti ti-check arrival-icon"></i>Turndown with
+                    lavender linen spray
+                  </div>
+                  <div class="arrival-item pending">
+                    <i class="ti ti-clock arrival-icon"></i>Welcome champagne —
+                    confirm rosé preference
+                  </div>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="card-btn-primary">
+                  <i
+                    class="ti ti-message"
+                    style="
+                      font-size: 13px;
+                      vertical-align: -1px;
+                      margin-right: 6px;
+                    "
+                  ></i
+                  >message guest
+                </button>
+                <button
+                  class="card-btn-ghost"
+                  id="openTableButton"
+                  type="button"
+                >
+                  <i
+                    class="ti ti-tools-kitchen-2"
+                    style="
+                      font-size: 13px;
+                      vertical-align: -1px;
+                      margin-right: 6px;
+                    "
+                  ></i
+                  >book dining
+                </button>
+                <button class="card-btn-ghost">
+                  <i
+                    class="ti ti-edit"
+                    style="
+                      font-size: 13px;
+                      vertical-align: -1px;
+                      margin-right: 6px;
+                    "
+                  ></i
+                  >edit preferences
+                </button>
+              </div>
+            </div>
+
+            <!-- CALENDAR PANEL -->
+            <div class="tab-panel" id="tab-calendar">
+              <div class="cal-days">
+                <div class="cal-day-hdr today">
+                  <span class="cal-dow">sun</span
+                  ><span class="cal-date">24</span>
+                </div>
+                <div class="cal-day-hdr">
+                  <span class="cal-dow">mon</span
+                  ><span class="cal-date">25</span>
+                </div>
+                <div class="cal-day-hdr">
+                  <span class="cal-dow">tue</span
+                  ><span class="cal-date">26</span>
+                </div>
+                <div class="cal-day-hdr">
+                  <span class="cal-dow">wed</span
+                  ><span class="cal-date">27</span>
+                </div>
+                <div class="cal-day-hdr">
+                  <span class="cal-dow">thu</span
+                  ><span class="cal-date">28</span>
+                </div>
+              </div>
+              <div class="cal-events" id="guestCalendarEvents">
+                <div class="cal-col">
+                  <span class="cal-empty">connect calendar</span>
+                </div>
+                <div class="cal-col">
+                  <span class="cal-empty">empty</span>
+                </div>
+                <div class="cal-col">
+                  <span class="cal-empty">empty</span>
+                </div>
+                <div class="cal-col">
+                  <span class="cal-empty">empty</span>
+                </div>
+                <div class="cal-col">
+                  <span class="cal-empty">empty</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="card-btn-ghost" style="flex: 1">
+                  <i
+                    class="ti ti-plus"
+                    style="
+                      font-size: 13px;
+                      vertical-align: -1px;
+                      margin-right: 6px;
+                    "
+                  ></i
+                  >add experience
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="pref-item">
-            <i class="ti ti-coffee pref-icon" style="color:rgba(220,185,130,0.8);"></i>
-            <div><p class="pref-label">morning</p><p class="pref-value">Oat cappuccino, 7am</p></div>
+          <!-- /.guest-card -->
+        </div>
+        <!-- /.hero-split -->
+
+        <div class="integration-dock">
+          <div class="dock-head">
+            <div class="dock-label">connected signals</div>
+            <button class="dock-minimize" id="dockMinimize" type="button">
+              minimize
+            </button>
           </div>
-          <div class="pref-item">
-            <i class="ti ti-leaf pref-icon" style="color:rgba(155,210,175,0.8);"></i>
-            <div><p class="pref-label">dietary</p><p class="pref-value">Pescatarian, no nuts</p></div>
+          <div class="dock-grid">
+            <a class="dock-btn" id="calendarButton" href="/api/auth/google"
+              >integrate calendar</a
+            >
+            <a class="dock-btn" id="gmailButton" href="/api/auth/google"
+              >integrate gmail</a
+            >
+            <button class="dock-btn" type="button">beli</button>
+            <button class="dock-btn" id="arrivalButton" type="button">
+              arrival info
+            </button>
+          </div>
+          <div class="dock-status" id="authMessage">
+            Connect Gmail and Calendar to personalize your stay.
+          </div>
+        </div>
+
+        <!-- ACCORDION -->
+        <div class="section-container">
+          <div class="accordion">
+            <div class="generate-row">
+              <button
+                class="dock-btn"
+                id="generateActivitiesButton"
+                type="button"
+              >
+                generate itinerary
+              </button>
+              <button
+                class="dock-btn"
+                id="publishPlanButton"
+                type="button"
+                disabled
+              >
+                book and add to calendar
+              </button>
+              <button
+                class="dock-btn mic-btn"
+                id="calendarAgentButton"
+                type="button"
+                aria-label="Edit calendar via voice"
+              >
+                edit calendar via voice
+              </button>
+              <span class="generate-status" id="generateActivitiesStatus"
+                >Uses the local mind map to create a May 26-28 itinerary.</span
+              >
+            </div>
+            <div class="agent-dialogue" id="calendarAgentDialogue">
+              <div class="agent-line">
+                <span>tia calendar agent</span>Tell Tia what to add, move, or
+                remove from your trip plan.
+              </div>
+            </div>
+
+            <div class="accordion-item activity open">
+              <button class="accordion-hdr" onclick="toggleAccordion(this)">
+                <div class="acc-left">
+                  <span class="acc-index">01</span>
+                  <span class="acc-tag">movement &amp; energy</span>
+                </div>
+                <h2 class="acc-title">activity</h2>
+                <div class="acc-indicator"></div>
+              </button>
+              <div class="accordion-body">
+                <div class="acc-body-inner">
+                  <div class="acc-chips">
+                    <span class="chip active">hiking</span>
+                    <span class="chip active">morning run</span>
+                    <span class="chip active">cycling</span>
+                    <span class="chip">yoga</span>
+                    <span class="chip">swimming</span>
+                  </div>
+                  <div class="acc-rule"></div>
+                  <div class="recs-label">curated for today</div>
+                  <div class="recs" id="activityRecs">
+                    <div class="rec">
+                      <div class="rec-info">
+                        <div class="rec-name">No itinerary yet</div>
+                        <div class="rec-meta">
+                          Generate an itinerary from the mind map.
+                        </div>
+                      </div>
+                      <span class="rec-cta">waiting →</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item wellness">
+              <button class="accordion-hdr" onclick="toggleAccordion(this)">
+                <div class="acc-left">
+                  <span class="acc-index">02</span>
+                  <span class="acc-tag">restore &amp; regulate</span>
+                </div>
+                <h2 class="acc-title">wellness</h2>
+                <div class="acc-indicator"></div>
+              </button>
+              <div class="accordion-body">
+                <div class="acc-body-inner">
+                  <div class="acc-chips">
+                    <span class="chip active">sauna</span>
+                    <span class="chip active">meditation</span>
+                    <span class="chip active">sleep ritual</span>
+                    <span class="chip">cold plunge</span>
+                    <span class="chip active">journaling</span>
+                  </div>
+                  <div class="acc-rule"></div>
+                  <div class="recs-label">prepared for you</div>
+                  <div class="recs" id="wellnessRecs">
+                    <div class="rec">
+                      <div class="rec-info">
+                        <div class="rec-name">No wellness plan yet</div>
+                        <div class="rec-meta">
+                          Generate wellness from the mind map.
+                        </div>
+                      </div>
+                      <span class="rec-cta">waiting →</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item learning">
+              <button class="accordion-hdr" onclick="toggleAccordion(this)">
+                <div class="acc-left">
+                  <span class="acc-index">03</span>
+                  <span class="acc-tag">culture &amp; growth</span>
+                </div>
+                <h2 class="acc-title">learning</h2>
+                <div class="acc-indicator"></div>
+              </button>
+              <div class="accordion-body">
+                <div class="acc-body-inner">
+                  <div class="acc-chips">
+                    <span class="chip active">workshops</span>
+                    <span class="chip active">museums</span>
+                    <span class="chip">language</span>
+                    <span class="chip active">artisan crafts</span>
+                    <span class="chip">architecture</span>
+                  </div>
+                  <div class="acc-rule"></div>
+                  <div class="recs-label">exclusive experiences</div>
+                  <div class="recs" id="learningRecs">
+                    <div class="rec">
+                      <div class="rec-info">
+                        <div class="rec-name">No learning experiences yet</div>
+                        <div class="rec-meta">
+                          Generate culture and learning from the mind map.
+                        </div>
+                      </div>
+                      <span class="rec-cta">waiting →</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /.accordion -->
+        </div>
+        <!-- /.section-container -->
+      </div>
+      <!-- /.user-view -->
+
+      <div class="admin-view">
+        <div class="admin-dashboard">
+          <div class="greeting-label">
+            admin console &nbsp;·&nbsp; living guest memory
+          </div>
+          <h1 class="greeting-title">Staff view</h1>
+          <div class="admin-shell">
+            <section class="admin-panel">
+              <h2 class="admin-title" id="adminInfoTitle">
+                guest's info graph
+              </h2>
+              <p class="admin-copy" id="mindmapStatus">
+                Generated from demo profile signals. Edit the small nodes or add
+                observations; changes save locally.
+              </p>
+              <div class="admin-actions">
+                <button class="dock-btn" id="mindmapButton" type="button">
+                  generate mind map
+                </button>
+                <button class="dock-btn" id="adminRecordButton" type="button">
+                  record conversation
+                </button>
+              </div>
+              <div class="admin-note" id="adminRecordStatus">
+                Record a staff conversation; Claude will add one concise mind
+                map item.
+              </div>
+              <div class="mindmap" id="mindmap">
+                <svg id="mindmapLines" aria-hidden="true"></svg>
+                <div id="mindmapLayer"></div>
+              </div>
+            </section>
+
+            <aside class="admin-panel dark">
+              <h2 class="admin-title">calendar view</h2>
+              <p class="admin-copy">
+                A staff-facing scan of the connected guest calendar for the week
+                of May 24.
+              </p>
+              <div class="admin-calendar-list" id="adminCalendarList">
+                <div class="admin-cal-item">
+                  <span class="admin-cal-time">waiting</span>Connect Google
+                  Calendar to load guest events.
+                </div>
+              </div>
+              <h2 class="admin-title key-title">5 service commitments</h2>
+              <div class="key-notes" id="keyNotes"></div>
+            </aside>
           </div>
         </div>
       </div>
-      <div class="card-section">
-        <p class="card-section-label">arrival preparation</p>
-        <div class="arrival-list">
-          <div class="arrival-item done"><i class="ti ti-check arrival-icon"></i>Suite pre-cooled to 21°C</div>
-          <div class="arrival-item done"><i class="ti ti-check arrival-icon"></i>Turndown with lavender linen spray</div>
-          <div class="arrival-item pending"><i class="ti ti-clock arrival-icon"></i>Welcome champagne — confirm rosé preference</div>
+
+      <!-- AMBIENT -->
+      <div class="ambient">
+        <span class="ambient-label">ambient</span>
+        <div class="ambient-signals">
+          <div class="signal">
+            <div class="signal-val">22°</div>
+            <div class="signal-lbl">suite temp</div>
+          </div>
+          <div class="signal">
+            <div class="signal-val">7h 40</div>
+            <div class="signal-lbl">last sleep</div>
+          </div>
+          <div class="signal">
+            <div class="signal-val">cloudy</div>
+            <div class="signal-lbl">tomorrow AM</div>
+          </div>
+          <div class="signal">
+            <div class="signal-val">day 2</div>
+            <div class="signal-lbl">stay rhythm</div>
+          </div>
         </div>
-      </div>
-      <div class="card-actions">
-        <button class="card-btn-primary"><i class="ti ti-message" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>message guest</button>
-        <button class="card-btn-ghost" id="openTableButton" type="button"><i class="ti ti-tools-kitchen-2" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>book dining</button>
-        <button class="card-btn-ghost"><i class="ti ti-edit" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>edit preferences</button>
+        <span class="ambient-action">tell us more</span>
       </div>
     </div>
+    <!-- /.app -->
 
-    <!-- CALENDAR PANEL -->
-    <div class="tab-panel" id="tab-calendar">
-      <div class="cal-days">
-        <div class="cal-day-hdr today"><span class="cal-dow">sun</span><span class="cal-date">24</span></div>
-        <div class="cal-day-hdr"><span class="cal-dow">mon</span><span class="cal-date">25</span></div>
-        <div class="cal-day-hdr"><span class="cal-dow">tue</span><span class="cal-date">26</span></div>
-        <div class="cal-day-hdr"><span class="cal-dow">wed</span><span class="cal-date">27</span></div>
-        <div class="cal-day-hdr"><span class="cal-dow">thu</span><span class="cal-date">28</span></div>
-      </div>
-      <div class="cal-events" id="guestCalendarEvents">
-        <div class="cal-col">
-          <span class="cal-empty">connect calendar</span>
-        </div>
-        <div class="cal-col">
-          <span class="cal-empty">empty</span>
-        </div>
-        <div class="cal-col">
-          <span class="cal-empty">empty</span>
-        </div>
-        <div class="cal-col">
-          <span class="cal-empty">empty</span>
-        </div>
-        <div class="cal-col">
-          <span class="cal-empty">empty</span>
-        </div>
-      </div>
-      <div class="card-actions">
-        <button class="card-btn-ghost" style="flex:1;"><i class="ti ti-plus" style="font-size:13px;vertical-align:-1px;margin-right:6px;"></i>add experience</button>
-      </div>
-    </div>
+    <script>
+      function toggleAccordion(btn) {
+        const item = btn.closest(".accordion-item");
+        const isOpen = item.classList.contains("open");
+        document
+          .querySelectorAll(".accordion-item")
+          .forEach((i) => i.classList.remove("open"));
+        if (!isOpen) item.classList.add("open");
+      }
 
-  </div><!-- /.guest-card -->
+      function switchTab(name, btn) {
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById("tab-" + name).classList.add("active");
+        if (btn) btn.classList.add("active");
+      }
 
-  </div><!-- /.hero-split -->
+      const roleButtons = document.querySelectorAll("[data-role]");
+      const gmailButton = document.getElementById("gmailButton");
+      const calendarButton = document.getElementById("calendarButton");
+      const arrivalButton = document.getElementById("arrivalButton");
+      const openTableButton = document.getElementById("openTableButton");
+      const integrationDock = document.querySelector(".integration-dock");
+      const dockMinimize = document.getElementById("dockMinimize");
+      const authMessage = document.getElementById("authMessage");
+      const userGreeting = document.getElementById("userGreeting");
+      const cardGuestName = document.getElementById("cardGuestName");
+      const adminInfoTitle = document.getElementById("adminInfoTitle");
+      const guestCalendarEvents = document.getElementById(
+        "guestCalendarEvents",
+      );
+      const loginName = document.getElementById("loginName");
+      const mindmap = document.getElementById("mindmap");
+      const mindmapLines = document.getElementById("mindmapLines");
+      const mindmapLayer = document.getElementById("mindmapLayer");
+      const mindmapStatus = document.getElementById("mindmapStatus");
+      const mindmapButton = document.getElementById("mindmapButton");
+      const adminRecordButton = document.getElementById("adminRecordButton");
+      const adminRecordStatus = document.getElementById("adminRecordStatus");
+      const adminCalendarList = document.getElementById("adminCalendarList");
+      const keyNotes = document.getElementById("keyNotes");
+      const generateActivitiesButton = document.getElementById(
+        "generateActivitiesButton",
+      );
+      const publishPlanButton = document.getElementById("publishPlanButton");
+      const calendarAgentButton = document.getElementById(
+        "calendarAgentButton",
+      );
+      const generateActivitiesStatus = document.getElementById(
+        "generateActivitiesStatus",
+      );
+      const calendarAgentDialogue = document.getElementById(
+        "calendarAgentDialogue",
+      );
+      const activityRecs = document.getElementById("activityRecs");
+      const wellnessRecs = document.getElementById("wellnessRecs");
+      const learningRecs = document.getElementById("learningRecs");
+      const calendarWeekStart = new Date("2026-05-24T00:00:00-07:00");
+      const calendarWeekEnd = new Date("2026-05-31T00:00:00-07:00");
+      const tripStart = new Date("2026-05-26T00:00:00-07:00");
+      const tripEnd = new Date("2026-05-29T00:00:00-07:00");
+      let lastCalendarEvents = [];
+      let adminRecognition = null;
+      let adminTranscript = "";
+      let calendarAgentRecognition = null;
+      let lastPublishablePlan = [];
+      let guestEmail = "bananachocolatebrownie@gmail.com";
+      const mindmapStorageKey = "rosewoodCompassMindmap";
+      const defaultMindmap = {
+        food: [
+          "Japanese",
+          "Mediterranean",
+          "Seasonal tasting menus",
+          "Nut allergy",
+          "Needs sparkling water",
+          "Quiet tables",
+        ],
+        events: [
+          "Private tastings",
+          "Wellness classes",
+          "Art/design tours",
+          "Intimate dinners",
+        ],
+        goals: [
+          "Recharge between work commitments",
+          "Stay fit while traveling",
+          "Discover local culture without overplanning",
+        ],
+        observations: [
+          "Room at 68F before arrival",
+          "Sparkling water with no ice",
+          "Extra charger by left bedside table",
+          "Avoids small talk during early breakfast",
+        ],
+      };
+      const mindmapBranches = {
+        food: {
+          title: "Food + dietary",
+          branch: { x: 28, y: 22 },
+          add: { x: 11, y: 47 },
+          children: [
+            { x: 10, y: 8 },
+            { x: 13, y: 20 },
+            { x: 10, y: 32 },
+            { x: 29, y: 8 },
+            { x: 28, y: 38 },
+            { x: 42, y: 16 },
+          ],
+        },
+        events: {
+          title: "Favorite events",
+          branch: { x: 72, y: 22 },
+          add: { x: 89, y: 47 },
+          children: [
+            { x: 90, y: 8 },
+            { x: 87, y: 20 },
+            { x: 90, y: 32 },
+            { x: 71, y: 8 },
+            { x: 72, y: 38 },
+            { x: 58, y: 16 },
+          ],
+        },
+        goals: {
+          title: "Latent goals",
+          branch: { x: 28, y: 78 },
+          add: { x: 11, y: 53 },
+          children: [
+            { x: 10, y: 92 },
+            { x: 13, y: 80 },
+            { x: 10, y: 68 },
+            { x: 29, y: 92 },
+            { x: 28, y: 62 },
+            { x: 42, y: 84 },
+          ],
+        },
+        observations: {
+          title: "Staff observations",
+          branch: { x: 72, y: 78 },
+          add: { x: 89, y: 53 },
+          children: [
+            { x: 90, y: 92 },
+            { x: 87, y: 80 },
+            { x: 90, y: 68 },
+            { x: 71, y: 92 },
+            { x: 72, y: 62 },
+            { x: 58, y: 84 },
+          ],
+        },
+      };
+      let mindmapState = loadMindmapState();
+      const mindmapChildGrids = {
+        food: { x: [10, 25, 40], y: [7, 18, 31, 43] },
+        events: { x: [90, 75, 60], y: [7, 18, 31, 43] },
+        goals: { x: [10, 25, 40], y: [93, 82, 69, 57] },
+        observations: { x: [90, 75, 60], y: [93, 82, 69, 57] },
+      };
 
-  <div class="integration-dock">
-    <div class="dock-head">
-      <div class="dock-label">connected signals</div>
-      <button class="dock-minimize" id="dockMinimize" type="button">minimize</button>
-    </div>
-    <div class="dock-grid">
-      <a class="dock-btn" id="calendarButton" href="/api/auth/google">integrate calendar</a>
-      <a class="dock-btn" id="gmailButton" href="/api/auth/google">integrate gmail</a>
-      <button class="dock-btn" type="button">beli</button>
-      <button class="dock-btn" id="arrivalButton" type="button">arrival info</button>
-    </div>
-    <div class="dock-status" id="authMessage">Connect Gmail and Calendar to personalize your stay.</div>
-  </div>
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
 
-  <!-- ACCORDION -->
-  <div class="section-container">
-  <div class="accordion">
-    <div class="generate-row">
-      <button class="dock-btn" id="generateActivitiesButton" type="button">generate itinerary</button>
-      <button class="dock-btn" id="publishPlanButton" type="button" disabled>book and add to calendar</button>
-      <button class="dock-btn mic-btn" id="calendarAgentButton" type="button" aria-label="Edit calendar via voice">edit calendar via voice</button>
-      <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
-    </div>
-    <div class="agent-dialogue" id="calendarAgentDialogue">
-      <div class="agent-line"><span>tia calendar agent</span>Tell Tia what to add, move, or remove from your trip plan.</div>
-    </div>
+      function firstNameFromProfile(profile) {
+        const source = profile.name || profile.email || "";
+        if (!source) return "";
+        return source.split("@")[0].split(/\s+/)[0];
+      }
 
-    <div class="accordion-item activity open">
-      <button class="accordion-hdr" onclick="toggleAccordion(this)">
-        <div class="acc-left">
-          <span class="acc-index">01</span>
-          <span class="acc-tag">movement &amp; energy</span>
-        </div>
-        <h2 class="acc-title">activity</h2>
-        <div class="acc-indicator"></div>
-      </button>
-      <div class="accordion-body">
-        <div class="acc-body-inner">
-          <div class="acc-chips">
-            <span class="chip active">hiking</span>
-            <span class="chip active">morning run</span>
-            <span class="chip active">cycling</span>
-            <span class="chip">yoga</span>
-            <span class="chip">swimming</span>
-          </div>
-          <div class="acc-rule"></div>
-          <div class="recs-label">curated for today</div>
-          <div class="recs" id="activityRecs">
-            <div class="rec"><div class="rec-info"><div class="rec-name">No itinerary yet</div><div class="rec-meta">Generate an itinerary from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+      function loadMindmapState() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(mindmapStorageKey));
+          if (stored?.evidence && !stored.observations)
+            stored.observations = stored.evidence;
+          return { ...defaultMindmap, ...(stored || {}) };
+        } catch {
+          return JSON.parse(JSON.stringify(defaultMindmap));
+        }
+      }
 
-    <div class="accordion-item wellness">
-      <button class="accordion-hdr" onclick="toggleAccordion(this)">
-        <div class="acc-left">
-          <span class="acc-index">02</span>
-          <span class="acc-tag">restore &amp; regulate</span>
-        </div>
-        <h2 class="acc-title">wellness</h2>
-        <div class="acc-indicator"></div>
-      </button>
-      <div class="accordion-body">
-        <div class="acc-body-inner">
-          <div class="acc-chips">
-            <span class="chip active">sauna</span>
-            <span class="chip active">meditation</span>
-            <span class="chip active">sleep ritual</span>
-            <span class="chip">cold plunge</span>
-            <span class="chip active">journaling</span>
-          </div>
-          <div class="acc-rule"></div>
-          <div class="recs-label">prepared for you</div>
-          <div class="recs" id="wellnessRecs">
-            <div class="rec"><div class="rec-info"><div class="rec-name">No wellness plan yet</div><div class="rec-meta">Generate wellness from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+      function saveMindmapState() {
+        localStorage.setItem(mindmapStorageKey, JSON.stringify(mindmapState));
+      }
 
-    <div class="accordion-item learning">
-      <button class="accordion-hdr" onclick="toggleAccordion(this)">
-        <div class="acc-left">
-          <span class="acc-index">03</span>
-          <span class="acc-tag">culture &amp; growth</span>
-        </div>
-        <h2 class="acc-title">learning</h2>
-        <div class="acc-indicator"></div>
-      </button>
-      <div class="accordion-body">
-        <div class="acc-body-inner">
-          <div class="acc-chips">
-            <span class="chip active">workshops</span>
-            <span class="chip active">museums</span>
-            <span class="chip">language</span>
-            <span class="chip active">artisan crafts</span>
-            <span class="chip">architecture</span>
-          </div>
-          <div class="acc-rule"></div>
-          <div class="recs-label">exclusive experiences</div>
-          <div class="recs" id="learningRecs">
-            <div class="rec"><div class="rec-info"><div class="rec-name">No learning experiences yet</div><div class="rec-meta">Generate culture and learning from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+      function pointToPixels(point) {
+        return {
+          x: (point.x / 100) * mindmap.clientWidth,
+          y: (point.y / 100) * mindmap.clientHeight,
+        };
+      }
 
-  </div><!-- /.accordion -->
-  </div><!-- /.section-container -->
-  </div><!-- /.user-view -->
-
-  <div class="admin-view">
-    <div class="admin-dashboard">
-      <div class="greeting-label">admin console &nbsp;·&nbsp; living guest memory</div>
-      <h1 class="greeting-title">Admin view</h1>
-      <div class="admin-shell">
-        <section class="admin-panel">
-          <h2 class="admin-title" id="adminInfoTitle">guest's info graph</h2>
-          <p class="admin-copy" id="mindmapStatus">Generated from demo profile signals. Edit the small nodes or add observations; changes save locally.</p>
-          <div class="admin-actions">
-            <button class="dock-btn" id="mindmapButton" type="button">generate mind map</button>
-            <button class="dock-btn" id="adminRecordButton" type="button">record conversation</button>
-          </div>
-          <div class="admin-note" id="adminRecordStatus">Record a staff conversation; Claude will add one concise mind map item.</div>
-          <div class="mindmap" id="mindmap">
-            <svg id="mindmapLines" aria-hidden="true"></svg>
-            <div id="mindmapLayer"></div>
-          </div>
-        </section>
-
-        <aside class="admin-panel dark">
-          <h2 class="admin-title">calendar view</h2>
-          <p class="admin-copy">A staff-facing scan of the connected guest calendar for the week of May 24.</p>
-          <div class="admin-calendar-list" id="adminCalendarList">
-            <div class="admin-cal-item"><span class="admin-cal-time">waiting</span>Connect Google Calendar to load guest events.</div>
-          </div>
-          <h2 class="admin-title key-title">5 service commitments</h2>
-          <div class="key-notes" id="keyNotes"></div>
-        </aside>
-      </div>
-    </div>
-  </div>
-
-  <!-- AMBIENT -->
-  <div class="ambient">
-    <span class="ambient-label">ambient</span>
-    <div class="ambient-signals">
-      <div class="signal">
-        <div class="signal-val">22°</div>
-        <div class="signal-lbl">suite temp</div>
-      </div>
-      <div class="signal">
-        <div class="signal-val">7h 40</div>
-        <div class="signal-lbl">last sleep</div>
-      </div>
-      <div class="signal">
-        <div class="signal-val">cloudy</div>
-        <div class="signal-lbl">tomorrow AM</div>
-      </div>
-      <div class="signal">
-        <div class="signal-val">day 2</div>
-        <div class="signal-lbl">stay rhythm</div>
-      </div>
-    </div>
-    <span class="ambient-action">tell us more</span>
-  </div>
-
-</div><!-- /.app -->
-
-<script>
-  function toggleAccordion(btn) {
-    const item = btn.closest('.accordion-item');
-    const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
-    if (!isOpen) item.classList.add('open');
-  }
-
-  function switchTab(name, btn) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    if (btn) btn.classList.add('active');
-  }
-
-  const roleButtons = document.querySelectorAll('[data-role]');
-  const gmailButton = document.getElementById('gmailButton');
-  const calendarButton = document.getElementById('calendarButton');
-  const arrivalButton = document.getElementById('arrivalButton');
-  const openTableButton = document.getElementById('openTableButton');
-  const integrationDock = document.querySelector('.integration-dock');
-  const dockMinimize = document.getElementById('dockMinimize');
-  const authMessage = document.getElementById('authMessage');
-  const userGreeting = document.getElementById('userGreeting');
-  const cardGuestName = document.getElementById('cardGuestName');
-  const adminInfoTitle = document.getElementById('adminInfoTitle');
-  const guestCalendarEvents = document.getElementById('guestCalendarEvents');
-  const loginName = document.getElementById('loginName');
-  const mindmap = document.getElementById('mindmap');
-  const mindmapLines = document.getElementById('mindmapLines');
-  const mindmapLayer = document.getElementById('mindmapLayer');
-  const mindmapStatus = document.getElementById('mindmapStatus');
-  const mindmapButton = document.getElementById('mindmapButton');
-  const adminRecordButton = document.getElementById('adminRecordButton');
-  const adminRecordStatus = document.getElementById('adminRecordStatus');
-  const adminCalendarList = document.getElementById('adminCalendarList');
-  const keyNotes = document.getElementById('keyNotes');
-  const generateActivitiesButton = document.getElementById('generateActivitiesButton');
-  const publishPlanButton = document.getElementById('publishPlanButton');
-  const calendarAgentButton = document.getElementById('calendarAgentButton');
-  const generateActivitiesStatus = document.getElementById('generateActivitiesStatus');
-  const calendarAgentDialogue = document.getElementById('calendarAgentDialogue');
-  const activityRecs = document.getElementById('activityRecs');
-  const wellnessRecs = document.getElementById('wellnessRecs');
-  const learningRecs = document.getElementById('learningRecs');
-  const calendarWeekStart = new Date('2026-05-24T00:00:00-07:00');
-  const calendarWeekEnd = new Date('2026-05-31T00:00:00-07:00');
-  const tripStart = new Date('2026-05-26T00:00:00-07:00');
-  const tripEnd = new Date('2026-05-29T00:00:00-07:00');
-  let lastCalendarEvents = [];
-  let adminRecognition = null;
-  let adminTranscript = '';
-  let calendarAgentRecognition = null;
-  let lastPublishablePlan = [];
-  let guestEmail = 'bananachocolatebrownie@gmail.com';
-  const mindmapStorageKey = 'rosewoodCompassMindmap';
-  const defaultMindmap = {
-    food: ['Japanese', 'Mediterranean', 'Seasonal tasting menus', 'Nut allergy', 'Needs sparkling water', 'Quiet tables'],
-    events: ['Private tastings', 'Wellness classes', 'Art/design tours', 'Intimate dinners'],
-    goals: ['Recharge between work commitments', 'Stay fit while traveling', 'Discover local culture without overplanning'],
-    observations: ['Room at 68F before arrival', 'Sparkling water with no ice', 'Extra charger by left bedside table', 'Avoids small talk during early breakfast']
-  };
-  const mindmapBranches = {
-    food: { title: 'Food + dietary', branch: { x: 28, y: 22 }, add: { x: 11, y: 47 }, children: [{ x: 10, y: 8 }, { x: 13, y: 20 }, { x: 10, y: 32 }, { x: 29, y: 8 }, { x: 28, y: 38 }, { x: 42, y: 16 }] },
-    events: { title: 'Favorite events', branch: { x: 72, y: 22 }, add: { x: 89, y: 47 }, children: [{ x: 90, y: 8 }, { x: 87, y: 20 }, { x: 90, y: 32 }, { x: 71, y: 8 }, { x: 72, y: 38 }, { x: 58, y: 16 }] },
-    goals: { title: 'Latent goals', branch: { x: 28, y: 78 }, add: { x: 11, y: 53 }, children: [{ x: 10, y: 92 }, { x: 13, y: 80 }, { x: 10, y: 68 }, { x: 29, y: 92 }, { x: 28, y: 62 }, { x: 42, y: 84 }] },
-    observations: { title: 'Staff observations', branch: { x: 72, y: 78 }, add: { x: 89, y: 53 }, children: [{ x: 90, y: 92 }, { x: 87, y: 80 }, { x: 90, y: 68 }, { x: 71, y: 92 }, { x: 72, y: 62 }, { x: 58, y: 84 }] }
-  };
-  let mindmapState = loadMindmapState();
-  const mindmapChildGrids = {
-    food: { x: [10, 25, 40], y: [7, 18, 31, 43] },
-    events: { x: [90, 75, 60], y: [7, 18, 31, 43] },
-    goals: { x: [10, 25, 40], y: [93, 82, 69, 57] },
-    observations: { x: [90, 75, 60], y: [93, 82, 69, 57] }
-  };
-
-  function escapeHtml(value) {
-    return String(value || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function firstNameFromProfile(profile) {
-    const source = profile.name || profile.email || '';
-    if (!source) return '';
-    return source.split('@')[0].split(/\s+/)[0];
-  }
-
-  function loadMindmapState() {
-    try {
-      const stored = JSON.parse(localStorage.getItem(mindmapStorageKey));
-      if (stored?.evidence && !stored.observations) stored.observations = stored.evidence;
-      return { ...defaultMindmap, ...(stored || {}) };
-    } catch {
-      return JSON.parse(JSON.stringify(defaultMindmap));
-    }
-  }
-
-  function saveMindmapState() {
-    localStorage.setItem(mindmapStorageKey, JSON.stringify(mindmapState));
-  }
-
-  function pointToPixels(point) {
-    return { x: (point.x / 100) * mindmap.clientWidth, y: (point.y / 100) * mindmap.clientHeight };
-  }
-
-  function drawCurve(from, to, width = 2) {
-    const start = pointToPixels(from);
-    const end = pointToPixels(to);
-    const midX = (start.x + end.x) / 2;
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`);
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke', 'rgba(28,25,20,0.24)');
-    path.setAttribute('stroke-width', width);
-    path.setAttribute('stroke-linecap', 'round');
-    mindmapLines.appendChild(path);
-  }
-
-  function makeMindNode(className, point, html) {
-    const node = document.createElement('div');
-    node.className = `mind-node ${className}`;
-    node.style.left = `${point.x}%`;
-    node.style.top = `${point.y}%`;
-    node.innerHTML = html;
-    mindmapLayer.appendChild(node);
-  }
-
-  function childPointForBranch(key, index) {
-    const grid = mindmapChildGrids[key];
-    if (!grid) return mindmapBranches[key].children[index] || mindmapBranches[key].children[0];
-    const row = Math.floor(index / grid.x.length);
-    const col = index % grid.x.length;
-    const y = grid.y[Math.min(row, grid.y.length - 1)];
-    const extraOffset = row >= grid.y.length ? (row - grid.y.length + 1) * 4 : 0;
-    return {
-      x: grid.x[col],
-      y: key === 'food' || key === 'events' ? Math.min(47, y + extraOffset) : Math.max(53, y - extraOffset)
-    };
-  }
-
-  function renderMindmap() {
-    if (!mindmap) return;
-    mindmapLayer.innerHTML = '';
-    mindmapLines.innerHTML = '';
-    mindmapLines.setAttribute('viewBox', `0 0 ${mindmap.clientWidth} ${mindmap.clientHeight}`);
-    const root = { x: 50, y: 50 };
-    makeMindNode('root', root, 'guest<br>memory graph');
-
-    Object.entries(mindmapBranches).forEach(([key, config]) => {
-      drawCurve(root, config.branch, 3);
-      makeMindNode(`branch ${key}`, config.branch, escapeHtml(config.title));
-      mindmapState[key].forEach((item, index) => {
-        const point = childPointForBranch(key, index);
-        drawCurve(config.branch, point, 1.5);
-        makeMindNode(
-          `child ${key}-child`,
-          point,
-          `<span contenteditable="true" data-edit="${key}" data-index="${index}">${escapeHtml(item)}</span><button type="button" data-remove="${key}" data-index="${index}">x</button>`
+      function drawCurve(from, to, width = 2) {
+        const start = pointToPixels(from);
+        const end = pointToPixels(to);
+        const midX = (start.x + end.x) / 2;
+        const path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
         );
-      });
-      drawCurve(config.branch, config.add, 1.5);
-      makeMindNode('add', config.add, `<input data-input="${key}" placeholder="add ${escapeHtml(config.title)}"><button data-add="${key}" type="button">add</button>`);
-    });
-    saveMindmapState();
-    renderKeyNotes();
-  }
+        path.setAttribute(
+          "d",
+          `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`,
+        );
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "rgba(28,25,20,0.24)");
+        path.setAttribute("stroke-width", width);
+        path.setAttribute("stroke-linecap", "round");
+        mindmapLines.appendChild(path);
+      }
 
-  function keyNoteType(text) {
-    const value = String(text || '').toLowerCase();
-    if (/(no |allerg|avoid|after 11|without|quiet|extra|prefers room|small talk)/.test(value)) return 'watch';
-    if (/(stay|recharge|discover|fit|goal|focus|bond)/.test(value)) return 'goal';
-    return 'like';
-  }
+      function makeMindNode(className, point, html) {
+        const node = document.createElement("div");
+        node.className = `mind-node ${className}`;
+        node.style.left = `${point.x}%`;
+        node.style.top = `${point.y}%`;
+        node.innerHTML = html;
+        mindmapLayer.appendChild(node);
+      }
 
-  function renderKeyNotes() {
-    if (!keyNotes) return;
-    const candidates = [
-      ...mindmapState.observations.map(item => ({ label: 'commit', item })),
-      ...mindmapState.food.map(item => ({ label: 'commit', item })),
-      ...mindmapState.goals.map(item => ({ label: 'goal', item })),
-      ...mindmapState.events.map(item => ({ label: 'event', item }))
-    ];
-    const seen = new Set();
-    const notes = candidates
-      .filter(note => {
-        const key = note.item.toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .slice(0, 5)
-      .map(note => ({ ...note, label: note.label === 'commit' ? 'commit' : keyNoteType(note.item) }));
+      function childPointForBranch(key, index) {
+        const grid = mindmapChildGrids[key];
+        if (!grid)
+          return (
+            mindmapBranches[key].children[index] ||
+            mindmapBranches[key].children[0]
+          );
+        const row = Math.floor(index / grid.x.length);
+        const col = index % grid.x.length;
+        const y = grid.y[Math.min(row, grid.y.length - 1)];
+        const extraOffset =
+          row >= grid.y.length ? (row - grid.y.length + 1) * 4 : 0;
+        return {
+          x: grid.x[col],
+          y:
+            key === "food" || key === "events"
+              ? Math.min(47, y + extraOffset)
+              : Math.max(53, y - extraOffset),
+        };
+      }
 
-    keyNotes.innerHTML = notes.map(note => `
+      function renderMindmap() {
+        if (!mindmap) return;
+        mindmapLayer.innerHTML = "";
+        mindmapLines.innerHTML = "";
+        mindmapLines.setAttribute(
+          "viewBox",
+          `0 0 ${mindmap.clientWidth} ${mindmap.clientHeight}`,
+        );
+        const root = { x: 50, y: 50 };
+        makeMindNode("root", root, "guest<br>memory graph");
+
+        Object.entries(mindmapBranches).forEach(([key, config]) => {
+          drawCurve(root, config.branch, 3);
+          makeMindNode(
+            `branch ${key}`,
+            config.branch,
+            escapeHtml(config.title),
+          );
+          mindmapState[key].forEach((item, index) => {
+            const point = childPointForBranch(key, index);
+            drawCurve(config.branch, point, 1.5);
+            makeMindNode(
+              `child ${key}-child`,
+              point,
+              `<span contenteditable="true" data-edit="${key}" data-index="${index}">${escapeHtml(item)}</span><button type="button" data-remove="${key}" data-index="${index}">x</button>`,
+            );
+          });
+          drawCurve(config.branch, config.add, 1.5);
+          makeMindNode(
+            "add",
+            config.add,
+            `<input data-input="${key}" placeholder="add ${escapeHtml(config.title)}"><button data-add="${key}" type="button">add</button>`,
+          );
+        });
+        saveMindmapState();
+        renderKeyNotes();
+      }
+
+      function keyNoteType(text) {
+        const value = String(text || "").toLowerCase();
+        if (
+          /(no |allerg|avoid|after 11|without|quiet|extra|prefers room|small talk)/.test(
+            value,
+          )
+        )
+          return "watch";
+        if (/(stay|recharge|discover|fit|goal|focus|bond)/.test(value))
+          return "goal";
+        return "like";
+      }
+
+      function renderKeyNotes() {
+        if (!keyNotes) return;
+        const candidates = [
+          ...mindmapState.observations.map((item) => ({
+            label: "commit",
+            item,
+          })),
+          ...mindmapState.food.map((item) => ({ label: "commit", item })),
+          ...mindmapState.goals.map((item) => ({ label: "goal", item })),
+          ...mindmapState.events.map((item) => ({ label: "event", item })),
+        ];
+        const seen = new Set();
+        const notes = candidates
+          .filter((note) => {
+            const key = note.item.toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .slice(0, 5)
+          .map((note) => ({
+            ...note,
+            label: note.label === "commit" ? "commit" : keyNoteType(note.item),
+          }));
+
+        keyNotes.innerHTML = notes
+          .map(
+            (note) => `
       <div class="key-note"><span>${escapeHtml(note.label)}</span>${escapeHtml(note.item)}</div>
-    `).join('');
-  }
-
-  function replaceMindmap(nextState) {
-    mindmapState = { ...defaultMindmap, ...nextState };
-    renderMindmap();
-  }
-
-  function splitMindmapItems(value, fallback = []) {
-    const items = Array.isArray(value) ? value : [value];
-    const cleaned = items
-      .flatMap(item => String(item || '').split(/\s*,\s*|\s*;\s*|\s+\+\s+/))
-      .map(item => item.trim())
-      .filter(item => item && item.toLowerCase() !== 'no signal yet');
-    return cleaned.length ? cleaned : fallback;
-  }
-
-  function localMindmapNotes(transcript) {
-    const text = transcript.toLowerCase();
-    const notes = [];
-    if (/no\s+caffeine\s+after\s+11|caffeine\s+after\s+11|no\s+coffee\s+after\s+11/.test(text)) {
-      notes.push({
-        branch: 'food',
-        item: 'No caffeine after 11',
-        reason: 'Fallback captured caffeine timing preference.'
-      });
-    }
-    if (/(sparkling water|seltzer|carbonated water)/.test(text)) {
-      notes.push({ branch: 'food', item: 'Needs sparkling water', reason: 'Fallback captured beverage preference.' });
-    }
-    if (/(nut allergy|allergic to nuts|no nuts)/.test(text)) {
-      notes.push({ branch: 'food', item: 'Nut allergy', reason: 'Fallback captured dietary restriction.' });
-    }
-    if (/(birdwatch|bird watching|birds)/.test(text)) {
-      notes.push({ branch: 'events', item: 'Interested in birdwatching', reason: 'Fallback captured activity interest.' });
-    }
-    if (/(stay fit|fitness|workout|exercise)/.test(text)) {
-      notes.push({ branch: 'goals', item: 'Stay fit while traveling', reason: 'Fallback captured latent goal.' });
-    }
-    if (notes.length) return notes;
-
-    let branch = 'observations';
-    if (/(allerg|diet|food|drink|water|coffee|tea|wine|restaurant|table|breakfast|dinner|lunch)/.test(text)) branch = 'food';
-    if (/(event|meet|meeting|concert|rave|museum|art|hike|bird|tasting|class|tour|show)/.test(text)) branch = 'events';
-    if (/(goal|wants?|trying|hopes?|needs to|fitness|fit|rest|sleep|focus|recharge|bond|discover)/.test(text)) branch = 'goals';
-    const cleaned = transcript
-      .replace(/\s+/g, ' ')
-      .replace(/^(the guest|guest|she|he|they)\s+/i, '')
-      .trim();
-    return [{
-      branch,
-      item: cleaned.split(' ').slice(0, 5).join(' ') || 'Staff note',
-      reason: 'Local fallback from transcript keywords.'
-    }];
-  }
-
-  function conciseMindmapItem(value) {
-    return String(value || '')
-      .replace(/^(the guest|guest|she|he|they)\s+/i, '')
-      .replace(/\b(prefers?|wants?|needs?|likes?|does not want|doesn't want)\b\s*/i, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .split(' ')
-      .slice(0, 5)
-      .join(' ');
-  }
-
-  async function addMindmapNoteFromTranscript(transcript) {
-    adminRecordStatus.textContent = 'Asking Claude where this belongs...';
-    let notes = [];
-    try {
-      const response = await fetch('/api/claude/mindmap-note', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ transcript })
-      });
-      const raw = await response.text();
-      let data = {};
-      try {
-        data = raw ? JSON.parse(raw) : {};
-      } catch {
-        data = { error: raw || 'Claude returned a non-JSON response' };
+    `,
+          )
+          .join("");
       }
-      if (!response.ok) throw new Error(data.error || 'Mind map note request failed');
-      notes = Array.isArray(data.items) ? data.items : [data];
-    } catch (error) {
-      notes = localMindmapNotes(transcript);
-      adminRecordStatus.textContent = `Using local fallback. ${error.message}`;
-    }
 
-    const added = [];
-    notes.forEach(note => {
-      const branch = mindmapState[note.branch] ? note.branch : 'observations';
-      const item = conciseMindmapItem(note.item);
-      if (!item) return;
-      if (!mindmapState[branch].some(existing => existing.toLowerCase() === item.toLowerCase())) {
-        mindmapState[branch].push(item);
-        added.push(`${mindmapBranches[branch].title}: ${item}`);
+      function replaceMindmap(nextState) {
+        mindmapState = { ...defaultMindmap, ...nextState };
+        renderMindmap();
       }
-    });
 
-    if (!added.length) {
-      adminRecordStatus.textContent = 'Claude did not find a clear preference to add.';
-      return;
-    }
-    renderMindmap();
-    adminRecordStatus.textContent = `Added ${added.length} item(s): ${added.join(' · ')}`;
-  }
+      function splitMindmapItems(value, fallback = []) {
+        const items = Array.isArray(value) ? value : [value];
+        const cleaned = items
+          .flatMap((item) =>
+            String(item || "").split(/\s+\|\s+|\n+|\s*,\s*|\s*;\s*|\s+\+\s+/),
+          )
+          .map((item) => item.trim())
+          .filter((item) => item && item.toLowerCase() !== "no signal yet");
+        return cleaned.length ? cleaned : fallback;
+      }
 
-  async function generateMindmap() {
-    mindmapStatus.textContent = 'Generating mind map...';
-    try {
-      const response = await fetch('/api/preferences/mindmap');
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Mind map request failed');
-      const byKey = Object.fromEntries((data.nodes || []).map(node => [node.key, node]));
-      const evidence = (data.nodes || []).flatMap(node => node.evidence || []).slice(0, 3).map(item => item.subject).filter(Boolean);
-      replaceMindmap({
-        food: splitMindmapItems(byKey.foodPreferences?.insight, ['Nut allergy', 'Needs sparkling water']),
-        events: splitMindmapItems(byKey.favoriteEvents?.insight, defaultMindmap.events.slice(0, 2)),
-        goals: splitMindmapItems(byKey.latentGoals?.insight, defaultMindmap.goals.slice(0, 2)),
-        observations: evidence.length ? evidence : defaultMindmap.observations
-      });
-      mindmapStatus.textContent = `Generated with ${data.provider || 'demo'} / ${data.model}.`;
-    } catch (error) {
-      replaceMindmap(defaultMindmap);
-      mindmapStatus.textContent = `Using local demo graph. ${error.message}`;
-    }
-  }
+      function localMindmapNotes(transcript) {
+        const text = transcript.toLowerCase();
+        const notes = [];
+        if (
+          /no\s+caffeine\s+after\s+11|caffeine\s+after\s+11|no\s+coffee\s+after\s+11/.test(
+            text,
+          )
+        ) {
+          notes.push({
+            branch: "food",
+            item: "No caffeine after 11",
+            reason: "Fallback captured caffeine timing preference.",
+          });
+        }
+        if (/(sparkling water|seltzer|carbonated water)/.test(text)) {
+          notes.push({
+            branch: "food",
+            item: "Needs sparkling water",
+            reason: "Fallback captured beverage preference.",
+          });
+        }
+        if (/(nut allergy|allergic to nuts|no nuts)/.test(text)) {
+          notes.push({
+            branch: "food",
+            item: "Nut allergy",
+            reason: "Fallback captured dietary restriction.",
+          });
+        }
+        if (/(birdwatch|bird watching|birds)/.test(text)) {
+          notes.push({
+            branch: "events",
+            item: "Interested in birdwatching",
+            reason: "Fallback captured activity interest.",
+          });
+        }
+        if (/(stay fit|fitness|workout|exercise)/.test(text)) {
+          notes.push({
+            branch: "goals",
+            item: "Stay fit while traveling",
+            reason: "Fallback captured latent goal.",
+          });
+        }
+        if (notes.length) return notes;
 
-  function renderAdminCalendar(events) {
-    if (!events.length) {
-      adminCalendarList.innerHTML = '<div class="admin-cal-item"><span class="admin-cal-time">empty</span>No Google Calendar events found for May 24-30.</div>';
-      return;
-    }
-    adminCalendarList.innerHTML = events.slice(0, 8).map(event => {
-      const start = event.startsAt ? new Date(event.startsAt) : null;
-      const time = start && !Number.isNaN(start.valueOf())
-        ? start.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
-        : 'calendar';
-      return `<div class="admin-cal-item"><span class="admin-cal-time">${escapeHtml(time)}</span>${escapeHtml(event.title)}${event.location ? `<br>${escapeHtml(event.location)}` : ''}</div>`;
-    }).join('');
-  }
+        let branch = "observations";
+        if (
+          /(allerg|diet|food|drink|water|coffee|tea|wine|restaurant|table|breakfast|dinner|lunch)/.test(
+            text,
+          )
+        )
+          branch = "food";
+        if (
+          /(event|meet|meeting|concert|rave|museum|art|hike|bird|tasting|class|tour|show)/.test(
+            text,
+          )
+        )
+          branch = "events";
+        if (
+          /(goal|wants?|trying|hopes?|needs to|fitness|fit|rest|sleep|focus|recharge|bond|discover)/.test(
+            text,
+          )
+        )
+          branch = "goals";
+        const cleaned = transcript
+          .replace(/\s+/g, " ")
+          .replace(/^(the guest|guest|she|he|they)\s+/i, "")
+          .trim();
+        return [
+          {
+            branch,
+            item: cleaned.split(" ").slice(0, 5).join(" ") || "Staff note",
+            reason: "Local fallback from transcript keywords.",
+          },
+        ];
+      }
 
-  function renderGuestCalendar(events) {
-    const cols = Array.from({ length: 5 }, () => []);
-    events.forEach(event => {
-      if (!event.startsAt) return;
-      const start = new Date(event.startsAt);
-      if (Number.isNaN(start.valueOf())) return;
-      const dayIndex = Math.floor((start - calendarWeekStart) / (24 * 60 * 60 * 1000));
-      if (dayIndex < 0 || dayIndex > 4) return;
-      const time = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      cols[dayIndex].push({ ...event, time });
-    });
+      function conciseMindmapItem(value) {
+        return String(value || "")
+          .replace(/^(the guest|guest|she|he|they)\s+/i, "")
+          .replace(
+            /\b(prefers?|wants?|needs?|likes?|does not want|doesn't want)\b\s*/i,
+            "",
+          )
+          .replace(/\s+/g, " ")
+          .trim()
+          .split(" ")
+          .slice(0, 5)
+          .join(" ");
+      }
 
-    guestCalendarEvents.innerHTML = cols.map(dayEvents => {
-      const content = dayEvents.length
-        ? dayEvents.slice(0, 4).map((event, index) => {
-            const type = ['activity', 'wellness', 'learning'][index % 3];
-            return `<div class="cal-event ${type}"><span class="cal-event-time">${escapeHtml(event.time)}</span>${escapeHtml(event.title)}</div>`;
-          }).join('')
-        : '<span class="cal-empty">open</span>';
-      return `<div class="cal-col">${content}</div>`;
-    }).join('');
-  }
+      async function addMindmapNoteFromTranscript(transcript) {
+        adminRecordStatus.textContent = "Asking Claude where this belongs...";
+        let notes = [];
+        try {
+          const response = await fetch("/api/claude/mindmap-note", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ transcript }),
+          });
+          const raw = await response.text();
+          let data = {};
+          try {
+            data = raw ? JSON.parse(raw) : {};
+          } catch {
+            data = { error: raw || "Claude returned a non-JSON response" };
+          }
+          if (!response.ok)
+            throw new Error(data.error || "Mind map note request failed");
+          notes = Array.isArray(data.items) ? data.items : [data];
+        } catch (error) {
+          notes = localMindmapNotes(transcript);
+          adminRecordStatus.textContent = `Using local fallback. ${error.message}`;
+        }
 
-  async function loadCalendarEvents() {
-    const params = new URLSearchParams({
-      timeMin: calendarWeekStart.toISOString(),
-      timeMax: calendarWeekEnd.toISOString()
-    });
-    const response = await fetch(`/api/calendar/events?${params}`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Calendar request failed');
-    lastCalendarEvents = data.events || [];
-    renderGuestCalendar(data.events || []);
-    renderAdminCalendar(data.events || []);
-    return data.events || [];
-  }
+        const added = [];
+        notes.forEach((note) => {
+          const branch = mindmapState[note.branch]
+            ? note.branch
+            : "observations";
+          const item = conciseMindmapItem(note.item);
+          if (!item) return;
+          if (
+            !mindmapState[branch].some(
+              (existing) => existing.toLowerCase() === item.toLowerCase(),
+            )
+          ) {
+            mindmapState[branch].push(item);
+            added.push(`${mindmapBranches[branch].title}: ${item}`);
+          }
+        });
 
-  async function loadArrivalEmail() {
-    authMessage.textContent = 'Loading latest arrival email...';
-    const response = await fetch('/api/gmail/arrival');
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Arrival email request failed');
-    if (!data.arrivalEmail) {
-      authMessage.textContent = 'No recent arrival-related email found.';
-      return;
-    }
-    authMessage.textContent = `Arrival email: ${data.arrivalEmail.subject}`;
-  }
+        if (!added.length) {
+          adminRecordStatus.textContent =
+            "Claude did not find a clear preference to add.";
+          return;
+        }
+        renderMindmap();
+        adminRecordStatus.textContent = `Added ${added.length} item(s): ${added.join(" · ")}`;
+      }
 
-  function renderRecommendationList(container, items) {
-    if (!items?.length) {
-      container.innerHTML = `
+      async function generateMindmap() {
+        mindmapStatus.textContent = "Generating mind map...";
+        try {
+          const response = await fetch("/api/preferences/mindmap");
+          const data = await response.json();
+          if (!response.ok)
+            throw new Error(data.error || "Mind map request failed");
+          const byKey = Object.fromEntries(
+            (data.nodes || []).map((node) => [node.key, node]),
+          );
+          const evidence = (data.nodes || [])
+            .flatMap((node) => node.evidence || [])
+            .slice(0, 3)
+            .map((item) => item.subject)
+            .filter(Boolean);
+          replaceMindmap({
+            food: splitMindmapItems(byKey.foodPreferences?.insight, [
+              "Nut allergy",
+              "Needs sparkling water",
+            ]),
+            events: splitMindmapItems(
+              byKey.favoriteEvents?.insight,
+              defaultMindmap.events.slice(0, 2),
+            ),
+            goals: splitMindmapItems(
+              byKey.latentGoals?.insight,
+              defaultMindmap.goals.slice(0, 2),
+            ),
+            observations: evidence.length
+              ? evidence
+              : defaultMindmap.observations,
+          });
+          mindmapStatus.textContent = `Generated with ${data.provider || "demo"} / ${data.model}.`;
+        } catch (error) {
+          replaceMindmap(defaultMindmap);
+          mindmapStatus.textContent = `Using local demo graph. ${error.message}`;
+        }
+      }
+
+      function renderAdminCalendar(events) {
+        if (!events.length) {
+          adminCalendarList.innerHTML =
+            '<div class="admin-cal-item"><span class="admin-cal-time">empty</span>No Google Calendar events found for May 24-30.</div>';
+          return;
+        }
+        adminCalendarList.innerHTML = events
+          .slice(0, 8)
+          .map((event) => {
+            const start = event.startsAt ? new Date(event.startsAt) : null;
+            const time =
+              start && !Number.isNaN(start.valueOf())
+                ? start.toLocaleString([], {
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                : "calendar";
+            return `<div class="admin-cal-item"><span class="admin-cal-time">${escapeHtml(time)}</span>${escapeHtml(event.title)}${event.location ? `<br>${escapeHtml(event.location)}` : ""}</div>`;
+          })
+          .join("");
+      }
+
+      function renderGuestCalendar(events) {
+        const cols = Array.from({ length: 5 }, () => []);
+        events.forEach((event) => {
+          if (!event.startsAt) return;
+          const start = new Date(event.startsAt);
+          if (Number.isNaN(start.valueOf())) return;
+          const dayIndex = Math.floor(
+            (start - calendarWeekStart) / (24 * 60 * 60 * 1000),
+          );
+          if (dayIndex < 0 || dayIndex > 4) return;
+          const time = start.toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          });
+          cols[dayIndex].push({ ...event, time });
+        });
+
+        guestCalendarEvents.innerHTML = cols
+          .map((dayEvents) => {
+            const content = dayEvents.length
+              ? dayEvents
+                  .slice(0, 4)
+                  .map((event, index) => {
+                    const type = ["activity", "wellness", "learning"][
+                      index % 3
+                    ];
+                    return `<div class="cal-event ${type}"><span class="cal-event-time">${escapeHtml(event.time)}</span>${escapeHtml(event.title)}</div>`;
+                  })
+                  .join("")
+              : '<span class="cal-empty">open</span>';
+            return `<div class="cal-col">${content}</div>`;
+          })
+          .join("");
+      }
+
+      async function loadCalendarEvents() {
+        const params = new URLSearchParams({
+          timeMin: calendarWeekStart.toISOString(),
+          timeMax: calendarWeekEnd.toISOString(),
+        });
+        const response = await fetch(`/api/calendar/events?${params}`);
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Calendar request failed");
+        lastCalendarEvents = data.events || [];
+        renderGuestCalendar(data.events || []);
+        renderAdminCalendar(data.events || []);
+        return data.events || [];
+      }
+
+      async function loadArrivalEmail() {
+        authMessage.textContent = "Loading latest arrival email...";
+        const response = await fetch("/api/gmail/arrival");
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Arrival email request failed");
+        if (!data.arrivalEmail) {
+          authMessage.textContent = "No recent arrival-related email found.";
+          return;
+        }
+        authMessage.textContent = `Arrival email: ${data.arrivalEmail.subject}`;
+      }
+
+      function renderRecommendationList(container, items) {
+        if (!items?.length) {
+          container.innerHTML = `
         <div class="rec">
           <div class="rec-info">
             <div class="rec-name">No separate recommendations</div>
@@ -1874,504 +2408,587 @@
           <span class="rec-cta">merged →</span>
         </div>
       `;
-      return;
-    }
+          return;
+        }
 
-    container.innerHTML = (items || []).map(item => `
+        container.innerHTML = (items || [])
+          .map(
+            (item) => `
       <div class="rec">
         <div class="rec-info">
           <div class="rec-name">${escapeHtml(item.name)}</div>
           <div class="rec-meta">${escapeHtml(item.meta)}</div>
-          <div class="rec-why"><span>why:</span> ${escapeHtml(item.why || 'Personalized from your preference map and trip context.')}</div>
+          <div class="rec-why"><span>why:</span> ${escapeHtml(item.why || "Personalized from your preference map and trip context.")}</div>
         </div>
-        <span class="rec-cta">${escapeHtml(item.cta || 'add')} →</span>
+        <span class="rec-cta">${escapeHtml(item.cta || "add")} →</span>
       </div>
-    `).join('');
-  }
-
-  function parseEventDate(value) {
-    const date = new Date(value || '');
-    return Number.isNaN(date.valueOf()) ? null : date;
-  }
-
-  function tripCalendarEvents(events) {
-    return (events || []).filter(event => {
-      const startsAt = parseEventDate(event.startsAt);
-      return startsAt && startsAt >= tripStart && startsAt < tripEnd;
-    });
-  }
-
-  function itemStart(item) {
-    const explicit = parseEventDate(item.startsAt);
-    if (explicit) return explicit;
-
-    const meta = String(item.meta || '');
-    const match = meta.match(/May\s+(26|27|28).*?(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
-    if (!match) return null;
-    let hour = Number(match[2]);
-    const minute = Number(match[3] || 0);
-    const meridiem = match[4].toUpperCase();
-    if (meridiem === 'PM' && hour !== 12) hour += 12;
-    if (meridiem === 'AM' && hour === 12) hour = 0;
-    return new Date(`2026-05-${match[1]}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00-07:00`);
-  }
-
-  function itemEnd(item, start) {
-    const explicit = parseEventDate(item.endsAt);
-    if (explicit) return explicit;
-    const minutes = item.durationMinutes || 75;
-    return new Date(start.getTime() + minutes * 60 * 1000);
-  }
-
-  function overlaps(a, b) {
-    return a.start < b.end && b.start < a.end;
-  }
-
-  function calendarEventToActivity(event) {
-    const start = parseEventDate(event.startsAt);
-    const end = parseEventDate(event.endsAt);
-    const time = start
-      ? start.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-      : 'calendar';
-    return {
-      name: event.title,
-      meta: `${time}${event.location ? ` · ${event.location}` : ''}`,
-      startsAt: event.startsAt,
-      endsAt: event.endsAt,
-      why: 'From your Google Calendar.',
-      cta: event.link ? 'open' : 'fixed event',
-      link: event.link,
-      source: 'calendar',
-      start,
-      end: end || (start ? new Date(start.getTime() + 60 * 60 * 1000) : null)
-    };
-  }
-
-  function recommendationToActivity(item, category = 'activity') {
-    const start = itemStart(item);
-    const end = start ? itemEnd(item, start) : null;
-    const source = ['activity', 'wellness', 'learning'].includes(category) ? category : 'activity';
-    return {
-      ...item,
-      name: item.name,
-      meta: item.meta,
-      why: item.why,
-      cta: item.cta || 'add',
-      source,
-      startsAt: item.startsAt || (start ? start.toISOString() : ''),
-      endsAt: item.endsAt || (end ? end.toISOString() : ''),
-      start,
-      end
-    };
-  }
-
-  function mergeCalendarWithRecommendations(itinerary, calendarEvents) {
-    const fixed = tripCalendarEvents(calendarEvents).map(calendarEventToActivity);
-    const merged = { activity: [...fixed], wellness: [], learning: [], skipped: [] };
-    const occupied = fixed
-      .filter(item => item.start && item.end)
-      .map(item => ({ start: item.start, end: item.end }));
-
-    ['activity', 'wellness', 'learning'].forEach(category => {
-      (itinerary?.[category] || []).forEach(item => {
-        const recommendation = recommendationToActivity(item, item.category || category);
-        const bucket = recommendation.source || 'activity';
-        if (!recommendation.start || !recommendation.end) {
-          merged[bucket].push(recommendation);
-          return;
-        }
-        const busy = { start: recommendation.start, end: recommendation.end };
-        if (occupied.some(slot => overlaps(slot, busy))) {
-          merged.skipped.push(recommendation);
-          return;
-        }
-        occupied.push(busy);
-        merged[bucket].push(recommendation);
-      });
-    });
-
-    ['activity', 'wellness', 'learning'].forEach(category => {
-      merged[category].sort((a, b) => {
-        const aTime = a.start ? a.start.getTime() : Number.MAX_SAFE_INTEGER;
-        const bTime = b.start ? b.start.getTime() : Number.MAX_SAFE_INTEGER;
-        return aTime - bTime;
-      });
-    });
-
-    return merged;
-  }
-
-  async function generateActivities() {
-    generateActivitiesStatus.textContent = 'Loading calendar and generating conflict-free recommendations...';
-    try {
-      let calendarEvents = lastCalendarEvents;
-      try {
-        calendarEvents = await loadCalendarEvents();
-      } catch (calendarError) {
-        calendarEvents = [];
-        generateActivitiesStatus.textContent = `Calendar unavailable; generating from mind map only. ${calendarError.message}`;
+    `,
+          )
+          .join("");
       }
 
-      const response = await fetch('/api/claude/itinerary', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ mindmap: mindmapState, calendarEvents: tripCalendarEvents(calendarEvents) })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Itinerary request failed');
+      function parseEventDate(value) {
+        const date = new Date(value || "");
+        return Number.isNaN(date.valueOf()) ? null : date;
+      }
 
-      const merged = mergeCalendarWithRecommendations(data.itinerary, calendarEvents);
-      renderRecommendationList(activityRecs, merged.activity);
-      renderRecommendationList(wellnessRecs, merged.wellness);
-      renderRecommendationList(learningRecs, merged.learning);
-      lastPublishablePlan = [...merged.activity, ...merged.wellness, ...merged.learning]
-        .filter(item => item.source !== 'calendar' && item.startsAt && item.endsAt)
-        .map(item => ({
+      function tripCalendarEvents(events) {
+        return (events || []).filter((event) => {
+          const startsAt = parseEventDate(event.startsAt);
+          return startsAt && startsAt >= tripStart && startsAt < tripEnd;
+        });
+      }
+
+      function itemStart(item) {
+        const explicit = parseEventDate(item.startsAt);
+        if (explicit) return explicit;
+
+        const meta = String(item.meta || "");
+        const match = meta.match(
+          /May\s+(26|27|28).*?(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i,
+        );
+        if (!match) return null;
+        let hour = Number(match[2]);
+        const minute = Number(match[3] || 0);
+        const meridiem = match[4].toUpperCase();
+        if (meridiem === "PM" && hour !== 12) hour += 12;
+        if (meridiem === "AM" && hour === 12) hour = 0;
+        return new Date(
+          `2026-05-${match[1]}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00-07:00`,
+        );
+      }
+
+      function itemEnd(item, start) {
+        const explicit = parseEventDate(item.endsAt);
+        if (explicit) return explicit;
+        const minutes = item.durationMinutes || 75;
+        return new Date(start.getTime() + minutes * 60 * 1000);
+      }
+
+      function overlaps(a, b) {
+        return a.start < b.end && b.start < a.end;
+      }
+
+      function calendarEventToActivity(event) {
+        const start = parseEventDate(event.startsAt);
+        const end = parseEventDate(event.endsAt);
+        const time = start
+          ? start.toLocaleString([], {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })
+          : "calendar";
+        return {
+          name: event.title,
+          meta: `${time}${event.location ? ` · ${event.location}` : ""}`,
+          startsAt: event.startsAt,
+          endsAt: event.endsAt,
+          why: "From your Google Calendar.",
+          cta: event.link ? "open" : "fixed event",
+          link: event.link,
+          source: "calendar",
+          start,
+          end:
+            end || (start ? new Date(start.getTime() + 60 * 60 * 1000) : null),
+        };
+      }
+
+      function recommendationToActivity(item, category = "activity") {
+        const start = itemStart(item);
+        const end = start ? itemEnd(item, start) : null;
+        const source = ["activity", "wellness", "learning"].includes(category)
+          ? category
+          : "activity";
+        return {
+          ...item,
           name: item.name,
           meta: item.meta,
           why: item.why,
-          startsAt: item.startsAt,
-          endsAt: item.endsAt,
-          source: item.source
-        }));
-      publishPlanButton.disabled = lastPublishablePlan.length === 0;
-      generateActivitiesStatus.textContent = data.fallback
-        ? `Merged calendar with fallback itinerary. Skipped ${merged.skipped.length} conflict(s). ${data.warning || ''}`
-        : `Merged calendar with ${data.model}. Skipped ${merged.skipped.length} conflict(s).`;
-    } catch (error) {
-      generateActivitiesStatus.textContent = error.message;
-    }
-  }
+          cta: item.cta || "add",
+          source,
+          startsAt: item.startsAt || (start ? start.toISOString() : ""),
+          endsAt: item.endsAt || (end ? end.toISOString() : ""),
+          start,
+          end,
+        };
+      }
 
-  roleButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const isAdmin = button.dataset.role === 'admin';
-      document.body.classList.toggle('admin-mode', isAdmin);
-      roleButtons.forEach(item => item.classList.toggle('active', item === button));
-      if (isAdmin) {
-        renderMindmap();
-        loadCalendarEvents().catch(error => {
-          adminCalendarList.innerHTML = `<div class="admin-cal-item"><span class="admin-cal-time">error</span>${escapeHtml(error.message)}</div>`;
+      function mergeCalendarWithRecommendations(itinerary, calendarEvents) {
+        const fixed = tripCalendarEvents(calendarEvents).map(
+          calendarEventToActivity,
+        );
+        const merged = {
+          activity: [...fixed],
+          wellness: [],
+          learning: [],
+          skipped: [],
+        };
+        const occupied = fixed
+          .filter((item) => item.start && item.end)
+          .map((item) => ({ start: item.start, end: item.end }));
+
+        ["activity", "wellness", "learning"].forEach((category) => {
+          (itinerary?.[category] || []).forEach((item) => {
+            const recommendation = recommendationToActivity(
+              item,
+              item.category || category,
+            );
+            const bucket = recommendation.source || "activity";
+            if (!recommendation.start || !recommendation.end) {
+              merged[bucket].push(recommendation);
+              return;
+            }
+            const busy = {
+              start: recommendation.start,
+              end: recommendation.end,
+            };
+            if (occupied.some((slot) => overlaps(slot, busy))) {
+              merged.skipped.push(recommendation);
+              return;
+            }
+            occupied.push(busy);
+            merged[bucket].push(recommendation);
+          });
         });
+
+        ["activity", "wellness", "learning"].forEach((category) => {
+          merged[category].sort((a, b) => {
+            const aTime = a.start ? a.start.getTime() : Number.MAX_SAFE_INTEGER;
+            const bTime = b.start ? b.start.getTime() : Number.MAX_SAFE_INTEGER;
+            return aTime - bTime;
+          });
+        });
+
+        return merged;
       }
-    });
-  });
 
-  [gmailButton, calendarButton].forEach(button => {
-    button?.addEventListener('click', event => {
-      event.preventDefault();
-      authMessage.textContent = 'Opening Google sign-in...';
-      window.location.assign('/api/auth/google');
-    });
-  });
+      async function generateActivities() {
+        generateActivitiesStatus.textContent =
+          "Loading calendar and generating conflict-free recommendations...";
+        try {
+          let calendarEvents = lastCalendarEvents;
+          try {
+            calendarEvents = await loadCalendarEvents();
+          } catch (calendarError) {
+            calendarEvents = [];
+            generateActivitiesStatus.textContent = `Calendar unavailable; generating from mind map only. ${calendarError.message}`;
+          }
 
-  dockMinimize?.addEventListener('click', () => {
-    const minimized = integrationDock.classList.toggle('minimized');
-    dockMinimize.textContent = minimized ? 'expand' : 'minimize';
-  });
+          const response = await fetch("/api/claude/itinerary", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              mindmap: mindmapState,
+              calendarEvents: tripCalendarEvents(calendarEvents),
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok)
+            throw new Error(data.error || "Itinerary request failed");
 
-  arrivalButton?.addEventListener('click', () => {
-    loadArrivalEmail().catch(error => {
-      authMessage.textContent = `${error.message}. Connect Google first if needed.`;
-    });
-  });
-
-  openTableButton?.addEventListener('click', () => {
-    openMaderaBooking('2026-05-27', '19:00', '2');
-  });
-
-  function openMaderaBooking(date, time, covers) {
-    const safeDate = date || '2026-05-27';
-    const safeTime = time || '19:00';
-    const safeCovers = covers || '2';
-    const params = new URLSearchParams({
-      covers: safeCovers,
-      dateTime: `${safeDate}T${safeTime}`
-    });
-    const url = `https://www.opentable.com/r/madera-restaurant-at-rosewood-sand-hill-menlo-park?${params.toString()}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
-
-  mindmapButton?.addEventListener('click', generateMindmap);
-  generateActivitiesButton?.addEventListener('click', generateActivities);
-
-  publishPlanButton?.addEventListener('click', async () => {
-    if (!lastPublishablePlan.length) {
-      generateActivitiesStatus.textContent = 'Generate an itinerary first.';
-      return;
-    }
-
-    publishPlanButton.disabled = true;
-    generateActivitiesStatus.textContent = 'Adding plan to Google Calendar and sending emails...';
-    try {
-      const response = await fetch('/api/calendar/publish-plan', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          items: lastPublishablePlan,
-          email: guestEmail
-        })
-      });
-      const raw = await response.text();
-      let data = {};
-      try {
-        data = raw ? JSON.parse(raw) : {};
-      } catch {
-        data = { error: raw || 'Publish route returned a non-JSON response' };
-      }
-      if (!response.ok) throw new Error(data.error || 'Plan publish failed');
-      generateActivitiesStatus.textContent = `Added ${data.created.length} calendar event(s) and sent ${data.emailed.length} email(s).`;
-      loadCalendarEvents().catch(() => {});
-    } catch (error) {
-      publishPlanButton.disabled = false;
-      generateActivitiesStatus.textContent = error.message;
-    }
-  });
-
-  function addAgentDialogue(speaker, text) {
-    if (!calendarAgentDialogue) return;
-    const line = document.createElement('div');
-    line.className = 'agent-line';
-    line.innerHTML = `<span>${escapeHtml(speaker)}</span>${escapeHtml(text)}`;
-    calendarAgentDialogue.appendChild(line);
-    calendarAgentDialogue.scrollTop = calendarAgentDialogue.scrollHeight;
-  }
-
-  async function runCalendarVoiceCommand(command) {
-    generateActivitiesStatus.textContent = `Calendar agent heard: ${command}`;
-    addAgentDialogue('you', command);
-    const response = await fetch('/api/calendar/publish-plan', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        command,
-        plannedItems: lastPublishablePlan,
-        calendarEvents: tripCalendarEvents(lastCalendarEvents),
-        email: guestEmail
-      })
-    });
-    const raw = await response.text();
-    let data = {};
-    try {
-      data = raw ? JSON.parse(raw) : {};
-    } catch {
-      data = { error: raw || 'Calendar agent returned a non-JSON response' };
-    }
-    if (!response.ok) throw new Error(data.error || 'Calendar agent failed');
-    if (data.decision) {
-      const decision = data.decision;
-      const summary = [
-        decision.action ? `action: ${decision.action}` : '',
-        decision.name || decision.targetTitle ? `target: ${decision.name || decision.targetTitle}` : '',
-        decision.startsAt ? `time: ${decision.startsAt}` : ''
-      ].filter(Boolean).join(' · ');
-      addAgentDialogue('claude decision', summary || 'calendar action selected');
-    }
-    addAgentDialogue('tia calendar agent', data.message || `Completed ${data.action}.`);
-    generateActivitiesStatus.textContent = data.message || `Calendar agent completed ${data.action}.`;
-    await loadCalendarEvents().catch(() => {});
-  }
-
-  calendarAgentButton?.addEventListener('click', () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      generateActivitiesStatus.textContent = 'Calendar voice agent needs Chrome speech recognition.';
-      return;
-    }
-
-    if (calendarAgentRecognition) {
-      calendarAgentRecognition.stop();
-      generateActivitiesStatus.textContent = 'Stopped calendar agent.';
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    calendarAgentRecognition = recognition;
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    calendarAgentButton.textContent = 'listening...';
-    generateActivitiesStatus.textContent = 'Listening for calendar command...';
-    addAgentDialogue('tia calendar agent', 'Listening...');
-
-    recognition.onresult = event => {
-      const transcript = event.results?.[0]?.[0]?.transcript || '';
-      runCalendarVoiceCommand(transcript).catch(error => {
-        generateActivitiesStatus.textContent = error.message;
-        addAgentDialogue('tia calendar agent', error.message);
-      });
-    };
-
-    recognition.onerror = event => {
-      const message = event.error === 'aborted'
-        ? 'Calendar agent stopped. Tap the mic to try again.'
-        : event.error === 'no-speech'
-          ? 'I did not hear a calendar command.'
-          : `Calendar mic error: ${event.error || 'unknown'}`;
-      generateActivitiesStatus.textContent = message;
-      addAgentDialogue('tia calendar agent', message);
-      calendarAgentButton.textContent = 'edit calendar via voice';
-      calendarAgentRecognition = null;
-    };
-
-    recognition.onend = () => {
-      calendarAgentButton.textContent = 'edit calendar via voice';
-      calendarAgentRecognition = null;
-    };
-
-    recognition.start();
-  });
-
-  adminRecordButton?.addEventListener('click', () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      adminRecordStatus.textContent = 'Voice capture is not supported in this browser. Try Chrome.';
-      return;
-    }
-
-    if (adminRecognition) {
-      adminRecordButton.textContent = 'processing...';
-      adminRecordStatus.textContent = 'Processing conversation...';
-      adminRecognition.stop();
-      return;
-    }
-
-    adminTranscript = '';
-    const recognition = new SpeechRecognition();
-    adminRecognition = recognition;
-    recognition.lang = 'en-US';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-    adminRecordButton.textContent = 'stop recording';
-    adminRecordStatus.textContent = 'Listening for staff conversation...';
-
-    recognition.onresult = event => {
-      let interim = '';
-      for (let index = event.resultIndex; index < event.results.length; index += 1) {
-        const phrase = event.results[index][0]?.transcript || '';
-        if (event.results[index].isFinal) {
-          adminTranscript += ` ${phrase}`;
-        } else {
-          interim += phrase;
+          const merged = mergeCalendarWithRecommendations(
+            data.itinerary,
+            calendarEvents,
+          );
+          renderRecommendationList(activityRecs, merged.activity);
+          renderRecommendationList(wellnessRecs, merged.wellness);
+          renderRecommendationList(learningRecs, merged.learning);
+          lastPublishablePlan = [
+            ...merged.activity,
+            ...merged.wellness,
+            ...merged.learning,
+          ]
+            .filter(
+              (item) =>
+                item.source !== "calendar" && item.startsAt && item.endsAt,
+            )
+            .map((item) => ({
+              name: item.name,
+              meta: item.meta,
+              why: item.why,
+              startsAt: item.startsAt,
+              endsAt: item.endsAt,
+              source: item.source,
+            }));
+          publishPlanButton.disabled = lastPublishablePlan.length === 0;
+          generateActivitiesStatus.textContent = data.fallback
+            ? `Merged calendar with fallback itinerary. Skipped ${merged.skipped.length} conflict(s). ${data.warning || ""}`
+            : `Merged calendar with ${data.model}. Skipped ${merged.skipped.length} conflict(s).`;
+        } catch (error) {
+          generateActivitiesStatus.textContent = error.message;
         }
       }
-      const preview = `${adminTranscript} ${interim}`.trim();
-      adminRecordStatus.textContent = preview
-        ? `Transcript: ${preview}`
-        : 'Listening for staff conversation...';
-    };
 
-    recognition.onerror = event => {
-      const message = event.error === 'aborted'
-        ? 'Recording stopped. Tap record again to retry.'
-        : event.error === 'no-speech'
-          ? 'No speech heard yet. Keep speaking or tap stop.'
-          : `Recording error: ${event.error || 'unknown'}`;
-      adminRecordStatus.textContent = message;
-    };
+      roleButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const isAdmin = button.dataset.role === "admin";
+          document.body.classList.toggle("admin-mode", isAdmin);
+          roleButtons.forEach((item) =>
+            item.classList.toggle("active", item === button),
+          );
+          if (isAdmin) {
+            renderMindmap();
+            loadCalendarEvents().catch((error) => {
+              adminCalendarList.innerHTML = `<div class="admin-cal-item"><span class="admin-cal-time">error</span>${escapeHtml(error.message)}</div>`;
+            });
+          }
+        });
+      });
 
-    recognition.onend = () => {
-      const transcript = adminTranscript.trim();
-      adminRecognition = null;
-      adminRecordButton.textContent = 'record conversation';
-      if (!transcript) {
-        adminRecordStatus.textContent = 'No transcript captured. Tap record and speak clearly.';
-        return;
+      [gmailButton, calendarButton].forEach((button) => {
+        button?.addEventListener("click", (event) => {
+          event.preventDefault();
+          authMessage.textContent = "Opening Google sign-in...";
+          window.location.assign("/api/auth/google");
+        });
+      });
+
+      dockMinimize?.addEventListener("click", () => {
+        const minimized = integrationDock.classList.toggle("minimized");
+        dockMinimize.textContent = minimized ? "expand" : "minimize";
+      });
+
+      arrivalButton?.addEventListener("click", () => {
+        loadArrivalEmail().catch((error) => {
+          authMessage.textContent = `${error.message}. Connect Google first if needed.`;
+        });
+      });
+
+      openTableButton?.addEventListener("click", () => {
+        openMaderaBooking("2026-05-27", "19:00", "2");
+      });
+
+      function openMaderaBooking(date, time, covers) {
+        const safeDate = date || "2026-05-27";
+        const safeTime = time || "19:00";
+        const safeCovers = covers || "2";
+        const params = new URLSearchParams({
+          covers: safeCovers,
+          dateTime: `${safeDate}T${safeTime}`,
+        });
+        const url = `https://www.opentable.com/r/madera-restaurant-at-rosewood-sand-hill-menlo-park?${params.toString()}`;
+        window.open(url, "_blank", "noopener,noreferrer");
       }
-      addMindmapNoteFromTranscript(transcript);
-    };
 
-    recognition.start();
-  });
+      mindmapButton?.addEventListener("click", generateMindmap);
+      generateActivitiesButton?.addEventListener("click", generateActivities);
 
-  mindmap?.addEventListener('click', event => {
-    const addButton = event.target.closest('[data-add]');
-    if (addButton) {
-      const key = addButton.dataset.add;
-      const input = mindmap.querySelector(`[data-input="${key}"]`);
-      const value = input.value.trim();
-      if (!value) return;
-      mindmapState[key].push(value);
+      publishPlanButton?.addEventListener("click", async () => {
+        if (!lastPublishablePlan.length) {
+          generateActivitiesStatus.textContent = "Generate an itinerary first.";
+          return;
+        }
+
+        publishPlanButton.disabled = true;
+        generateActivitiesStatus.textContent =
+          "Adding plan to Google Calendar and sending emails...";
+        try {
+          const response = await fetch("/api/calendar/publish-plan", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              items: lastPublishablePlan,
+              email: guestEmail,
+            }),
+          });
+          const raw = await response.text();
+          let data = {};
+          try {
+            data = raw ? JSON.parse(raw) : {};
+          } catch {
+            data = {
+              error: raw || "Publish route returned a non-JSON response",
+            };
+          }
+          if (!response.ok)
+            throw new Error(data.error || "Plan publish failed");
+          generateActivitiesStatus.textContent = `Added ${data.created.length} calendar event(s) and sent ${data.emailed.length} email(s).`;
+          loadCalendarEvents().catch(() => {});
+        } catch (error) {
+          publishPlanButton.disabled = false;
+          generateActivitiesStatus.textContent = error.message;
+        }
+      });
+
+      function addAgentDialogue(speaker, text) {
+        if (!calendarAgentDialogue) return;
+        const line = document.createElement("div");
+        line.className = "agent-line";
+        line.innerHTML = `<span>${escapeHtml(speaker)}</span>${escapeHtml(text)}`;
+        calendarAgentDialogue.appendChild(line);
+        calendarAgentDialogue.scrollTop = calendarAgentDialogue.scrollHeight;
+      }
+
+      async function runCalendarVoiceCommand(command) {
+        generateActivitiesStatus.textContent = `Calendar agent heard: ${command}`;
+        addAgentDialogue("you", command);
+        const response = await fetch("/api/calendar/publish-plan", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            command,
+            plannedItems: lastPublishablePlan,
+            calendarEvents: tripCalendarEvents(lastCalendarEvents),
+            email: guestEmail,
+          }),
+        });
+        const raw = await response.text();
+        let data = {};
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch {
+          data = {
+            error: raw || "Calendar agent returned a non-JSON response",
+          };
+        }
+        if (!response.ok)
+          throw new Error(data.error || "Calendar agent failed");
+        if (data.decision) {
+          const decision = data.decision;
+          const summary = [
+            decision.action ? `action: ${decision.action}` : "",
+            decision.name || decision.targetTitle
+              ? `target: ${decision.name || decision.targetTitle}`
+              : "",
+            decision.startsAt ? `time: ${decision.startsAt}` : "",
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          addAgentDialogue(
+            "claude decision",
+            summary || "calendar action selected",
+          );
+        }
+        addAgentDialogue(
+          "tia calendar agent",
+          data.message || `Completed ${data.action}.`,
+        );
+        generateActivitiesStatus.textContent =
+          data.message || `Calendar agent completed ${data.action}.`;
+        await loadCalendarEvents().catch(() => {});
+      }
+
+      calendarAgentButton?.addEventListener("click", () => {
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          generateActivitiesStatus.textContent =
+            "Calendar voice agent needs Chrome speech recognition.";
+          return;
+        }
+
+        if (calendarAgentRecognition) {
+          calendarAgentRecognition.stop();
+          generateActivitiesStatus.textContent = "Stopped calendar agent.";
+          return;
+        }
+
+        const recognition = new SpeechRecognition();
+        calendarAgentRecognition = recognition;
+        recognition.lang = "en-US";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        calendarAgentButton.textContent = "listening...";
+        generateActivitiesStatus.textContent =
+          "Listening for calendar command...";
+        addAgentDialogue("tia calendar agent", "Listening...");
+
+        recognition.onresult = (event) => {
+          const transcript = event.results?.[0]?.[0]?.transcript || "";
+          runCalendarVoiceCommand(transcript).catch((error) => {
+            generateActivitiesStatus.textContent = error.message;
+            addAgentDialogue("tia calendar agent", error.message);
+          });
+        };
+
+        recognition.onerror = (event) => {
+          const message =
+            event.error === "aborted"
+              ? "Calendar agent stopped. Tap the mic to try again."
+              : event.error === "no-speech"
+                ? "I did not hear a calendar command."
+                : `Calendar mic error: ${event.error || "unknown"}`;
+          generateActivitiesStatus.textContent = message;
+          addAgentDialogue("tia calendar agent", message);
+          calendarAgentButton.textContent = "edit calendar via voice";
+          calendarAgentRecognition = null;
+        };
+
+        recognition.onend = () => {
+          calendarAgentButton.textContent = "edit calendar via voice";
+          calendarAgentRecognition = null;
+        };
+
+        recognition.start();
+      });
+
+      adminRecordButton?.addEventListener("click", () => {
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          adminRecordStatus.textContent =
+            "Voice capture is not supported in this browser. Try Chrome.";
+          return;
+        }
+
+        if (adminRecognition) {
+          adminRecordButton.textContent = "processing...";
+          adminRecordStatus.textContent = "Processing conversation...";
+          adminRecognition.stop();
+          return;
+        }
+
+        adminTranscript = "";
+        const recognition = new SpeechRecognition();
+        adminRecognition = recognition;
+        recognition.lang = "en-US";
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        adminRecordButton.textContent = "stop recording";
+        adminRecordStatus.textContent = "Listening for staff conversation...";
+
+        recognition.onresult = (event) => {
+          let interim = "";
+          for (
+            let index = event.resultIndex;
+            index < event.results.length;
+            index += 1
+          ) {
+            const phrase = event.results[index][0]?.transcript || "";
+            if (event.results[index].isFinal) {
+              adminTranscript += ` ${phrase}`;
+            } else {
+              interim += phrase;
+            }
+          }
+          const preview = `${adminTranscript} ${interim}`.trim();
+          adminRecordStatus.textContent = preview
+            ? `Transcript: ${preview}`
+            : "Listening for staff conversation...";
+        };
+
+        recognition.onerror = (event) => {
+          const message =
+            event.error === "aborted"
+              ? "Recording stopped. Tap record again to retry."
+              : event.error === "no-speech"
+                ? "No speech heard yet. Keep speaking or tap stop."
+                : `Recording error: ${event.error || "unknown"}`;
+          adminRecordStatus.textContent = message;
+        };
+
+        recognition.onend = () => {
+          const transcript = adminTranscript.trim();
+          adminRecognition = null;
+          adminRecordButton.textContent = "record conversation";
+          if (!transcript) {
+            adminRecordStatus.textContent =
+              "No transcript captured. Tap record and speak clearly.";
+            return;
+          }
+          addMindmapNoteFromTranscript(transcript);
+        };
+
+        recognition.start();
+      });
+
+      mindmap?.addEventListener("click", (event) => {
+        const addButton = event.target.closest("[data-add]");
+        if (addButton) {
+          const key = addButton.dataset.add;
+          const input = mindmap.querySelector(`[data-input="${key}"]`);
+          const value = input.value.trim();
+          if (!value) return;
+          mindmapState[key].push(value);
+          renderMindmap();
+          mindmapStatus.textContent = "Mind map updated locally.";
+          return;
+        }
+        const removeButton = event.target.closest("[data-remove]");
+        if (!removeButton) return;
+        mindmapState[removeButton.dataset.remove].splice(
+          Number(removeButton.dataset.index),
+          1,
+        );
+        renderMindmap();
+        mindmapStatus.textContent = "Mind map updated locally.";
+      });
+
+      mindmap?.addEventListener("keydown", (event) => {
+        const input = event.target.closest("[data-input]");
+        if (!input || event.key !== "Enter") return;
+        event.preventDefault();
+        mindmap.querySelector(`[data-add="${input.dataset.input}"]`).click();
+      });
+
+      mindmap?.addEventListener("input", (event) => {
+        const edit = event.target.closest("[data-edit]");
+        if (!edit) return;
+        mindmapState[edit.dataset.edit][Number(edit.dataset.index)] =
+          edit.textContent.trim();
+        saveMindmapState();
+        renderKeyNotes();
+      });
+
+      window.addEventListener("resize", renderMindmap);
+
+      async function loadGoogleState() {
+        try {
+          const profile = await fetch("/api/auth/me").then((response) =>
+            response.json(),
+          );
+          if (profile.authenticated) {
+            const firstName = firstNameFromProfile(profile);
+            loginName.textContent =
+              profile.name || profile.email || "signed in";
+            if (firstName) {
+              userGreeting.innerHTML = `Good evening, ${escapeHtml(firstName)}<br><em>your world, curated.</em>`;
+              cardGuestName.textContent = `Welcome back, ${firstName}`;
+              adminInfoTitle.textContent = `${firstName}'s info graph`;
+            }
+            authMessage.textContent = `Signed in as ${profile.name || profile.email}.`;
+            if (profile.email) {
+              guestEmail = profile.email;
+            }
+            gmailButton.textContent = "gmail connected";
+            calendarButton.textContent = "calendar connected";
+            loadCalendarEvents().catch(() => {});
+          }
+        } catch {
+          authMessage.textContent =
+            "Connect Gmail and Calendar to personalize your stay.";
+        }
+      }
+
+      const slides = document.querySelectorAll(".slide");
+      const label = document.getElementById("slideLabel");
+      const labels = [
+        "rosewood new market \u00b7 lake jetty",
+        "rosewood dhahran \u00b7 piano lounge",
+        "rosewood mandarina \u00b7 ocean suite",
+        "rosewood amsterdam \u00b7 public spaces",
+        "rosewood amsterdam \u00b7 asaya wellness",
+      ];
+
+      let current = 0;
+
+      setInterval(() => {
+        slides[current].classList.remove("active");
+        current = (current + 1) % slides.length;
+        slides[current].classList.add("active");
+        label.style.opacity = "0";
+        setTimeout(() => {
+          label.textContent = labels[current];
+          label.style.opacity = "1";
+        }, 1000);
+      }, 6000);
+
       renderMindmap();
-      mindmapStatus.textContent = 'Mind map updated locally.';
-      return;
-    }
-    const removeButton = event.target.closest('[data-remove]');
-    if (!removeButton) return;
-    mindmapState[removeButton.dataset.remove].splice(Number(removeButton.dataset.index), 1);
-    renderMindmap();
-    mindmapStatus.textContent = 'Mind map updated locally.';
-  });
-
-  mindmap?.addEventListener('keydown', event => {
-    const input = event.target.closest('[data-input]');
-    if (!input || event.key !== 'Enter') return;
-    event.preventDefault();
-    mindmap.querySelector(`[data-add="${input.dataset.input}"]`).click();
-  });
-
-  mindmap?.addEventListener('input', event => {
-    const edit = event.target.closest('[data-edit]');
-    if (!edit) return;
-    mindmapState[edit.dataset.edit][Number(edit.dataset.index)] = edit.textContent.trim();
-    saveMindmapState();
-    renderKeyNotes();
-  });
-
-  window.addEventListener('resize', renderMindmap);
-
-  async function loadGoogleState() {
-    try {
-      const profile = await fetch('/api/auth/me').then(response => response.json());
-      if (profile.authenticated) {
-        const firstName = firstNameFromProfile(profile);
-        loginName.textContent = profile.name || profile.email || 'signed in';
-        if (firstName) {
-          userGreeting.innerHTML = `Good evening, ${escapeHtml(firstName)}<br><em>your world, curated.</em>`;
-          cardGuestName.textContent = `Welcome back, ${firstName}`;
-          adminInfoTitle.textContent = `${firstName}'s info graph`;
-        }
-        authMessage.textContent = `Signed in as ${profile.name || profile.email}.`;
-        if (profile.email) {
-          guestEmail = profile.email;
-        }
-        gmailButton.textContent = 'gmail connected';
-        calendarButton.textContent = 'calendar connected';
-        loadCalendarEvents().catch(() => {});
-      }
-    } catch {
-      authMessage.textContent = 'Connect Gmail and Calendar to personalize your stay.';
-    }
-  }
-
-  const slides = document.querySelectorAll('.slide');
-  const label  = document.getElementById('slideLabel');
-  const labels = [
-    'rosewood new market \u00b7 lake jetty',
-    'rosewood dhahran \u00b7 piano lounge',
-    'rosewood mandarina \u00b7 ocean suite',
-    'rosewood amsterdam \u00b7 public spaces',
-    'rosewood amsterdam \u00b7 asaya wellness',
-  ];
-
-  let current = 0;
-
-  setInterval(() => {
-    slides[current].classList.remove('active');
-    current = (current + 1) % slides.length;
-    slides[current].classList.add('active');
-    label.style.opacity = '0';
-    setTimeout(() => {
-      label.textContent = labels[current];
-      label.style.opacity = '1';
-    }, 1000);
-  }, 6000);
-
-  renderMindmap();
-  loadGoogleState();
-</script>
-
-</body>
+      loadGoogleState();
+    </script>
+  </body>
 </html>
