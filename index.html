@@ -1319,7 +1319,7 @@
   <div class="section-container">
   <div class="accordion">
     <div class="generate-row">
-      <button class="dock-btn" id="generateActivitiesButton" type="button">generate activities</button>
+      <button class="dock-btn" id="generateActivitiesButton" type="button">generate itinerary</button>
       <button class="dock-btn" id="publishPlanButton" type="button" disabled>book and add to calendar</button>
       <button class="dock-btn mic-btn" id="calendarAgentButton" type="button" aria-label="Edit calendar via voice">edit calendar via voice</button>
       <span class="generate-status" id="generateActivitiesStatus">Uses the local mind map to create a May 26-28 itinerary.</span>
@@ -1349,7 +1349,7 @@
           <div class="acc-rule"></div>
           <div class="recs-label">curated for today</div>
           <div class="recs" id="activityRecs">
-            <div class="rec"><div class="rec-info"><div class="rec-name">No activities yet</div><div class="rec-meta">Generate activities from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
+            <div class="rec"><div class="rec-info"><div class="rec-name">No itinerary yet</div><div class="rec-meta">Generate an itinerary from the mind map.</div></div><span class="rec-cta">waiting →</span></div>
           </div>
         </div>
       </div>
@@ -2097,7 +2097,7 @@
 
   publishPlanButton?.addEventListener('click', async () => {
     if (!lastPublishablePlan.length) {
-      generateActivitiesStatus.textContent = 'Generate activities first.';
+      generateActivitiesStatus.textContent = 'Generate an itinerary first.';
       return;
     }
 
