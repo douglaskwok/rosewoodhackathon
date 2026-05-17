@@ -125,6 +125,33 @@
         border-color: rgba(18, 15, 12, 0.78);
       }
 
+      .music-toggle {
+        position: absolute;
+        top: 86px;
+        right: 64px;
+        z-index: 5;
+        border: 0.5px solid rgba(18, 15, 12, 0.22);
+        background: rgba(255, 252, 248, 0.34);
+        color: rgba(18, 15, 12, 0.68);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        padding: 8px 12px;
+        font-family: "Inter", sans-serif;
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.22em;
+        text-transform: lowercase;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+
+      .music-toggle:hover,
+      .music-toggle.active {
+        background: rgba(18, 15, 12, 0.76);
+        border-color: rgba(18, 15, 12, 0.76);
+        color: rgba(255, 252, 248, 0.88);
+      }
+
       /* ── HERO SPLIT ─────────────────────────────────────── */
       .hero-split {
         display: grid;
@@ -1307,6 +1334,15 @@
           >
         </div>
       </nav>
+      <button class="music-toggle" id="musicToggle" type="button">
+        music off
+      </button>
+      <audio
+        id="ambientMusic"
+        src="music/konstantinpazuzustudio-spa-harp-for-relaxation-495248.mp3"
+        loop
+        preload="auto"
+      ></audio>
 
       <div class="user-view">
         <div class="hero-split">
@@ -1816,6 +1852,8 @@
       const userGreeting = document.getElementById("userGreeting");
       const cardGuestName = document.getElementById("cardGuestName");
       const adminInfoTitle = document.getElementById("adminInfoTitle");
+      const musicToggle = document.getElementById("musicToggle");
+      const ambientMusic = document.getElementById("ambientMusic");
       const guestCalendarEvents = document.getElementById(
         "guestCalendarEvents",
       );
@@ -2669,6 +2707,24 @@
         loadArrivalEmail().catch((error) => {
           authMessage.textContent = `${error.message}. Connect Google first if needed.`;
         });
+      });
+
+      musicToggle?.addEventListener("click", async () => {
+        if (!ambientMusic) return;
+        ambientMusic.volume = 0.14;
+        if (ambientMusic.paused) {
+          try {
+            await ambientMusic.play();
+            musicToggle.textContent = "music on";
+            musicToggle.classList.add("active");
+          } catch (error) {
+            musicToggle.textContent = "music blocked";
+          }
+          return;
+        }
+        ambientMusic.pause();
+        musicToggle.textContent = "music off";
+        musicToggle.classList.remove("active");
       });
 
       openTableButton?.addEventListener("click", () => {

@@ -18,7 +18,7 @@ https://rosewoodhackathon.vercel.app/
 - Admin preference mind map with a reliable demo profile and optional Vertex AI embedding mode.
 - Editable hierarchical admin mind map saved locally in the browser.
 - Claude-generated May 26-28 activities and itinerary from the local mind map, with fallback JSON.
-- Tia booking flow that can add recommended activities to Google Calendar and send booking-style confirmations.
+- Tia booking flow that can add recommended activities to Google Calendar and help users book activities.
 
 ## Gmail OAuth Setup
 
